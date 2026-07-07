@@ -783,7 +783,7 @@ function renderClassRankChart(){
     groupLabel = peers.length + ' kantor cabang kelas ' + (meta.kelas || '-') + ' se-Indonesia';
   }
 
-  document.getElementById('classRankTitle').textContent = isWilayah ? 'Peringkat antar Kantor Wilayah' : ('Peringkat di kelasnya (Kelas ' + (meta.kelas||'-') + ')');
+  document.getElementById('classRankTitle').textContent = isWilayah ? 'Peringkat antar Kantor Wilayah' : ('Peringkat di kelasnya (' + (meta.kelas||'-') + ')');
   document.getElementById('classRankSub').innerHTML = 'Skor total ' + (currentUnit===WILAYAH_ROW_NAME?'Kanwil Jateng &amp; DIY':currentUnit) + ' dibandingkan ' + groupLabel + ' &mdash; diurutkan dari skor tertinggi';
 
   const sortedPeers = peers.slice().sort((a,b) => (unitMetaMap[b].scoreTotal||0) - (unitMetaMap[a].scoreTotal||0));
