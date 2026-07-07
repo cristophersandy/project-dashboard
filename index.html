@@ -985,14 +985,21 @@ function renderInsight(rows, meta, weightedPct, growthDay){
     document.getElementById('insightText').innerHTML = 'Tidak ada data indikator untuk unit ini.';
     return;
   }
-  const sorted = rows.slice().sort((a,b)=>a.pct-b.pct);
-  const lowest = sorted[0];
   const sortedBobot = rows.slice().sort((a,b)=>b.bobot-a.bobot);
   const biggestWeight = sortedBobot[0];
   const dir = growthDay >= 0 ? 'naik' : 'turun';
   const unitLabel = currentUnit === WILAYAH_ROW_NAME ? 'Kanwil Jateng &amp; DIY' : currentUnit;
 
-  const html = `Skor <b>${unitLabel}</b> saat ini <b>${fmtScore(meta.scoreTotal)}</b> (peringkat nasional <b>${Math.round(meta.rank)}</b>), ${dir} <b>${fmtScore(Math.abs(growthDay))} poin</b> dibanding hari sebelumnya. Capaian rata-rata tertimbang seluruh indikator berada di <b>${fmtPct(weightedPct)}</b>. Indikator dengan pencapaian terendah adalah <b>${lowest.nama}</b> (${fmtPct(lowest.pct)}), sementara indikator berbobot terbesar adalah <b>${biggestWeight.nama}</b> (bobot ${biggestWeight.bobot}) dengan capaian ${fmtPct(biggestWeight.pct)} &mdash; ini yang paling menentukan arah skor total ke depan.`;
+  const sortedByScoreGrowth = rows.slice().filter(r => r.scoreGrowth !== 0).sort((a,b)=>Math.abs(b.scoreGrowth)-Math.abs(a.scoreGrowth));
+  const topGrowthDriver = sortedByScoreGrowth[0];
+  let growthDriverSentence = '';
+  if(topGrowthDriver){
+    const gdir = topGrowthDriver.scoreGrowth >= 0 ? 'naik' : 'turun';
+    const rdir = topGrowthDriver.realisasiGrowth >= 0 ? 'naik' : 'turun';
+    growthDriverSentence = ` Indikator yang paling berpengaruh terhadap growth skor harian adalah <b>${topGrowthDriver.nama}</b>, dengan skor ${gdir} <b>${fmtScore(Math.abs(topGrowthDriver.scoreGrowth))} poin</b>, didorong oleh realisasi yang ${rdir} sebesar <b>${fmtBig(Math.abs(topGrowthDriver.realisasiGrowth))}</b> dibanding hari sebelumnya.`;
+  }
+
+  const html = `Skor <b>${unitLabel}</b> saat ini <b>${fmtScore(meta.scoreTotal)}</b> (peringkat nasional <b>${Math.round(meta.rank)}</b>), ${dir} <b>${fmtScore(Math.abs(growthDay))} poin</b> dibanding hari sebelumnya.${growthDriverSentence} Indikator berbobot terbesar adalah <b>${biggestWeight.nama}</b> (bobot ${biggestWeight.bobot}) dengan capaian ${fmtPct(biggestWeight.pct)} &mdash; ini yang paling menentukan arah skor total ke depan.`;
   document.getElementById('insightText').innerHTML = html;
 }
 
