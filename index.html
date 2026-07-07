@@ -483,14 +483,14 @@
           <thead>
             <tr>
               <th data-key="namaKantor">Kantor cabang</th>
+              <th class="num" data-key="rankIndikator">Rank</th>
+              <th class="num" data-key="deltaRankParameter">+/-</th>
               <th data-key="kelas">Kelas</th>
               <th class="num" data-key="target">Target</th>
               <th class="num" data-key="realisasi">Realisasi</th>
               <th class="num" data-key="pct">%</th>
               <th class="num" data-key="gap">GAP</th>
-              <th class="num" data-key="scoreTotal">Skor total</th>
-              <th class="num" data-key="rankIndikator">Rank</th>
-              <th class="num" data-key="deltaRankParameter">Delta</th>
+              <th class="num" data-key="scoreTotal">Skor</th>
               <th class="num" data-key="gap1">Ketertinggalan</th>
               <th class="num" data-key="vs1">Kebutuhan</th>
               <th class="num" data-key="realisasiGrowth">Growth Realisasi</th>
@@ -521,8 +521,8 @@ let unitList = [];
 let currentUnit = null;
 let currentKategori = null;
 let currentIndikator = null;
-let sortKey = 'pct';
-let sortDir = -1;
+let sortKey = 'kelas';
+let sortDir = 1;
 let kpiSortKey = 'bobot';
 let kpiSortDir = -1;
 let clusterChartInstance = null;
@@ -1352,6 +1352,11 @@ function renderDetailTable(){
   const q = document.getElementById('search').value.trim().toLowerCase();
   let filtered = q ? rows.filter(r => r.namaKantor.toLowerCase().includes(q)) : rows;
   filtered.sort((a,b) => {
+    if(sortKey === 'kelas'){
+      const c = sortDir * (a.kelas||'').localeCompare(b.kelas||'');
+      if(c !== 0) return c;
+      return (a.rankIndikator||0) - (b.rankIndikator||0);
+    }
     const av = a[sortKey], bv = b[sortKey];
     if(typeof av === 'string') return sortDir * av.localeCompare(bv);
     return sortDir * ((av||0) - (bv||0));
@@ -1368,14 +1373,14 @@ function renderDetailTable(){
     const deltaRankDisp = r.deltaRankParameter === 0 ? '-' : (r.deltaRankParameter>0?'+':'') + Math.round(r.deltaRankParameter);
     tr.innerHTML = `
       <td>${r.namaKantor}</td>
+      <td class="num">${Math.round(r.rankIndikator)}</td>
+      <td class="num ${r.deltaRankParameter<0?'text-bad':(r.deltaRankParameter>0?'text-good':'')}">${deltaRankDisp}</td>
       <td><span class="type-tag">${r.kelas}</span></td>
       <td class="num">${fmtBig(r.target)}</td>
       <td class="num">${fmtBig(r.realisasi)}</td>
       <td class="num"><span class="badge ${st}">${fmtPct(r.pct)}</span></td>
       <td class="num">${(r.gap>=0?'+':'')+fmtBig(r.gap)}</td>
       <td class="num">${fmtScore(r.scoreTotal)}</td>
-      <td class="num">${Math.round(r.rankIndikator)}</td>
-      <td class="num ${r.deltaRankParameter<0?'text-bad':(r.deltaRankParameter>0?'text-good':'')}">${deltaRankDisp}</td>
       <td class="num ${r.gap1<0?'text-bad':''}">${gap1Disp}</td>
       <td class="num ${r.vs1<0?'text-bad':''}">${vs1Disp}</td>
       <td class="num ${r.realisasiGrowth<0?'text-bad':''}">${realGrowthDisp}</td>
