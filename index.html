@@ -12,21 +12,21 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <style>
   :root{
-    --navy:#0B1F3A;
-    --navy-2:#122A4C;
-    --slate-bg:#EEF1F4;
+    --navy:#11284A;
+    --navy-2:#0B5AA6;
+    --slate-bg:#F5F7FA;
     --card:#FFFFFF;
-    --ink:#1B2430;
+    --ink:#11284A;
     --muted:#6B7280;
     --line:#DEE3E9;
-    --teal:#0F8B6C;
-    --teal-bg:#E3F3EC;
-    --amber:#B7791F;
-    --amber-bg:#FBF0DA;
-    --red:#B03A2E;
-    --red-bg:#FBE7E3;
-    --blue:#2C5FA8;
-    --blue-bg:#E5EDF8;
+    --teal:#2E7D32;
+    --teal-bg:#E8F3E7;
+    --amber:#FFB300;
+    --amber-bg:#FFF6DF;
+    --red:#D32F2F;
+    --red-bg:#FBE4E3;
+    --blue:#1976D2;
+    --blue-bg:#E3EEFB;
   }
   *{box-sizing:border-box;}
   body{
@@ -741,7 +741,7 @@ function buildExecPage(){
   document.getElementById('execRankLbl').textContent = currentUnit === WILAYAH_ROW_NAME ? 'Peringkat nasional (antar kanwil)' : 'Peringkat (antar cabang kelas ' + (unitRows[0] ? unitRows[0].kelas : '') + ')';
   document.getElementById('execRank').textContent = Math.round(meta.rank);
   const dRank = meta.deltaRank || 0;
-  document.getElementById('execRankSub').textContent = dRank===0 ? 'Tetap dari H-1' : (dRank>0 ? ('Naik ' + dRank + ' peringkat') : ('Turun ' + Math.abs(dRank) + ' peringkat'));
+  document.getElementById('execRankSub').textContent = dRank===0 ? 'Tetap dari H-1' : (dRank>0 ? ('Turun ' + dRank + ' peringkat') : ('Naik ' + Math.abs(dRank) + ' peringkat'));
 
   document.getElementById('execScore').textContent = fmtScore(meta.scoreTotal);
   document.getElementById('execScoreSub').textContent = 'H-1: ' + fmtScore(meta.scoreTotalH1);
@@ -789,7 +789,7 @@ function renderClassRankChart(){
   const sortedPeers = peers.slice().sort((a,b) => (unitMetaMap[b].scoreTotal||0) - (unitMetaMap[a].scoreTotal||0));
   const labels = sortedPeers;
   const data = sortedPeers.map(nk => unitMetaMap[nk].scoreTotal || 0);
-  const colors = sortedPeers.map(nk => nk === currentUnit ? '#0B1F3A' : '#B9C3D1');
+  const colors = sortedPeers.map(nk => nk === currentUnit ? '#11284A' : '#B9C3D1');
 
   const wrapper = document.getElementById('classRankChart').parentElement;
   wrapper.style.height = Math.max(300, sortedPeers.length * 20 + 40) + 'px';
@@ -818,7 +818,7 @@ function renderClassRankChart(){
       },
       scales: {
         x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
-        y: { ticks: { color:'#1B2430', font:{size: sortedPeers.length>25?9:11} }, grid: { display:false } }
+        y: { ticks: { color:'#11284A', font:{size: sortedPeers.length>25?9:11} }, grid: { display:false } }
       }
     }
   });
@@ -848,8 +848,8 @@ function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
   const labels = sortedPeers;
   const data = sortedPeers.map(nk => growthOf(nk));
   const colors = sortedPeers.map(nk => {
-    if(nk === currentUnit) return '#0B1F3A';
-    return growthOf(nk) < 0 ? '#E3B8B0' : '#B9C3D1';
+    if(nk === currentUnit) return '#11284A';
+    return growthOf(nk) < 0 ? '#F5C6C3' : '#B9C3D1';
   });
 
   const wrapper = document.getElementById('growthRankChart').parentElement;
@@ -879,7 +879,7 @@ function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
       },
       scales: {
         x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
-        y: { ticks: { color:'#1B2430', font:{size: sortedPeers.length>25?9:11} }, grid: { display:false } }
+        y: { ticks: { color:'#11284A', font:{size: sortedPeers.length>25?9:11} }, grid: { display:false } }
       }
     }
   });
@@ -890,7 +890,7 @@ function renderKanwilCategoryChart(){
   const sorted = kanwilNames.slice().sort((a,b) => (unitMetaMap[b].scoreTotal||0) - (unitMetaMap[a].scoreTotal||0));
 
   const categories = ['OUTCOME','DRIVER','RESOURCES','ADD/MIN'];
-  const catColors = { 'OUTCOME':'#2C5FA8','DRIVER':'#0F8B6C','RESOURCES':'#B7791F','ADD/MIN':'#6B3FA0' };
+  const catColors = { 'OUTCOME':'#0B5AA6','DRIVER':'#74B843','RESOURCES':'#F4C300','ADD/MIN':'#6B3FA0' };
 
   const scoreByKanwilCat = {};
   sorted.forEach(nk => { scoreByKanwilCat[nk] = { OUTCOME:0, DRIVER:0, RESOURCES:0, 'ADD/MIN':0 }; });
@@ -919,7 +919,7 @@ function renderKanwilCategoryChart(){
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { font:{size:11}, color:'#1B2430', boxWidth:10 } },
+        legend: { position: 'bottom', labels: { font:{size:11}, color:'#11284A', boxWidth:10 } },
         datalabels: {
           color: '#fff',
           font: { size: 10, weight: '600' },
@@ -928,7 +928,7 @@ function renderKanwilCategoryChart(){
       },
       scales: {
         x: { stacked: true, ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
-        y: { stacked: true, ticks: { color:'#1B2430', font:{size:11} }, grid: { display:false } }
+        y: { stacked: true, ticks: { color:'#11284A', font:{size:11} }, grid: { display:false } }
       }
     }
   });
@@ -940,7 +940,7 @@ function renderDonut(rows){
   const labels = Object.keys(byKat);
   const data = labels.map(l => Math.max(byKat[l],0));
   const colors = labels.map(l => ({
-    'OUTCOME':'#2C5FA8','DRIVER':'#0F8B6C','RESOURCES':'#B7791F','ADD/MIN':'#6B3FA0'
+    'OUTCOME':'#0B5AA6','DRIVER':'#74B843','RESOURCES':'#F4C300','ADD/MIN':'#6B3FA0'
   }[l] || '#94A3B8'));
 
   const ctx = document.getElementById('donutChart');
@@ -951,7 +951,7 @@ function renderDonut(rows){
     options: {
       responsive:true, maintainAspectRatio:false,
       cutout:'62%',
-      plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, color:'#1B2430', boxWidth:10 } } }
+      plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, color:'#11284A', boxWidth:10 } } }
     }
   });
 }
@@ -1000,7 +1000,7 @@ function renderMatrix(rows){
   const points = rows.map(r => ({
     x: r.pct, y: r.bobot, r: Math.max(Math.abs(r.score)*1.6, 5), label: r.nama, status: statusClass(r.pct)
   }));
-  const colorMap = { good:'#0F8B6C', warn:'#B7791F', bad:'#B03A2E' };
+  const colorMap = { good:'#74B843', warn:'#F4C300', bad:'#D32F2F' };
 
   const ctx = document.getElementById('matrixChart');
   if(matrixChartInstance) matrixChartInstance.destroy();
@@ -1318,7 +1318,7 @@ function renderClusterChart(rows){
       labels: clusters,
       datasets: [
         { label: 'Target', data: targetData, backgroundColor: '#B9C3D1', borderRadius: 3, maxBarThickness: 14 },
-        { label: 'Realisasi', data: realisasiData, backgroundColor: '#0F8B6C', borderRadius: 3, maxBarThickness: 14 }
+        { label: 'Realisasi', data: realisasiData, backgroundColor: '#74B843', borderRadius: 3, maxBarThickness: 14 }
       ]
     },
     options: {
@@ -1328,7 +1328,7 @@ function renderClusterChart(rows){
       plugins: { legend: { display: false } },
       scales: {
         x: { ticks: { callback: (v) => fmtBig(v), color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
-        y: { ticks: { color:'#1B2430', font:{size:11} }, grid: { display:false } }
+        y: { ticks: { color:'#11284A', font:{size:11} }, grid: { display:false } }
       }
     }
   });
