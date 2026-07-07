@@ -375,8 +375,8 @@
         <div class="mini-list" id="warHighImpact"></div>
       </div>
       <div class="panel">
-        <h2 class="text-bad">Growth score harian</h2>
-        <div class="sub">Indikator dengan penurunan skor harian terbesar</div>
+        <h2 class="text-good">Growth score harian</h2>
+        <div class="sub">Diurutkan dari growth skor tertinggi ke terendah</div>
         <div class="mini-list" id="warScoreGrowth"></div>
       </div>
     </div>
@@ -1035,12 +1035,12 @@ function renderWarRoom(rows){
   const critical = rows.filter(r => r.bobot >= 6 && r.pct < 90).sort((a,b)=>b.bobot-a.bobot);
   const quickwins = rows.slice().sort((a,b)=>a.gap1-b.gap1).slice(0,5);
   const highimpact = rows.slice().sort((a,b)=>b.bobot-a.bobot).slice(0,5);
-  const scoreGrowthWorst = rows.filter(r => r.scoreGrowth !== 0).sort((a,b)=>a.scoreGrowth-b.scoreGrowth).slice(0,5);
+  const scoreGrowthWorst = rows.filter(r => r.scoreGrowth !== 0).sort((a,b)=>b.scoreGrowth-a.scoreGrowth).slice(0,5);
 
   fillMini('warCritical', critical, r => fmtPct(r.pct), 'text-bad');
   fillMini('warQuickwins', quickwins, r => fmtBig(r.vs1), 'text-warn');
   fillMini('warHighImpact', highimpact, r => 'Bobot ' + r.bobot, '');
-  fillMini('warScoreGrowth', scoreGrowthWorst, r => (r.scoreGrowth>0?'+':'')+fmtScore(r.scoreGrowth), 'text-bad');
+  fillMini('warScoreGrowth', scoreGrowthWorst, r => (r.scoreGrowth>0?'+':'')+fmtScore(r.scoreGrowth), r => r.scoreGrowth>=0?'text-good':'text-bad');
 }
 
 function fillMini(elId, rows, valFn, cls, subValFn){
@@ -1053,8 +1053,9 @@ function fillMini(elId, rows, valFn, cls, subValFn){
   rows.forEach(r => {
     const row = document.createElement('div');
     row.className = 'mini-row';
+    const clsResolved = typeof cls === 'function' ? cls(r) : cls;
     const subHtml = subValFn ? `<div style="font-size:10.5px;font-weight:500;color:var(--muted);margin-top:2px;">${subValFn(r)}</div>` : '';
-    row.innerHTML = `<span class="mini-name">${r.nama}</span><span style="text-align:right;"><span class="mini-val ${cls}">${valFn(r)}</span>${subHtml}</span>`;
+    row.innerHTML = `<span class="mini-name">${r.nama}</span><span style="text-align:right;"><span class="mini-val ${clsResolved}">${valFn(r)}</span>${subHtml}</span>`;
     el.appendChild(row);
   });
 }
