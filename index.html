@@ -985,8 +985,6 @@ function renderInsight(rows, meta, weightedPct, growthDay){
     document.getElementById('insightText').innerHTML = 'Tidak ada data indikator untuk unit ini.';
     return;
   }
-  const sortedBobot = rows.slice().sort((a,b)=>b.bobot-a.bobot);
-  const biggestWeight = sortedBobot[0];
   const dir = growthDay >= 0 ? 'naik' : 'turun';
   const unitLabel = currentUnit === WILAYAH_ROW_NAME ? 'Kanwil Jateng &amp; DIY' : currentUnit;
 
@@ -999,7 +997,14 @@ function renderInsight(rows, meta, weightedPct, growthDay){
     growthDriverSentence = ` Indikator yang paling berpengaruh terhadap growth skor harian adalah <b>${topGrowthDriver.nama}</b>, dengan skor ${gdir} <b>${fmtScore(Math.abs(topGrowthDriver.scoreGrowth))} poin</b>, didorong oleh realisasi yang ${rdir} sebesar <b>${fmtBig(Math.abs(topGrowthDriver.realisasiGrowth))}</b> dibanding hari sebelumnya.`;
   }
 
-  const html = `Skor <b>${unitLabel}</b> saat ini <b>${fmtScore(meta.scoreTotal)}</b> (peringkat nasional <b>${Math.round(meta.rank)}</b>), ${dir} <b>${fmtScore(Math.abs(growthDay))} poin</b> dibanding hari sebelumnya.${growthDriverSentence} Indikator berbobot terbesar adalah <b>${biggestWeight.nama}</b> (bobot ${biggestWeight.bobot}) dengan capaian ${fmtPct(biggestWeight.pct)} &mdash; ini yang paling menentukan arah skor total ke depan.`;
+  const sortedByGap = rows.slice().sort((a,b)=>a.gap1-b.gap1);
+  const biggestGap = sortedByGap[0];
+  let gapSentence = '';
+  if(biggestGap){
+    gapSentence = ` Indikator dengan GAP score terbesar adalah <b>${biggestGap.nama}</b> (${fmtScore(biggestGap.gap1)} poin) dan dibutuhkan penambahan sebesar <b>${fmtBig(Math.abs(biggestGap.vs1))}</b> untuk menyusul.`;
+  }
+
+  const html = `Skor <b>${unitLabel}</b> saat ini <b>${fmtScore(meta.scoreTotal)}</b> (peringkat nasional <b>${Math.round(meta.rank)}</b>), ${dir} <b>${fmtScore(Math.abs(growthDay))} poin</b> dibanding hari sebelumnya.${growthDriverSentence}${gapSentence}`;
   document.getElementById('insightText').innerHTML = html;
 }
 
