@@ -375,9 +375,9 @@
         <div class="mini-list" id="warHighImpact"></div>
       </div>
       <div class="panel">
-        <h2 class="text-bad">Capaian terendah</h2>
-        <div class="sub">Perlu perhatian segera</div>
-        <div class="mini-list" id="warLowPerf"></div>
+        <h2 class="text-bad">Growth score harian</h2>
+        <div class="sub">Indikator dengan penurunan skor harian terbesar</div>
+        <div class="mini-list" id="warScoreGrowth"></div>
       </div>
     </div>
 
@@ -1035,12 +1035,12 @@ function renderWarRoom(rows){
   const critical = rows.filter(r => r.bobot >= 6 && r.pct < 90).sort((a,b)=>b.bobot-a.bobot);
   const quickwins = rows.slice().sort((a,b)=>a.gap1-b.gap1).slice(0,5);
   const highimpact = rows.slice().sort((a,b)=>b.bobot-a.bobot).slice(0,5);
-  const lowperf = rows.filter(r => r.scoreGrowth !== 0).sort((a,b)=>a.pct-b.pct).slice(0,5);
+  const scoreGrowthWorst = rows.filter(r => r.scoreGrowth !== 0).sort((a,b)=>a.scoreGrowth-b.scoreGrowth).slice(0,5);
 
   fillMini('warCritical', critical, r => fmtPct(r.pct), 'text-bad');
   fillMini('warQuickwins', quickwins, r => fmtBig(r.vs1), 'text-warn');
   fillMini('warHighImpact', highimpact, r => 'Bobot ' + r.bobot, '');
-  fillMini('warLowPerf', lowperf, r => fmtPct(r.pct), 'text-bad', r => 'Growth realisasi: ' + (r.realisasiGrowth===0?'-':(r.realisasiGrowth>0?'+':'')+fmtBig(r.realisasiGrowth)));
+  fillMini('warScoreGrowth', scoreGrowthWorst, r => (r.scoreGrowth>0?'+':'')+fmtScore(r.scoreGrowth), 'text-bad', r => 'Pencapaian: ' + fmtPct(r.pct));
 }
 
 function fillMini(elId, rows, valFn, cls, subValFn){
