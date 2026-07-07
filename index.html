@@ -1040,7 +1040,7 @@ function renderWarRoom(rows){
   fillMini('warCritical', critical, r => fmtPct(r.pct), 'text-bad');
   fillMini('warQuickwins', quickwins, r => fmtBig(r.vs1), 'text-warn');
   fillMini('warHighImpact', highimpact, r => 'Bobot ' + r.bobot, '');
-  fillMini('warScoreGrowth', scoreGrowthWorst, r => (r.scoreGrowth>0?'+':'')+fmtScore(r.scoreGrowth), 'text-bad', r => 'Pencapaian: ' + fmtPct(r.pct));
+  fillMini('warScoreGrowth', scoreGrowthWorst, r => (r.scoreGrowth>0?'+':'')+fmtScore(r.scoreGrowth), 'text-bad');
 }
 
 function fillMini(elId, rows, valFn, cls, subValFn){
