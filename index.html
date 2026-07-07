@@ -1035,15 +1035,15 @@ function renderWarRoom(rows){
   const critical = rows.filter(r => r.bobot >= 6 && r.pct < 90).sort((a,b)=>b.bobot-a.bobot);
   const quickwins = rows.slice().sort((a,b)=>a.gap1-b.gap1).slice(0,5);
   const highimpact = rows.slice().sort((a,b)=>b.bobot-a.bobot).slice(0,5);
-  const lowperf = rows.slice().sort((a,b)=>a.pct-b.pct).slice(0,5);
+  const lowperf = rows.filter(r => r.scoreGrowth !== 0).sort((a,b)=>a.pct-b.pct).slice(0,5);
 
   fillMini('warCritical', critical, r => fmtPct(r.pct), 'text-bad');
   fillMini('warQuickwins', quickwins, r => fmtBig(r.vs1), 'text-warn');
   fillMini('warHighImpact', highimpact, r => 'Bobot ' + r.bobot, '');
-  fillMini('warLowPerf', lowperf, r => fmtPct(r.pct), 'text-bad');
+  fillMini('warLowPerf', lowperf, r => fmtPct(r.pct), 'text-bad', r => 'Growth realisasi: ' + (r.realisasiGrowth===0?'-':(r.realisasiGrowth>0?'+':'')+fmtBig(r.realisasiGrowth)));
 }
 
-function fillMini(elId, rows, valFn, cls){
+function fillMini(elId, rows, valFn, cls, subValFn){
   const el = document.getElementById(elId);
   el.innerHTML = '';
   if(rows.length === 0){
@@ -1053,7 +1053,8 @@ function fillMini(elId, rows, valFn, cls){
   rows.forEach(r => {
     const row = document.createElement('div');
     row.className = 'mini-row';
-    row.innerHTML = `<span class="mini-name">${r.nama}</span><span class="mini-val ${cls}">${valFn(r)}</span>`;
+    const subHtml = subValFn ? `<div style="font-size:10.5px;font-weight:500;color:var(--muted);margin-top:2px;">${subValFn(r)}</div>` : '';
+    row.innerHTML = `<span class="mini-name">${r.nama}</span><span style="text-align:right;"><span class="mini-val ${cls}">${valFn(r)}</span>${subHtml}</span>`;
     el.appendChild(row);
   });
 }
