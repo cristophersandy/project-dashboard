@@ -482,10 +482,10 @@
         <table>
           <thead>
             <tr>
-              <th data-key="namaKantor">Kantor cabang</th>
               <th class="num" data-key="rankIndikator">Rank</th>
               <th class="num" data-key="deltaRankParameter">+/-</th>
               <th data-key="kelas">Kelas</th>
+              <th data-key="namaKantor">Kantor cabang</th>
               <th class="num" data-key="target">Target</th>
               <th class="num" data-key="realisasi">Realisasi</th>
               <th class="num" data-key="pct">%</th>
@@ -1372,10 +1372,10 @@ function renderDetailTable(){
     const scoreGrowthDisp = r.scoreGrowth === 0 ? '-' : (r.scoreGrowth>0?'+':'') + fmtScore(r.scoreGrowth);
     const deltaRankDisp = r.deltaRankParameter === 0 ? '-' : (r.deltaRankParameter>0?'+':'') + Math.round(r.deltaRankParameter);
     tr.innerHTML = `
-      <td>${r.namaKantor}</td>
       <td class="num">${Math.round(r.rankIndikator)}</td>
       <td class="num ${r.deltaRankParameter<0?'text-bad':(r.deltaRankParameter>0?'text-good':'')}">${deltaRankDisp}</td>
       <td><span class="type-tag">${r.kelas}</span></td>
+      <td>${r.namaKantor}</td>
       <td class="num">${fmtBig(r.target)}</td>
       <td class="num">${fmtBig(r.realisasi)}</td>
       <td class="num"><span class="badge ${st}">${fmtPct(r.pct)}</span></td>
