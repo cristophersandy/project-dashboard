@@ -144,7 +144,7 @@
   }
   .panel .sub{font-size:12px;color:var(--muted);margin-bottom:14px;}
 
-  .mini-list{display:flex;flex-direction:column;gap:10px;}
+  .mini-list{display:flex;flex-direction:column;gap:10px;max-height:340px;overflow-y:auto;padding-right:4px;}
   .mini-row{
     display:flex;
     justify-content:space-between;
@@ -396,7 +396,7 @@
           <thead>
             <tr>
               <th class="num" data-key="rankIndikator">Rank</th>
-              <th class="num" data-key="deltaRankParameter">Delta</th>
+              <th class="num" data-key="deltaRankParameter">+/-</th>
               <th data-key="nama">Indikator</th>
               <th data-key="kategori">Kategori</th>
               <th class="num" data-key="bobot">Bobot</th>
@@ -741,7 +741,7 @@ function buildExecPage(){
   document.getElementById('execRankLbl').textContent = currentUnit === WILAYAH_ROW_NAME ? 'Peringkat nasional (antar kanwil)' : 'Peringkat (antar cabang kelas ' + (unitRows[0] ? unitRows[0].kelas : '') + ')';
   document.getElementById('execRank').textContent = Math.round(meta.rank);
   const dRank = meta.deltaRank || 0;
-  document.getElementById('execRankSub').textContent = dRank===0 ? 'Tetap dari H-1' : (dRank>0 ? ('Turun ' + dRank + ' peringkat') : ('Naik ' + Math.abs(dRank) + ' peringkat'));
+  document.getElementById('execRankSub').textContent = dRank===0 ? 'Tetap dari H-1' : (dRank>0 ? ('Naik ' + dRank + ' peringkat') : ('Turun ' + Math.abs(dRank) + ' peringkat'));
 
   document.getElementById('execScore').textContent = fmtScore(meta.scoreTotal);
   document.getElementById('execScoreSub').textContent = 'H-1: ' + fmtScore(meta.scoreTotalH1);
@@ -1047,7 +1047,7 @@ function renderWarRoom(rows){
   const critical = rows.filter(r => r.bobot >= 6 && r.pct < 90).sort((a,b)=>b.bobot-a.bobot);
   const quickwins = rows.slice().sort((a,b)=>a.gap1-b.gap1).slice(0,5);
   const highimpact = rows.slice().sort((a,b)=>b.bobot-a.bobot).slice(0,5);
-  const scoreGrowthWorst = rows.filter(r => r.scoreGrowth !== 0).sort((a,b)=>b.scoreGrowth-a.scoreGrowth).slice(0,5);
+  const scoreGrowthWorst = rows.filter(r => r.scoreGrowth !== 0).sort((a,b)=>b.scoreGrowth-a.scoreGrowth);
 
   fillMini('warCritical', critical, r => fmtPct(r.pct), 'text-bad');
   fillMini('warQuickwins', quickwins, r => fmtBig(r.vs1), 'text-warn');
