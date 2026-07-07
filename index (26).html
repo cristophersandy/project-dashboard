@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Executive Dashboard KPI &mdash; Kanwil Jateng &amp; DIY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  :root{
+    --navy:#0B1F3A;
+    --navy-2:#122A4C;
+    --slate-bg:#EEF1F4;
+    --card:#FFFFFF;
+    --ink:#1B2430;
+    --muted:#6B7280;
+    --line:#DEE3E9;
+    --teal:#0F8B6C;
+    --teal-bg:#E3F3EC;
+    --amber:#B7791F;
+    --amber-bg:#FBF0DA;
+    --red:#B03A2E;
+    --red-bg:#FBE7E3;
+    --blue:#2C5FA8;
+    --blue-bg:#E5EDF8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--slate-bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .display{font-family:'Space Grotesk', sans-serif;}
+  .mono{font-family:'IBM Plex Mono', monospace;}
+
+  header.topbar{
+    background:var(--navy);
+    color:#fff;
+    padding:22px 32px;
+  }
+  .topbar-inner{
+    max-width:1360px;
+    margin:0 auto;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  .brand-eyebrow{
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:#8FA6C7;
+    margin:0 0 6px 0;
+    font-weight:600;
+  }
+  h1.title{
+    font-size:24px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .updated{
+    font-size:12px;
+    color:#9FB2CC;
+    margin-top:6px;
+  }
+  .toplinks{display:flex;gap:8px;}
+  .toptab{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.18);
+    color:#C9D5E8;
+    padding:9px 16px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .toptab.active{background:#fff;color:var(--navy);border-color:#fff;}
+
+  main{
+    max-width:1360px;
+    margin:0 auto;
+    padding:28px 32px 64px;
+  }
+  .page{}
+  .hidden{display:none;}
+
+  .section-title{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--muted);
+    font-weight:600;
+    margin:0 0 12px 2px;
+  }
+
+  .kpi-row{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+    margin-bottom:24px;
+  }
+  .kpi-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 18px;
+  }
+  .kpi-lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:500;}
+  .kpi-val{font-size:26px;font-weight:600;margin-top:6px;letter-spacing:-0.01em;}
+  .kpi-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+  .kpi-val.pos{color:var(--teal);}
+  .kpi-val.neg{color:var(--red);}
+
+  .panel-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-bottom:24px;
+  }
+  .panel-row.thirds{grid-template-columns:1fr 1fr 1fr 1fr;}
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px 20px;
+  }
+  .panel h2{
+    font-size:14px;
+    margin:0 0 4px 0;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .panel .sub{font-size:12px;color:var(--muted);margin-bottom:14px;}
+
+  .mini-list{display:flex;flex-direction:column;gap:10px;}
+  .mini-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    padding:8px 10px;
+    border-radius:8px;
+    background:#F7F9FB;
+  }
+  .mini-name{font-size:12.5px;font-weight:500;}
+  .mini-val{font-size:12.5px;font-weight:600;font-family:'IBM Plex Mono', monospace;flex-shrink:0;}
+
+  .board-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .board-row:last-child{border-bottom:none;}
+  .rank{width:20px;font-size:12px;color:var(--muted);font-weight:600;text-align:right;flex-shrink:0;}
+  .board-name{width:170px;flex-shrink:0;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .board-track{flex:1;height:8px;background:#EEF1F4;border-radius:4px;overflow:hidden;position:relative;}
+  .board-fill{height:100%;border-radius:4px;}
+  .board-pct{width:56px;text-align:right;font-size:12px;font-weight:600;flex-shrink:0;}
+
+  .status-good{background:var(--teal);}
+  .status-warn{background:var(--amber);}
+  .status-bad{background:var(--red);}
+  .text-good{color:var(--teal);}
+  .text-warn{color:var(--amber);}
+  .text-bad{color:var(--red);}
+
+  .table-panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:24px;}
+  .table-head-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;}
+  input[type=text], select{
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 12px;
+    font-size:13px;
+    font-family:inherit;
+    background:#F9FAFB;
+  }
+  #search{width:220px;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  thead th{
+    text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.04em;
+    color:var(--muted);font-weight:600;padding:8px 8px;border-bottom:2px solid var(--line);
+    cursor:pointer;user-select:none;white-space:nowrap;
+  }
+  thead th:hover{color:var(--ink);}
+  tbody td{padding:9px 8px;border-bottom:1px solid var(--line);white-space:nowrap;}
+  tbody tr:hover{background:#F7F9FB;}
+  td.num, th.num{text-align:right;font-family:'IBM Plex Mono', monospace;}
+  .badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11.5px;font-weight:600;font-family:'IBM Plex Mono', monospace;}
+  .badge.good{background:var(--teal-bg);color:var(--teal);}
+  .badge.warn{background:var(--amber-bg);color:var(--amber);}
+  .badge.bad{background:var(--red-bg);color:var(--red);}
+  .type-tag{font-size:11px;padding:2px 6px;border-radius:4px;background:#EEF1F4;color:var(--muted);font-weight:500;}
+  .cat-tag{font-size:10.5px;padding:2px 7px;border-radius:10px;font-weight:600;letter-spacing:0.02em;}
+  .cat-OUTCOME{background:var(--blue-bg);color:var(--blue);}
+  .cat-DRIVER{background:var(--teal-bg);color:var(--teal);}
+  .cat-RESOURCES{background:var(--amber-bg);color:var(--amber);}
+  .cat-ADDMIN{background:#EEE7F7;color:#6B3FA0;}
+
+  .insight-box{
+    background:var(--navy);
+    color:#E8EDF5;
+    border-radius:10px;
+    padding:20px 24px;
+    font-size:14px;
+    line-height:1.6;
+    margin-bottom:24px;
+  }
+  .insight-box b{color:#fff;}
+  .insight-icon{font-size:12px;color:#8FA6C7;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;margin-bottom:8px;display:block;}
+
+  .state-msg{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;}
+
+  @media (max-width:1000px){
+    .kpi-row{grid-template-columns:repeat(2,1fr);}
+    .panel-row{grid-template-columns:1fr;}
+    .panel-row.thirds{grid-template-columns:1fr 1fr;}
+    .board-name{width:120px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div>
+      <p class="brand-eyebrow">BPJS Ketenagakerjaan &mdash; Kantor Wilayah</p>
+      <h1 class="title display">Executive Dashboard KPI &middot; Jawa Tengah &amp; DIY</h1>
+      <p class="updated" id="updatedText">Memuat data&hellip;</p>
+    </div>
+    <div class="toplinks">
+      <button class="toptab active" data-page="exec">Ringkasan Eksekutif</button>
+      <button class="toptab" data-page="detail">Detail per Cabang</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="loadingState" class="state-msg">Mengambil data terbaru dari Google Sheets&hellip;</div>
+  <div id="errorState" class="state-msg hidden">
+    Gagal memuat data. Periksa apakah spreadsheet sudah di-publish sebagai CSV dan dapat diakses publik.<br>
+    <span id="errorDetail" style="font-size:12px;"></span>
+  </div>
+
+  <!-- ================= PAGE 1: EXECUTIVE SUMMARY ================= -->
+  <div id="page-exec" class="page hidden">
+
+    <div class="table-head-row" style="margin-bottom:18px;">
+      <div>
+        <div class="section-title" style="margin-bottom:2px;">Unit kerja</div>
+        <select id="unitSelect" style="min-width:300px;font-weight:600;"></select>
+      </div>
+      <div style="font-size:12px;color:var(--muted);text-align:right;max-width:360px;">
+        Pilih Kanwil (agregat wilayah) atau kantor cabang tertentu &mdash; seluruh ringkasan di bawah akan menyesuaikan.
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-lbl" id="execRankLbl">Peringkat nasional</div>
+        <div class="kpi-val mono" id="execRank">&mdash;</div>
+        <div class="kpi-sub" id="execRankSub"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-lbl">Skor total (skala 0&ndash;100)</div>
+        <div class="kpi-val mono" id="execScore">&mdash;</div>
+        <div class="kpi-sub" id="execScoreSub"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-lbl">Growth harian skor</div>
+        <div class="kpi-val mono" id="execGrowthDay">&mdash;</div>
+        <div class="kpi-sub">dibanding H-1</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-lbl">Peringkat growth</div>
+        <div class="kpi-val mono" id="execGrowthRank">&mdash;</div>
+        <div class="kpi-sub" id="execGrowthRankSub"></div>
+      </div>
+    </div>
+
+    <div class="panel-row">
+      <div class="panel">
+        <h2 id="classRankTitle">Peringkat di kelasnya</h2>
+        <div class="sub" id="classRankSub">Posisi skor total unit terpilih dibandingkan unit sekelas</div>
+        <div style="position:relative;height:340px;">
+          <canvas id="classRankChart" role="img" aria-label="Grafik batang peringkat skor total unit kerja dibandingkan unit lain sekelasnya"></canvas>
+        </div>
+      </div>
+      <div class="panel">
+        <h2 id="growthRankTitle">Peringkat growth</h2>
+        <div class="sub" id="growthRankSub">Posisi growth skor unit terpilih dibandingkan unit sekelas</div>
+        <div style="position:relative;height:340px;">
+          <canvas id="growthRankChart" role="img" aria-label="Grafik batang peringkat growth skor unit kerja dibandingkan unit lain sekelasnya"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-row" id="kanwilCatPanelRow">
+      <div class="panel" style="grid-column:1/-1;">
+        <h2>Skor per kategori &mdash; seluruh Kantor Wilayah</h2>
+        <div class="sub">Kontribusi skor Outcome, Driver, Resources, dan Add/Min pada setiap Kanwil, diurutkan dari skor total tertinggi</div>
+        <div style="position:relative;height:440px;">
+          <canvas id="kanwilCatChart" role="img" aria-label="Grafik batang bertumpuk skor per kategori untuk setiap kantor wilayah"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-row">
+      <div class="panel">
+        <h2>Komposisi skor per kategori</h2>
+        <div class="sub">Kontribusi skor terhadap total, per kelompok indikator</div>
+        <div style="position:relative;height:280px;">
+          <canvas id="donutChart" role="img" aria-label="Diagram donat komposisi skor per kategori indikator"></canvas>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Kontributor &amp; penghambat skor</h2>
+        <div class="sub">Kontributor = skor tertinggi &middot; Penghambat = selisih skor terbesar vs unit peringkat 1 nasional pada indikator itu</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <div class="section-title" style="color:var(--teal);">Top kontributor</div>
+            <div class="mini-list" id="topContributors"></div>
+          </div>
+          <div>
+            <div class="section-title" style="color:var(--red);">Top ketertinggalan</div>
+            <div class="mini-list" id="topDetractors"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight-box" id="insightBox">
+      <span class="insight-icon">Executive insight</span>
+      <span id="insightText">Menyusun ringkasan&hellip;</span>
+    </div>
+
+    <div class="panel-row">
+      <div class="panel" style="grid-column:1/-1;">
+        <h2>Matriks bobot vs pencapaian</h2>
+        <div class="sub">Ukuran gelembung = besar skor &middot; warna = status capaian &middot; kanan-atas = prioritas pertahankan, kiri-atas = prioritas utama perbaikan</div>
+        <div style="position:relative;height:380px;">
+          <canvas id="matrixChart" role="img" aria-label="Grafik gelembung bobot versus pencapaian setiap indikator"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-row thirds">
+      <div class="panel">
+        <h2 class="text-bad">KPI kritis</h2>
+        <div class="sub">Bobot tinggi (&ge;6) &amp; pencapaian &lt; 90%</div>
+        <div class="mini-list" id="warCritical"></div>
+      </div>
+      <div class="panel">
+        <h2 class="text-warn">Quick wins</h2>
+        <div class="sub">Kebutuhan (vs_1) diurutkan dari ketertinggalan (gap_1) terbesar</div>
+        <div class="mini-list" id="warQuickwins"></div>
+      </div>
+      <div class="panel">
+        <h2>Bobot tertinggi</h2>
+        <div class="sub">Indikator paling menentukan skor</div>
+        <div class="mini-list" id="warHighImpact"></div>
+      </div>
+      <div class="panel">
+        <h2 class="text-bad">Capaian terendah</h2>
+        <div class="sub">Perlu perhatian segera</div>
+        <div class="mini-list" id="warLowPerf"></div>
+      </div>
+    </div>
+
+    <div class="table-panel">
+      <div class="table-head-row">
+        <h2 style="margin:0;font-size:14px;font-weight:600;" id="kpiTableTitle">Papan Kinerja</h2>
+        <div class="controls">
+          <select id="kategoriFilter">
+            <option value="">Semua kategori</option>
+          </select>
+          <input type="text" id="kpiSearch" placeholder="Cari indikator&hellip;">
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th class="num" data-key="rankIndikator">Rank</th>
+              <th class="num" data-key="deltaRankParameter">Delta</th>
+              <th data-key="nama">Indikator</th>
+              <th data-key="kategori">Kategori</th>
+              <th class="num" data-key="bobot">Bobot</th>
+              <th class="num" data-key="target">Target</th>
+              <th class="num" data-key="realisasi">Realisasi</th>
+              <th class="num" data-key="pct">Pencapaian</th>
+              <th class="num" data-key="score">Skor</th>
+              <th class="num" data-key="gap1">Ketertinggalan</th>
+              <th class="num" data-key="vs1">Kebutuhan</th>
+              <th class="num" data-key="realisasiGrowth">Growth Realisasi</th>
+              <th class="num" data-key="scoreGrowth">Growth Score</th>
+            </tr>
+          </thead>
+          <tbody id="kpiTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 2: DETAIL PER CABANG ================= -->
+  <div id="page-detail" class="page hidden">
+    <div class="table-head-row" style="margin-bottom:16px;">
+      <div class="controls">
+        <div>
+          <div class="section-title" style="margin-bottom:2px;">Kode wilayah</div>
+          <select id="wilayahFilterSelect" style="min-width:220px;"></select>
+        </div>
+        <div>
+          <div class="section-title" style="margin-bottom:2px;">Kelas (bisa pilih lebih dari satu)</div>
+          <div id="kelasFilterCheckboxes" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#F9FAFB;min-height:38px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="param-tabs" id="kategoriTabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;"></div>
+    <div style="margin-bottom:22px;">
+      <select id="indikatorSelect" style="min-width:320px;padding:9px 14px;"></select>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-lbl">Target</div>
+        <div class="kpi-val mono" id="kpiTarget">&mdash;</div>
+        <div class="kpi-sub" id="kpiTargetSub"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-lbl">Realisasi</div>
+        <div class="kpi-val mono" id="kpiRealisasi">&mdash;</div>
+        <div class="kpi-sub" id="kpiRealisasiSub"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-lbl">Capaian</div>
+        <div class="kpi-val mono" id="kpiCapaian">&mdash;</div>
+        <div class="kpi-sub">terhadap target parameter ini</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-lbl">GAP</div>
+        <div class="kpi-val mono" id="kpiGap">&mdash;</div>
+        <div class="kpi-sub" id="kpiGapSub"></div>
+      </div>
+    </div>
+
+    <div class="panel-row">
+      <div class="panel">
+        <h2>Papan peringkat cabang</h2>
+        <div class="sub">Diurutkan dari capaian tertinggi ke terendah</div>
+        <div id="leaderboard"></div>
+      </div>
+      <div class="panel">
+        <h2>Target vs realisasi per cabang</h2>
+        <div class="sub">Seluruh kantor cabang, diurutkan dari realisasi tertinggi</div>
+        <div style="position:relative;height:340px;">
+          <canvas id="clusterChart" role="img" aria-label="Grafik batang perbandingan target dan realisasi per kantor cabang"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-panel">
+      <div class="table-head-row">
+        <h2 style="margin:0;font-size:14px;font-weight:600;">Rincian per kantor cabang</h2>
+        <input type="text" id="search" placeholder="Cari nama kantor cabang&hellip;">
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th data-key="namaKantor">Kantor cabang</th>
+              <th data-key="kelas">Kelas</th>
+              <th class="num" data-key="target">Target</th>
+              <th class="num" data-key="realisasi">Realisasi</th>
+              <th class="num" data-key="pct">%</th>
+              <th class="num" data-key="gap">GAP</th>
+              <th class="num" data-key="scoreTotal">Skor total</th>
+              <th class="num" data-key="rankIndikator">Rank</th>
+              <th class="num" data-key="deltaRankParameter">Delta</th>
+              <th class="num" data-key="gap1">Ketertinggalan</th>
+              <th class="num" data-key="vs1">Kebutuhan</th>
+              <th class="num" data-key="realisasiGrowth">Growth Realisasi</th>
+              <th class="num" data-key="scoreGrowth">Growth Harian</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0HCr3oEpkmUyrJtErwipM1FpafFNph9yAeeS5wcLtl5KEsPztwvFWbJFquJutHR109THtFHxFWuES/pub?gid=1165718232&single=true&output=csv";
+const TARGET_WILAYAH_CODE = "905";
+const WILAYAH_ROW_NAME = "KANWIL JATENG DAN DIY";
+
+let allRows = [];
+let jatengRows = [];
+let wilayahOptions = [];
+let currentWilayahFilter = "905";
+let currentKelasFilter = new Set();
+let wilayahRows = [];
+let wilayahMeta = {};
+let unitMetaMap = {};
+let unitList = [];
+let currentUnit = null;
+let currentKategori = null;
+let currentIndikator = null;
+let sortKey = 'pct';
+let sortDir = -1;
+let kpiSortKey = 'bobot';
+let kpiSortDir = -1;
+let clusterChartInstance = null;
+let donutChartInstance = null;
+let matrixChartInstance = null;
+let classRankChartInstance = null;
+let growthRankChartInstance = null;
+let kanwilCatChartInstance = null;
+
+function parseIDNum(s){
+  if(s===undefined || s===null) return 0;
+  s = String(s).trim();
+  if(s === '' || s === 'NULL' || s === '#VALUE!' || s === '#N/A') return 0;
+  s = s.replace('%','').replace(/\./g,'').replace(',', '.');
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function fmtBig(n){
+  const abs = Math.abs(n);
+  if(abs >= 1e12) return (n/1e12).toFixed(2)+' T';
+  if(abs >= 1e9) return (n/1e9).toFixed(2)+' M';
+  if(abs >= 1e6) return (n/1e6).toFixed(2)+' Jt';
+  return n.toLocaleString('id-ID', {maximumFractionDigits:0});
+}
+
+function fmtPct(n){
+  return n.toLocaleString('id-ID', {minimumFractionDigits:1, maximumFractionDigits:1}) + '%';
+}
+
+function fmtScore(n){
+  return n.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function statusClass(pct){
+  if(pct >= 100) return 'good';
+  if(pct >= 85) return 'warn';
+  return 'bad';
+}
+
+function catClass(k){
+  return 'cat-' + (k||'').replace('/','');
+}
+
+/* ============== LOAD ============== */
+function loadData(){
+  Papa.parse(CSV_URL, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results){
+      try{
+        const rows = results.data.filter(r => (r.nama_kantor||'').trim() !== '' && (r.nama||'').trim() !== '');
+        if(rows.length === 0){ throw new Error('Tidak ada baris data yang terbaca. Cek apakah sheet KPI yang benar sudah dipublish di link ini.'); }
+
+        allRows = rows.map(r => ({
+          kodeDetil: (r.kode_detil||'').trim(),
+          nama: (r.nama||'').trim(),
+          kategori: (r.kategori||'').trim(),
+          bobot: parseIDNum(r.bobot),
+          target: parseIDNum(r.target),
+          realisasi: parseIDNum(r.realisasi),
+          pct: parseIDNum(r.pencapaian),
+          score: parseIDNum(r.score),
+          gap1: parseIDNum(r.gap_1),
+          vs1: parseIDNum(r.vs_1),
+          unit1: (r.unit_1||'').trim(),
+          rankIndikator: parseIDNum(r.rank_indikator),
+          realisasiGrowth: parseIDNum(r.realisasi_growth),
+          scoreGrowth: parseIDNum(r.score_growth),
+          deltaRankParameter: parseIDNum(r.delta_rank_parameter),
+          tipeKantor: (r.tipe_kantor||'').trim(),
+          kelas: (r.kelas||'').trim(),
+          kodeWilayah: (r.kode_wilayah||'').trim(),
+          namaKantor: (r.nama_kantor||'').trim(),
+          scoreTotal: parseIDNum(r.score_total),
+          rank: parseIDNum(r.rank),
+          tglProses: (r.tgl_proses||'').trim()
+        })).filter(r => r.nama !== '');
+
+        jatengRows = allRows.filter(r => r.kodeWilayah === TARGET_WILAYAH_CODE);
+        wilayahRows = allRows.filter(r => r.namaKantor === WILAYAH_ROW_NAME);
+
+        const tglSet = new Set(allRows.map(r=>r.tglProses).filter(Boolean));
+        const tgl = tglSet.size ? Array.from(tglSet)[0] : '';
+        document.getElementById('updatedText').textContent = tgl ? ('Data per ' + tgl) : 'Data termuat';
+
+        const anyWRow = rows.find(r => (r.nama_kantor||'').trim() === WILAYAH_ROW_NAME);
+        if(anyWRow){
+          wilayahMeta = {
+            scoreTotal: parseIDNum(anyWRow.score_total),
+            scoreTotalH1: parseIDNum(anyWRow['score_total_h-1']),
+            scoreTotalB1: parseIDNum(anyWRow['score_total_b-1']),
+            rank: parseIDNum(anyWRow.rank),
+            rankH1: parseIDNum(anyWRow['rank_h-1']),
+            deltaRank: parseIDNum(anyWRow.delta_rank),
+            rankB1: parseIDNum(anyWRow['rank_b-1']),
+            deltaRankBulan: parseIDNum(anyWRow.delta_rank_bulan)
+          };
+        }
+
+        unitMetaMap = {};
+        const kanwilNameByCode = {};
+        rows.forEach(r => {
+          const nk = (r.nama_kantor||'').trim();
+          if(!nk || unitMetaMap[nk]) return;
+          unitMetaMap[nk] = {
+            scoreTotal: parseIDNum(r.score_total),
+            scoreTotalH1: parseIDNum(r['score_total_h-1']),
+            scoreTotalB1: parseIDNum(r['score_total_b-1']),
+            rank: parseIDNum(r.rank),
+            rankH1: parseIDNum(r['rank_h-1']),
+            deltaRank: parseIDNum(r.delta_rank),
+            rankB1: parseIDNum(r['rank_b-1']),
+            deltaRankBulan: parseIDNum(r.delta_rank_bulan),
+            tipeKantor: (r.tipe_kantor||'').trim(),
+            kodeWilayah: (r.kode_wilayah||'').trim(),
+            kelas: (r.kelas||'').trim()
+          };
+          if((r.tipe_kantor||'').trim() === 'Kantor Wilayah'){
+            kanwilNameByCode[(r.kode_wilayah||'').trim()] = nk;
+          }
+        });
+        Object.keys(unitMetaMap).forEach(nk => {
+          unitMetaMap[nk].kanwilName = kanwilNameByCode[unitMetaMap[nk].kodeWilayah] || 'Lainnya';
+        });
+
+        wilayahOptions = Object.keys(kanwilNameByCode)
+          .map(code => ({ code, name: kanwilNameByCode[code] }))
+          .sort((a,b) => a.name.localeCompare(b.name));
+
+        unitList = Array.from(new Set(rows.map(r => (r.nama_kantor||'').trim()))).filter(Boolean);
+        buildUnitSelect();
+
+        document.getElementById('loadingState').classList.add('hidden');
+        buildDetailPage();
+        showPage('exec');
+      }catch(err){
+        showError(err.message);
+      }
+    },
+    error: function(err){
+      showError(err && err.message ? err.message : String(err));
+    }
+  });
+}
+
+function showError(detail){
+  document.getElementById('loadingState').classList.add('hidden');
+  document.getElementById('errorState').classList.remove('hidden');
+  document.getElementById('errorDetail').textContent = detail || '';
+}
+
+/* ============== NAV ============== */
+document.querySelectorAll('.toptab').forEach(btn => {
+  btn.addEventListener('click', () => showPage(btn.getAttribute('data-page')));
+});
+function showPage(name){
+  document.querySelectorAll('.toptab').forEach(b => b.classList.toggle('active', b.getAttribute('data-page')===name));
+  document.getElementById('page-exec').classList.toggle('hidden', name!=='exec');
+  document.getElementById('page-detail').classList.toggle('hidden', name!=='detail');
+}
+
+/* ============== PAGE 1: EXEC SUMMARY ============== */
+function buildUnitSelect(){
+  const sel = document.getElementById('unitSelect');
+  sel.innerHTML = '';
+
+  const kanwilGroup = document.createElement('optgroup');
+  kanwilGroup.label = 'Kantor Wilayah (Nasional)';
+  const kanwils = unitList.filter(nk => (unitMetaMap[nk]||{}).tipeKantor === 'Kantor Wilayah').sort((a,b)=>a.localeCompare(b));
+  kanwils.forEach(nk => {
+    const opt = document.createElement('option');
+    opt.value = nk;
+    opt.textContent = nk === WILAYAH_ROW_NAME ? (nk + ' (agregat wilayah)') : nk;
+    kanwilGroup.appendChild(opt);
+  });
+  sel.appendChild(kanwilGroup);
+
+  const kanwilNames = Array.from(new Set(kanwils)).sort((a,b)=>a.localeCompare(b));
+  kanwilNames.forEach(kanwilName => {
+    const branches = unitList.filter(nk => {
+      const m = unitMetaMap[nk] || {};
+      return m.tipeKantor !== 'Kantor Wilayah' && m.kanwilName === kanwilName;
+    }).sort((a,b)=>a.localeCompare(b));
+    if(branches.length === 0) return;
+    const grp = document.createElement('optgroup');
+    grp.label = kanwilName;
+    branches.forEach(nk => {
+      const opt = document.createElement('option');
+      opt.value = nk;
+      opt.textContent = nk;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  });
+
+  currentUnit = WILAYAH_ROW_NAME;
+  sel.value = currentUnit;
+  sel.addEventListener('change', (e) => {
+    currentUnit = e.target.value;
+    buildExecPage();
+  });
+  buildExecPage();
+}
+
+function getUnitRows(){
+  return allRows.filter(r => r.namaKantor === currentUnit);
+}
+
+function buildExecPage(){
+  document.getElementById('page-exec').classList.remove('hidden');
+  const unitRows = getUnitRows();
+  const meta = unitMetaMap[currentUnit] || {scoreTotal:0, scoreTotalH1:0, rank:0, deltaRank:0};
+
+  document.getElementById('execRankLbl').textContent = currentUnit === WILAYAH_ROW_NAME ? 'Peringkat nasional (antar kanwil)' : 'Peringkat (antar cabang kelas ' + (unitRows[0] ? unitRows[0].kelas : '') + ')';
+  document.getElementById('execRank').textContent = Math.round(meta.rank);
+  const dRank = meta.deltaRank || 0;
+  document.getElementById('execRankSub').textContent = dRank===0 ? 'Tetap dari H-1' : (dRank>0 ? ('Turun ' + dRank + ' peringkat') : ('Naik ' + Math.abs(dRank) + ' peringkat'));
+
+  document.getElementById('execScore').textContent = fmtScore(meta.scoreTotal);
+  document.getElementById('execScoreSub').textContent = 'H-1: ' + fmtScore(meta.scoreTotalH1);
+
+  const growthDay = meta.scoreTotal - meta.scoreTotalH1;
+  const gEl = document.getElementById('execGrowthDay');
+  gEl.textContent = (growthDay>=0?'+':'') + fmtScore(growthDay);
+  gEl.className = 'kpi-val mono ' + (growthDay>=0?'pos':'neg');
+
+  const totalBobot = unitRows.reduce((a,r)=>a+r.bobot,0);
+  const weightedPct = totalBobot ? unitRows.reduce((a,r)=>a+r.bobot*r.pct,0)/totalBobot : 0;
+
+  renderClassRankChart();
+  renderDonut(unitRows);
+  renderContributors(unitRows);
+  renderInsight(unitRows, meta, weightedPct, growthDay);
+  renderMatrix(unitRows);
+  renderWarRoom(unitRows);
+  const unitLabel = currentUnit === WILAYAH_ROW_NAME ? 'Kanwil Jateng &amp; DIY' : currentUnit;
+  document.getElementById('kpiTableTitle').innerHTML = 'Papan Kinerja &mdash; ' + unitLabel;
+  buildKategoriFilter(unitRows);
+  renderKpiTable(unitRows);
+}
+
+function renderClassRankChart(){
+  const meta = unitMetaMap[currentUnit] || {};
+  const isWilayah = meta.tipeKantor === 'Kantor Wilayah';
+
+  let peers;
+  let groupLabel;
+  if(isWilayah){
+    peers = unitList.filter(nk => (unitMetaMap[nk]||{}).tipeKantor === 'Kantor Wilayah');
+    groupLabel = 'seluruh ' + peers.length + ' Kantor Wilayah se-Indonesia';
+  } else {
+    peers = unitList.filter(nk => {
+      const m = unitMetaMap[nk] || {};
+      return m.tipeKantor !== 'Kantor Wilayah' && m.kelas === meta.kelas;
+    });
+    groupLabel = peers.length + ' kantor cabang kelas ' + (meta.kelas || '-') + ' se-Indonesia';
+  }
+
+  document.getElementById('classRankTitle').textContent = isWilayah ? 'Peringkat antar Kantor Wilayah' : ('Peringkat di kelasnya (Kelas ' + (meta.kelas||'-') + ')');
+  document.getElementById('classRankSub').innerHTML = 'Skor total ' + (currentUnit===WILAYAH_ROW_NAME?'Kanwil Jateng &amp; DIY':currentUnit) + ' dibandingkan ' + groupLabel + ' &mdash; diurutkan dari skor tertinggi';
+
+  const sortedPeers = peers.slice().sort((a,b) => (unitMetaMap[b].scoreTotal||0) - (unitMetaMap[a].scoreTotal||0));
+  const labels = sortedPeers;
+  const data = sortedPeers.map(nk => unitMetaMap[nk].scoreTotal || 0);
+  const colors = sortedPeers.map(nk => nk === currentUnit ? '#0B1F3A' : '#B9C3D1');
+
+  const wrapper = document.getElementById('classRankChart').parentElement;
+  wrapper.style.height = Math.max(300, sortedPeers.length * 20 + 40) + 'px';
+
+  const ctx = document.getElementById('classRankChart');
+  if(classRankChartInstance) classRankChartInstance.destroy();
+  classRankChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, maxBarThickness: 16 }] },
+    plugins: [ChartDataLabels],
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => 'Skor total: ' + fmtScore(ctx.raw) } },
+        datalabels: {
+          anchor: 'center',
+          align: 'center',
+          clamp: true,
+          color: '#fff',
+          font: { size: 10, weight: '700' },
+          formatter: (v) => fmtScore(v)
+        }
+      },
+      scales: {
+        x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
+        y: { ticks: { color:'#1B2430', font:{size: sortedPeers.length>25?9:11} }, grid: { display:false } }
+      }
+    }
+  });
+
+  document.getElementById('kanwilCatPanelRow').classList.toggle('hidden', !isWilayah);
+  if(isWilayah) renderKanwilCategoryChart();
+
+  renderGrowthRankChart(peers, isWilayah, meta, groupLabel);
+}
+
+function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
+  const growthOf = (nk) => (unitMetaMap[nk].scoreTotal||0) - (unitMetaMap[nk].scoreTotalH1||0);
+
+  document.getElementById('growthRankTitle').textContent = isWilayah ? 'Peringkat growth antar Kantor Wilayah' : ('Peringkat growth di kelasnya (Kelas ' + (meta.kelas||'-') + ')');
+  document.getElementById('growthRankSub').innerHTML = 'Growth skor harian ' + (currentUnit===WILAYAH_ROW_NAME?'Kanwil Jateng &amp; DIY':currentUnit) + ' dibandingkan ' + groupLabel + ' &mdash; diurutkan dari growth tertinggi';
+
+  const sortedPeers = peers.slice().sort((a,b) => growthOf(b) - growthOf(a));
+
+  const growthRankPos = sortedPeers.indexOf(currentUnit) + 1;
+  const grEl = document.getElementById('execGrowthRank');
+  grEl.textContent = growthRankPos > 0 ? growthRankPos : '-';
+  grEl.className = 'kpi-val mono ' + (growthOf(currentUnit) >= 0 ? 'pos' : 'neg');
+  document.getElementById('execGrowthRankSub').textContent = isWilayah
+    ? ('dari ' + sortedPeers.length + ' Kantor Wilayah')
+    : ('dari ' + sortedPeers.length + ' cabang kelas ' + (meta.kelas||'-'));
+
+  const labels = sortedPeers;
+  const data = sortedPeers.map(nk => growthOf(nk));
+  const colors = sortedPeers.map(nk => {
+    if(nk === currentUnit) return '#0B1F3A';
+    return growthOf(nk) < 0 ? '#E3B8B0' : '#B9C3D1';
+  });
+
+  const wrapper = document.getElementById('growthRankChart').parentElement;
+  wrapper.style.height = Math.max(300, sortedPeers.length * 20 + 40) + 'px';
+
+  const ctx = document.getElementById('growthRankChart');
+  if(growthRankChartInstance) growthRankChartInstance.destroy();
+  growthRankChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, maxBarThickness: 16 }] },
+    plugins: [ChartDataLabels],
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => 'Growth skor: ' + (ctx.raw>=0?'+':'') + fmtScore(ctx.raw) } },
+        datalabels: {
+          anchor: 'center',
+          align: 'center',
+          clamp: true,
+          color: '#fff',
+          font: { size: 10, weight: '700' },
+          formatter: (v) => (v>=0?'+':'') + fmtScore(v)
+        }
+      },
+      scales: {
+        x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
+        y: { ticks: { color:'#1B2430', font:{size: sortedPeers.length>25?9:11} }, grid: { display:false } }
+      }
+    }
+  });
+}
+
+function renderKanwilCategoryChart(){
+  const kanwilNames = unitList.filter(nk => (unitMetaMap[nk]||{}).tipeKantor === 'Kantor Wilayah');
+  const sorted = kanwilNames.slice().sort((a,b) => (unitMetaMap[b].scoreTotal||0) - (unitMetaMap[a].scoreTotal||0));
+
+  const categories = ['OUTCOME','DRIVER','RESOURCES','ADD/MIN'];
+  const catColors = { 'OUTCOME':'#2C5FA8','DRIVER':'#0F8B6C','RESOURCES':'#B7791F','ADD/MIN':'#6B3FA0' };
+
+  const scoreByKanwilCat = {};
+  sorted.forEach(nk => { scoreByKanwilCat[nk] = { OUTCOME:0, DRIVER:0, RESOURCES:0, 'ADD/MIN':0 }; });
+  allRows.forEach(r => {
+    if(r.tipeKantor === 'Kantor Wilayah' && scoreByKanwilCat[r.namaKantor] && categories.includes(r.kategori)){
+      scoreByKanwilCat[r.namaKantor][r.kategori] += r.score;
+    }
+  });
+
+  const datasets = categories.map(cat => ({
+    label: cat,
+    data: sorted.map(nk => scoreByKanwilCat[nk][cat]),
+    backgroundColor: catColors[cat],
+    borderRadius: 2,
+    maxBarThickness: 36
+  }));
+
+  const ctx = document.getElementById('kanwilCatChart');
+  if(kanwilCatChartInstance) kanwilCatChartInstance.destroy();
+  kanwilCatChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: sorted, datasets },
+    plugins: [ChartDataLabels],
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font:{size:11}, color:'#1B2430', boxWidth:10 } },
+        datalabels: {
+          color: '#fff',
+          font: { size: 10, weight: '600' },
+          formatter: (v) => Math.abs(v) < 0.9 ? '' : v.toFixed(1)
+        }
+      },
+      scales: {
+        x: { stacked: true, ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
+        y: { stacked: true, ticks: { color:'#1B2430', font:{size:11} }, grid: { display:false } }
+      }
+    }
+  });
+}
+
+function renderDonut(rows){
+  const byKat = {};
+  rows.forEach(r => { byKat[r.kategori] = (byKat[r.kategori]||0) + r.score; });
+  const labels = Object.keys(byKat);
+  const data = labels.map(l => Math.max(byKat[l],0));
+  const colors = labels.map(l => ({
+    'OUTCOME':'#2C5FA8','DRIVER':'#0F8B6C','RESOURCES':'#B7791F','ADD/MIN':'#6B3FA0'
+  }[l] || '#94A3B8'));
+
+  const ctx = document.getElementById('donutChart');
+  if(donutChartInstance) donutChartInstance.destroy();
+  donutChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor:'#fff' }] },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      cutout:'62%',
+      plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, color:'#1B2430', boxWidth:10 } } }
+    }
+  });
+}
+
+function renderContributors(rows){
+  const top = rows.slice().sort((a,b)=>b.score-a.score).slice(0,5);
+  const bottom = rows.slice().sort((a,b)=>a.gap1-b.gap1).slice(0,5);
+
+  const topEl = document.getElementById('topContributors');
+  topEl.innerHTML='';
+  top.forEach(r=>{
+    const row=document.createElement('div');
+    row.className='mini-row';
+    row.innerHTML = `<span class="mini-name">${r.nama}</span><span class="mini-val text-good">${fmtScore(r.score)}</span>`;
+    topEl.appendChild(row);
+  });
+
+  const botEl = document.getElementById('topDetractors');
+  botEl.innerHTML='';
+  bottom.forEach(r=>{
+    const row=document.createElement('div');
+    row.className='mini-row';
+    const title = r.unit1 ? `Gap skor vs peringkat 1 (${r.unit1})` : r.nama;
+    row.innerHTML = `<span class="mini-name" title="${title}">${r.nama}</span><span class="mini-val text-bad">${fmtScore(r.gap1)}</span>`;
+    botEl.appendChild(row);
+  });
+}
+
+function renderInsight(rows, meta, weightedPct, growthDay){
+  if(rows.length === 0){
+    document.getElementById('insightText').innerHTML = 'Tidak ada data indikator untuk unit ini.';
+    return;
+  }
+  const sorted = rows.slice().sort((a,b)=>a.pct-b.pct);
+  const lowest = sorted[0];
+  const sortedBobot = rows.slice().sort((a,b)=>b.bobot-a.bobot);
+  const biggestWeight = sortedBobot[0];
+  const dir = growthDay >= 0 ? 'naik' : 'turun';
+  const unitLabel = currentUnit === WILAYAH_ROW_NAME ? 'Kanwil Jateng &amp; DIY' : currentUnit;
+
+  const html = `Skor <b>${unitLabel}</b> saat ini <b>${fmtScore(meta.scoreTotal)}</b> (peringkat nasional <b>${Math.round(meta.rank)}</b>), ${dir} <b>${fmtScore(Math.abs(growthDay))} poin</b> dibanding hari sebelumnya. Capaian rata-rata tertimbang seluruh indikator berada di <b>${fmtPct(weightedPct)}</b>. Indikator dengan pencapaian terendah adalah <b>${lowest.nama}</b> (${fmtPct(lowest.pct)}), sementara indikator berbobot terbesar adalah <b>${biggestWeight.nama}</b> (bobot ${biggestWeight.bobot}) dengan capaian ${fmtPct(biggestWeight.pct)} &mdash; ini yang paling menentukan arah skor total ke depan.`;
+  document.getElementById('insightText').innerHTML = html;
+}
+
+function renderMatrix(rows){
+  const points = rows.map(r => ({
+    x: r.pct, y: r.bobot, r: Math.max(Math.abs(r.score)*1.6, 5), label: r.nama, status: statusClass(r.pct)
+  }));
+  const colorMap = { good:'#0F8B6C', warn:'#B7791F', bad:'#B03A2E' };
+
+  const ctx = document.getElementById('matrixChart');
+  if(matrixChartInstance) matrixChartInstance.destroy();
+  matrixChartInstance = new Chart(ctx, {
+    type: 'bubble',
+    data: {
+      datasets: [{
+        data: points,
+        backgroundColor: points.map(p => colorMap[p.status] + 'CC'),
+        borderColor: points.map(p => colorMap[p.status]),
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label: (ctx) => {
+          const p = ctx.raw;
+          return `${p.label}: bobot ${p.y}, pencapaian ${p.x.toFixed(1)}%`;
+        }}}
+      },
+      scales:{
+        x:{ title:{ display:true, text:'Pencapaian (%)', font:{size:11} }, grid:{ color:'#E5E9ED' } },
+        y:{ title:{ display:true, text:'Bobot', font:{size:11} }, grid:{ color:'#E5E9ED' } }
+      }
+    }
+  });
+}
+
+function renderWarRoom(rows){
+  const critical = rows.filter(r => r.bobot >= 6 && r.pct < 90).sort((a,b)=>b.bobot-a.bobot);
+  const quickwins = rows.slice().sort((a,b)=>a.gap1-b.gap1).slice(0,5);
+  const highimpact = rows.slice().sort((a,b)=>b.bobot-a.bobot).slice(0,5);
+  const lowperf = rows.slice().sort((a,b)=>a.pct-b.pct).slice(0,5);
+
+  fillMini('warCritical', critical, r => fmtPct(r.pct), 'text-bad');
+  fillMini('warQuickwins', quickwins, r => fmtBig(r.vs1), 'text-warn');
+  fillMini('warHighImpact', highimpact, r => 'Bobot ' + r.bobot, '');
+  fillMini('warLowPerf', lowperf, r => fmtPct(r.pct), 'text-bad');
+}
+
+function fillMini(elId, rows, valFn, cls){
+  const el = document.getElementById(elId);
+  el.innerHTML = '';
+  if(rows.length === 0){
+    el.innerHTML = '<div class="mini-row" style="color:var(--muted);font-size:12px;">Tidak ada indikator pada kategori ini.</div>';
+    return;
+  }
+  rows.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'mini-row';
+    row.innerHTML = `<span class="mini-name">${r.nama}</span><span class="mini-val ${cls}">${valFn(r)}</span>`;
+    el.appendChild(row);
+  });
+}
+
+let kpiRowsCurrent = [];
+let kpiControlsInit = false;
+
+function buildKategoriFilter(rows){
+  kpiRowsCurrent = rows;
+  const sel = document.getElementById('kategoriFilter');
+  const prevVal = sel.value;
+  sel.innerHTML = '<option value="">Semua kategori</option>';
+  const kats = Array.from(new Set(rows.map(r=>r.kategori)));
+  kats.forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k; opt.textContent = k;
+    sel.appendChild(opt);
+  });
+  sel.value = kats.includes(prevVal) ? prevVal : '';
+
+  if(!kpiControlsInit){
+    kpiControlsInit = true;
+    sel.addEventListener('change', () => renderKpiTable(kpiRowsCurrent));
+    document.getElementById('kpiSearch').addEventListener('input', () => renderKpiTable(kpiRowsCurrent));
+    document.querySelectorAll('#page-exec table thead th').forEach(th => {
+      th.addEventListener('click', () => {
+        const key = th.getAttribute('data-key');
+        if(kpiSortKey === key){ kpiSortDir *= -1; } else { kpiSortKey = key; kpiSortDir = -1; }
+        renderKpiTable(kpiRowsCurrent);
+      });
+    });
+  }
+}
+
+function renderKpiTable(rows){
+  rows = rows || kpiRowsCurrent;
+  const katVal = document.getElementById('kategoriFilter').value;
+  const q = document.getElementById('kpiSearch').value.trim().toLowerCase();
+  let filtered = rows.slice();
+  if(katVal) filtered = filtered.filter(r => r.kategori === katVal);
+  if(q) filtered = filtered.filter(r => r.nama.toLowerCase().includes(q));
+  filtered.sort((a,b) => {
+    const av = a[kpiSortKey], bv = b[kpiSortKey];
+    if(typeof av === 'string') return kpiSortDir * av.localeCompare(bv);
+    return kpiSortDir * ((av||0)-(bv||0));
+  });
+  const body = document.getElementById('kpiTableBody');
+  body.innerHTML = '';
+  filtered.forEach(r => {
+    const st = statusClass(r.pct);
+    const tr = document.createElement('tr');
+    const gap1Disp = r.gap1 === 0 ? '-' : fmtScore(r.gap1);
+    const vs1Disp = r.vs1 === 0 ? '-' : fmtBig(r.vs1);
+    const realGrowthDisp = r.realisasiGrowth === 0 ? '-' : (r.realisasiGrowth>0?'+':'') + fmtBig(r.realisasiGrowth);
+    const scoreGrowthDisp = r.scoreGrowth === 0 ? '-' : (r.scoreGrowth>0?'+':'') + fmtScore(r.scoreGrowth);
+    const deltaRankDisp = r.deltaRankParameter === 0 ? '-' : (r.deltaRankParameter>0?'+':'') + Math.round(r.deltaRankParameter);
+    tr.innerHTML = `
+      <td class="num">${Math.round(r.rankIndikator)}</td>
+      <td class="num ${r.deltaRankParameter<0?'text-bad':(r.deltaRankParameter>0?'text-good':'')}">${deltaRankDisp}</td>
+      <td>${r.nama}</td>
+      <td><span class="cat-tag ${catClass(r.kategori)}">${r.kategori}</span></td>
+      <td class="num">${r.bobot}</td>
+      <td class="num">${fmtBig(r.target)}</td>
+      <td class="num">${fmtBig(r.realisasi)}</td>
+      <td class="num"><span class="badge ${st}">${fmtPct(r.pct)}</span></td>
+      <td class="num">${fmtScore(r.score)}</td>
+      <td class="num ${r.gap1<0?'text-bad':''}">${gap1Disp}</td>
+      <td class="num ${r.vs1<0?'text-bad':''}">${vs1Disp}</td>
+      <td class="num ${r.realisasiGrowth<0?'text-bad':''}">${realGrowthDisp}</td>
+      <td class="num ${r.scoreGrowth<0?'text-bad':''}">${scoreGrowthDisp}</td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+/* ============== PAGE 2: DETAIL PER CABANG ============== */
+function buildDetailPage(){
+  const wSel = document.getElementById('wilayahFilterSelect');
+  wSel.innerHTML = '';
+  const allOpt = document.createElement('option');
+  allOpt.value = 'ALL';
+  allOpt.textContent = 'Semua Kanwil (Nasional)';
+  wSel.appendChild(allOpt);
+  wilayahOptions.forEach(w => {
+    const opt = document.createElement('option');
+    opt.value = w.code;
+    opt.textContent = w.name;
+    wSel.appendChild(opt);
+  });
+  wSel.value = currentWilayahFilter;
+  wSel.addEventListener('change', (e) => {
+    currentWilayahFilter = e.target.value;
+    buildKelasFilterOptions();
+    renderDetailAll();
+  });
+
+  buildKelasFilterOptions();
+
+  const kategoriList = Array.from(new Set(allRows.map(r=>r.kategori))).filter(Boolean);
+  const order = ['OUTCOME','DRIVER','RESOURCES','ADD/MIN'];
+  kategoriList.sort((a,b) => order.indexOf(a) - order.indexOf(b));
+
+  const tabsEl = document.getElementById('kategoriTabs');
+  tabsEl.innerHTML = '';
+  kategoriList.forEach((k, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'toptab' + (i===0 ? ' active' : '');
+    btn.style.color = i===0 ? '' : 'var(--muted)';
+    btn.style.background = i===0 ? 'var(--navy)' : 'var(--card)';
+    btn.style.border = '1px solid var(--line)';
+    btn.textContent = k;
+    btn.onclick = () => selectKategori(k);
+    tabsEl.appendChild(btn);
+  });
+  currentKategori = kategoriList[0];
+  buildIndikatorSelect();
+
+  document.getElementById('search').addEventListener('input', renderDetailTable);
+  document.querySelectorAll('#page-detail table thead th').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.getAttribute('data-key');
+      if(sortKey === key){ sortDir *= -1; } else { sortKey = key; sortDir = -1; }
+      renderDetailTable();
+    });
+  });
+  document.getElementById('indikatorSelect').addEventListener('change', (e) => {
+    currentIndikator = e.target.value;
+    renderDetailAll();
+  });
+}
+
+function buildKelasFilterOptions(){
+  const container = document.getElementById('kelasFilterCheckboxes');
+  const prevSelected = new Set(currentKelasFilter);
+  const pool = currentWilayahFilter === 'ALL' ? allRows : allRows.filter(r => r.kodeWilayah === currentWilayahFilter);
+  const kelasList = Array.from(new Set(pool.map(r => r.kelas))).filter(Boolean).sort((a,b) => {
+    if(a==='0') return -1;
+    if(b==='0') return 1;
+    return a.localeCompare(b);
+  });
+
+  currentKelasFilter = new Set(Array.from(prevSelected).filter(k => kelasList.includes(k)));
+
+  container.innerHTML = '';
+  kelasList.forEach(k => {
+    const id = 'kelasChk_' + k.replace(/[^A-Za-z0-9]/g,'');
+    const label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer;';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.id = id;
+    cb.value = k;
+    cb.checked = currentKelasFilter.has(k);
+    cb.addEventListener('change', () => {
+      if(cb.checked) currentKelasFilter.add(k); else currentKelasFilter.delete(k);
+      renderDetailAll();
+    });
+    const span = document.createElement('span');
+    span.textContent = k === '0' ? 'Kelas 0 (Kanwil)' : k;
+    label.appendChild(cb);
+    label.appendChild(span);
+    container.appendChild(label);
+  });
+}
+
+function selectKategori(k){
+  currentKategori = k;
+  document.querySelectorAll('#kategoriTabs .toptab').forEach(b => {
+    const active = b.textContent === k;
+    b.style.background = active ? 'var(--navy)' : 'var(--card)';
+    b.style.color = active ? '#fff' : 'var(--muted)';
+  });
+  buildIndikatorSelect();
+}
+
+function buildIndikatorSelect(){
+  const indikators = Array.from(new Set(
+    allRows.filter(r => r.kategori === currentKategori).map(r => r.nama)
+  ));
+  const sel = document.getElementById('indikatorSelect');
+  sel.innerHTML = '';
+  indikators.forEach(ind => {
+    const opt = document.createElement('option');
+    opt.value = ind;
+    opt.textContent = ind;
+    sel.appendChild(opt);
+  });
+  currentIndikator = indikators[0];
+  sel.value = currentIndikator;
+  renderDetailAll();
+}
+
+function currentDetailRows(){
+  const kelasActive = currentKelasFilter.size > 0;
+  return allRows
+    .filter(r => (currentWilayahFilter === 'ALL' || r.kodeWilayah === currentWilayahFilter)
+      && (kelasActive ? currentKelasFilter.has(r.kelas) : r.kelas !== '0')
+      && r.kategori === currentKategori && r.nama === currentIndikator)
+    .map(r => Object.assign({}, r, { gap: r.realisasi - r.target }));
+}
+
+function renderDetailAll(){
+  const rows = currentDetailRows();
+  const wRow = allRows.find(r => r.kodeWilayah === currentWilayahFilter && r.tipeKantor === 'Kantor Wilayah' && r.kategori === currentKategori && r.nama === currentIndikator);
+
+  const totalTarget = wRow ? wRow.target : rows.reduce((a,r)=>a+r.target,0);
+  const totalRealisasi = wRow ? wRow.realisasi : rows.reduce((a,r)=>a+r.realisasi,0);
+  const overallPct = wRow ? wRow.pct : (totalTarget > 0 ? (totalRealisasi/totalTarget*100) : 0);
+  const totalGap = totalRealisasi - totalTarget;
+
+  document.getElementById('kpiTarget').textContent = fmtBig(totalTarget);
+  document.getElementById('kpiTargetSub').textContent = currentIndikator;
+  document.getElementById('kpiRealisasi').textContent = fmtBig(totalRealisasi);
+  document.getElementById('kpiRealisasiSub').textContent = rows.length + ' kantor cabang';
+  const capaianEl = document.getElementById('kpiCapaian');
+  capaianEl.textContent = fmtPct(overallPct);
+  capaianEl.className = 'kpi-val mono ' + (overallPct >= 100 ? 'pos' : 'neg');
+  const gapEl = document.getElementById('kpiGap');
+  gapEl.textContent = (totalGap >= 0 ? '+' : '') + fmtBig(totalGap);
+  gapEl.className = 'kpi-val mono ' + (totalGap >= 0 ? 'pos' : 'neg');
+  document.getElementById('kpiGapSub').textContent = 'realisasi wilayah dikurangi target wilayah';
+
+  renderLeaderboard(rows);
+  renderClusterChart(rows);
+  renderDetailTable();
+}
+
+function renderLeaderboard(rows){
+  const sorted = rows.slice().sort((a,b)=>b.pct - a.pct);
+  const el = document.getElementById('leaderboard');
+  el.innerHTML = '';
+  sorted.forEach((r, i) => {
+    const st = statusClass(r.pct);
+    const row = document.createElement('div');
+    row.className = 'board-row';
+    const widthPct = Math.min(r.pct, 130);
+    row.innerHTML = `
+      <div class="rank">${i+1}</div>
+      <div class="board-name" title="${r.namaKantor}">${r.namaKantor}</div>
+      <div class="board-track"><div class="board-fill status-${st}" style="width:${Math.min(widthPct,100)}%;"></div></div>
+      <div class="board-pct text-${st}">${fmtPct(r.pct)}</div>
+    `;
+    el.appendChild(row);
+  });
+}
+
+function renderClusterChart(rows){
+  const sorted = rows.slice().sort((a,b)=> b.realisasi - a.realisasi);
+  const clusters = sorted.map(r => r.namaKantor);
+  const targetData = sorted.map(r => r.target);
+  const realisasiData = sorted.map(r => r.realisasi);
+
+  const wrapper = document.getElementById('clusterChart').parentElement;
+  wrapper.style.height = Math.max(340, clusters.length * 22 + 40) + 'px';
+
+  const ctx = document.getElementById('clusterChart');
+  if(clusterChartInstance) clusterChartInstance.destroy();
+  clusterChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: clusters,
+      datasets: [
+        { label: 'Target', data: targetData, backgroundColor: '#B9C3D1', borderRadius: 3, maxBarThickness: 14 },
+        { label: 'Realisasi', data: realisasiData, backgroundColor: '#0F8B6C', borderRadius: 3, maxBarThickness: 14 }
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { callback: (v) => fmtBig(v), color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
+        y: { ticks: { color:'#1B2430', font:{size:11} }, grid: { display:false } }
+      }
+    }
+  });
+}
+
+function renderDetailTable(){
+  const rows = currentDetailRows();
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  let filtered = q ? rows.filter(r => r.namaKantor.toLowerCase().includes(q)) : rows;
+  filtered.sort((a,b) => {
+    const av = a[sortKey], bv = b[sortKey];
+    if(typeof av === 'string') return sortDir * av.localeCompare(bv);
+    return sortDir * ((av||0) - (bv||0));
+  });
+  const body = document.getElementById('tableBody');
+  body.innerHTML = '';
+  filtered.forEach(r => {
+    const st = statusClass(r.pct);
+    const tr = document.createElement('tr');
+    const gap1Disp = r.gap1 === 0 ? '-' : fmtScore(r.gap1);
+    const vs1Disp = r.vs1 === 0 ? '-' : fmtBig(r.vs1);
+    const realGrowthDisp = r.realisasiGrowth === 0 ? '-' : (r.realisasiGrowth>0?'+':'') + fmtBig(r.realisasiGrowth);
+    const scoreGrowthDisp = r.scoreGrowth === 0 ? '-' : (r.scoreGrowth>0?'+':'') + fmtScore(r.scoreGrowth);
+    const deltaRankDisp = r.deltaRankParameter === 0 ? '-' : (r.deltaRankParameter>0?'+':'') + Math.round(r.deltaRankParameter);
+    tr.innerHTML = `
+      <td>${r.namaKantor}</td>
+      <td><span class="type-tag">${r.kelas}</span></td>
+      <td class="num">${fmtBig(r.target)}</td>
+      <td class="num">${fmtBig(r.realisasi)}</td>
+      <td class="num"><span class="badge ${st}">${fmtPct(r.pct)}</span></td>
+      <td class="num">${(r.gap>=0?'+':'')+fmtBig(r.gap)}</td>
+      <td class="num">${fmtScore(r.scoreTotal)}</td>
+      <td class="num">${Math.round(r.rankIndikator)}</td>
+      <td class="num ${r.deltaRankParameter<0?'text-bad':(r.deltaRankParameter>0?'text-good':'')}">${deltaRankDisp}</td>
+      <td class="num ${r.gap1<0?'text-bad':''}">${gap1Disp}</td>
+      <td class="num ${r.vs1<0?'text-bad':''}">${vs1Disp}</td>
+      <td class="num ${r.realisasiGrowth<0?'text-bad':''}">${realGrowthDisp}</td>
+      <td class="num ${r.scoreGrowth<0?'text-bad':''}">${scoreGrowthDisp}</td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+loadData();
+</script>
+
+</body>
+</html>
