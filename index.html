@@ -741,7 +741,7 @@ function buildExecPage(){
   document.getElementById('execRankLbl').textContent = currentUnit === WILAYAH_ROW_NAME ? 'Peringkat nasional (antar kanwil)' : 'Peringkat (antar cabang kelas ' + (unitRows[0] ? unitRows[0].kelas : '') + ')';
   document.getElementById('execRank').textContent = Math.round(meta.rank);
   const dRank = meta.deltaRank || 0;
-  document.getElementById('execRankSub').textContent = dRank===0 ? 'Tetap dari H-1' : (dRank>0 ? ('Turun ' + dRank + ' peringkat') : ('Naik ' + Math.abs(dRank) + ' peringkat'));
+  document.getElementById('execRankSub').textContent = dRank===0 ? 'Tetap dari H-1' : (dRank>0 ? ('Naik ' + dRank + ' peringkat') : ('Turun ' + Math.abs(dRank) + ' peringkat'));
 
   document.getElementById('execScore').textContent = fmtScore(meta.scoreTotal);
   document.getElementById('execScoreSub').textContent = 'H-1: ' + fmtScore(meta.scoreTotalH1);
