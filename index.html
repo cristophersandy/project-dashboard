@@ -301,18 +301,20 @@
       <div class="panel">
         <h2 id="classRankTitle">Peringkat di kelasnya</h2>
         <div class="sub" id="classRankSub">Posisi skor total unit terpilih dibandingkan unit sekelas</div>
-        <div style="position:relative;height:340px;">
-          <canvas id="classRankChart" role="img" aria-label="Grafik batang peringkat skor total unit kerja dibandingkan unit lain sekelasnya"></canvas>
+        <div style="max-height:480px;overflow-y:auto;">
+          <div style="position:relative;height:340px;">
+            <canvas id="classRankChart" role="img" aria-label="Grafik batang peringkat skor total unit kerja dibandingkan unit lain sekelasnya"></canvas>
+          </div>
         </div>
-        <div id="classRankPagination" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;font-size:12.5px;"></div>
       </div>
       <div class="panel">
         <h2 id="growthRankTitle">Peringkat growth</h2>
         <div class="sub" id="growthRankSub">Posisi growth skor unit terpilih dibandingkan unit sekelas</div>
-        <div style="position:relative;height:340px;">
-          <canvas id="growthRankChart" role="img" aria-label="Grafik batang peringkat growth skor unit kerja dibandingkan unit lain sekelasnya"></canvas>
+        <div style="max-height:480px;overflow-y:auto;">
+          <div style="position:relative;height:340px;">
+            <canvas id="growthRankChart" role="img" aria-label="Grafik batang peringkat growth skor unit kerja dibandingkan unit lain sekelasnya"></canvas>
+          </div>
         </div>
-        <div id="growthRankPagination" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;font-size:12.5px;"></div>
       </div>
     </div>
 
@@ -352,16 +354,6 @@
       </div>
     </div>
 
-    <div class="panel-row">
-      <div class="panel" style="grid-column:1/-1;">
-        <h2>Matriks bobot vs pencapaian</h2>
-        <div class="sub">Ukuran gelembung = besar skor &middot; warna = status capaian &middot; kanan-atas = prioritas pertahankan, kiri-atas = prioritas utama perbaikan</div>
-        <div style="position:relative;height:380px;">
-          <canvas id="matrixChart" role="img" aria-label="Grafik gelembung bobot versus pencapaian setiap indikator"></canvas>
-        </div>
-      </div>
-    </div>
-
     <div class="panel-row thirds">
       <div class="panel">
         <h2 class="text-bad">KPI kritis</h2>
@@ -382,6 +374,16 @@
         <h2 class="text-good">Growth score harian</h2>
         <div class="sub">Diurutkan dari growth skor tertinggi ke terendah</div>
         <div class="mini-list" id="warScoreGrowth"></div>
+      </div>
+    </div>
+
+    <div class="panel-row">
+      <div class="panel" style="grid-column:1/-1;">
+        <h2>Matriks bobot vs pencapaian</h2>
+        <div class="sub">Ukuran gelembung = besar skor &middot; warna = status capaian &middot; kanan-atas = prioritas pertahankan, kiri-atas = prioritas utama perbaikan</div>
+        <div style="position:relative;height:380px;">
+          <canvas id="matrixChart" role="img" aria-label="Grafik gelembung bobot versus pencapaian setiap indikator"></canvas>
+        </div>
       </div>
     </div>
 
@@ -536,9 +538,6 @@ let donutChartInstance = null;
 let matrixChartInstance = null;
 let classRankChartInstance = null;
 let growthRankChartInstance = null;
-let classRankPage = 1;
-let growthRankPage = 1;
-const RANK_PAGE_SIZE = 40;
 let kanwilCatChartInstance = null;
 
 function parseIDNum(s){
@@ -796,29 +795,12 @@ function renderClassRankChart(){
   document.getElementById('classRankSub').innerHTML = 'Skor total ' + (currentUnit===WILAYAH_ROW_NAME?'Kanwil Jateng &amp; DIY':currentUnit) + ' dibandingkan ' + groupLabel + ' &mdash; diurutkan dari skor tertinggi';
 
   const sortedPeers = peers.slice().sort((a,b) => (unitMetaMap[b].scoreTotal||0) - (unitMetaMap[a].scoreTotal||0));
-
-  const idx = sortedPeers.indexOf(currentUnit);
-  classRankPage = idx >= 0 ? Math.floor(idx / RANK_PAGE_SIZE) + 1 : 1;
-
-  drawClassRankPage(sortedPeers);
-
-  renderCategoryBreakdownChart(peers, isWilayah, meta, groupLabel);
-
-  renderGrowthRankChart(peers, isWilayah, meta, groupLabel);
-}
-
-function drawClassRankPage(sortedPeers){
-  const totalPages = Math.max(1, Math.ceil(sortedPeers.length / RANK_PAGE_SIZE));
-  classRankPage = Math.min(Math.max(1, classRankPage), totalPages);
-  const start = (classRankPage - 1) * RANK_PAGE_SIZE;
-  const pagePeers = sortedPeers.slice(start, start + RANK_PAGE_SIZE);
-
-  const labels = pagePeers;
-  const data = pagePeers.map(nk => unitMetaMap[nk].scoreTotal || 0);
-  const colors = pagePeers.map(nk => nk === currentUnit ? '#11284A' : '#B9C3D1');
+  const labels = sortedPeers;
+  const data = sortedPeers.map(nk => unitMetaMap[nk].scoreTotal || 0);
+  const colors = sortedPeers.map(nk => nk === currentUnit ? '#11284A' : '#B9C3D1');
 
   const wrapper = document.getElementById('classRankChart').parentElement;
-  wrapper.style.height = Math.max(300, pagePeers.length * 20 + 40) + 'px';
+  wrapper.style.height = Math.max(300, sortedPeers.length * 20 + 40) + 'px';
 
   const ctx = document.getElementById('classRankChart');
   if(classRankChartInstance) classRankChartInstance.destroy();
@@ -844,42 +826,14 @@ function drawClassRankPage(sortedPeers){
       },
       scales: {
         x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
-        y: { ticks: { color:'#11284A', font:{size: pagePeers.length>25?9:11} }, grid: { display:false } }
+        y: { ticks: { color:'#11284A', font:{size: sortedPeers.length>25?9:11} }, grid: { display:false } }
       }
     }
   });
 
-  renderRankPagination('classRankPagination', classRankPage, totalPages, start, pagePeers.length, sortedPeers.length, (p) => {
-    classRankPage = p;
-    drawClassRankPage(sortedPeers);
-  });
-}
+  renderCategoryBreakdownChart(peers, isWilayah, meta, groupLabel);
 
-function renderRankPagination(containerId, page, totalPages, start, pageCount, totalCount, onGoto){
-  const el = document.getElementById(containerId);
-  if(totalPages <= 1){ el.innerHTML = ''; return; }
-  const btnStyle = 'padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;font-size:12px;';
-  const disabledStyle = 'padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:#F3F4F6;color:var(--muted);font-size:12px;';
-  el.innerHTML = '';
-
-  const prevBtn = document.createElement('button');
-  prevBtn.textContent = '‹ Sebelumnya';
-  prevBtn.style.cssText = page<=1 ? disabledStyle : btnStyle;
-  prevBtn.disabled = page<=1;
-  prevBtn.onclick = () => onGoto(page-1);
-  el.appendChild(prevBtn);
-
-  const info = document.createElement('span');
-  info.style.cssText = 'color:var(--muted);';
-  info.textContent = `Menampilkan ${start+1}\u2013${start+pageCount} dari ${totalCount} \u00b7 Halaman ${page}/${totalPages}`;
-  el.appendChild(info);
-
-  const nextBtn = document.createElement('button');
-  nextBtn.textContent = 'Berikutnya ›';
-  nextBtn.style.cssText = page>=totalPages ? disabledStyle : btnStyle;
-  nextBtn.disabled = page>=totalPages;
-  nextBtn.onclick = () => onGoto(page+1);
-  el.appendChild(nextBtn);
+  renderGrowthRankChart(peers, isWilayah, meta, groupLabel);
 }
 
 function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
@@ -898,27 +852,15 @@ function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
     ? ('dari ' + sortedPeers.length + ' Kantor Wilayah')
     : ('dari ' + sortedPeers.length + ' cabang kelas ' + (meta.kelas||'-'));
 
-  const idx = sortedPeers.indexOf(currentUnit);
-  growthRankPage = idx >= 0 ? Math.floor(idx / RANK_PAGE_SIZE) + 1 : 1;
-
-  drawGrowthRankPage(sortedPeers, growthOf);
-}
-
-function drawGrowthRankPage(sortedPeers, growthOf){
-  const totalPages = Math.max(1, Math.ceil(sortedPeers.length / RANK_PAGE_SIZE));
-  growthRankPage = Math.min(Math.max(1, growthRankPage), totalPages);
-  const start = (growthRankPage - 1) * RANK_PAGE_SIZE;
-  const pagePeers = sortedPeers.slice(start, start + RANK_PAGE_SIZE);
-
-  const labels = pagePeers;
-  const data = pagePeers.map(nk => growthOf(nk));
-  const colors = pagePeers.map(nk => {
+  const labels = sortedPeers;
+  const data = sortedPeers.map(nk => growthOf(nk));
+  const colors = sortedPeers.map(nk => {
     if(nk === currentUnit) return '#11284A';
     return growthOf(nk) < 0 ? '#F5C6C3' : '#B9C3D1';
   });
 
   const wrapper = document.getElementById('growthRankChart').parentElement;
-  wrapper.style.height = Math.max(300, pagePeers.length * 20 + 40) + 'px';
+  wrapper.style.height = Math.max(300, sortedPeers.length * 20 + 40) + 'px';
 
   const ctx = document.getElementById('growthRankChart');
   if(growthRankChartInstance) growthRankChartInstance.destroy();
@@ -944,14 +886,9 @@ function drawGrowthRankPage(sortedPeers, growthOf){
       },
       scales: {
         x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
-        y: { ticks: { color:'#11284A', font:{size: pagePeers.length>25?9:11} }, grid: { display:false } }
+        y: { ticks: { color:'#11284A', font:{size: sortedPeers.length>25?9:11} }, grid: { display:false } }
       }
     }
-  });
-
-  renderRankPagination('growthRankPagination', growthRankPage, totalPages, start, pagePeers.length, sortedPeers.length, (p) => {
-    growthRankPage = p;
-    drawGrowthRankPage(sortedPeers, growthOf);
   });
 }
 
