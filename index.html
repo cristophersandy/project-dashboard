@@ -296,15 +296,19 @@
       <div class="panel">
         <h2 id="classRankTitle">Peringkat di kelasnya</h2>
         <div class="sub" id="classRankSub">Posisi skor total unit terpilih dibandingkan unit sekelas</div>
-        <div style="position:relative;height:340px;">
-          <canvas id="classRankChart" role="img" aria-label="Grafik batang peringkat skor total unit kerja dibandingkan unit lain sekelasnya"></canvas>
+        <div id="classRankScrollBox" style="max-height:480px;overflow-y:auto;">
+          <div style="position:relative;height:340px;">
+            <canvas id="classRankChart" role="img" aria-label="Grafik batang peringkat skor total unit kerja dibandingkan unit lain sekelasnya"></canvas>
+          </div>
         </div>
       </div>
       <div class="panel">
         <h2 id="growthRankTitle">Peringkat growth</h2>
         <div class="sub" id="growthRankSub">Posisi growth skor unit terpilih dibandingkan unit sekelas</div>
-        <div style="position:relative;height:340px;">
-          <canvas id="growthRankChart" role="img" aria-label="Grafik batang peringkat growth skor unit kerja dibandingkan unit lain sekelasnya"></canvas>
+        <div id="growthRankScrollBox" style="max-height:480px;overflow-y:auto;">
+          <div style="position:relative;height:340px;">
+            <canvas id="growthRankChart" role="img" aria-label="Grafik batang peringkat growth skor unit kerja dibandingkan unit lain sekelasnya"></canvas>
+          </div>
         </div>
       </div>
     </div>
