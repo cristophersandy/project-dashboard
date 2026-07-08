@@ -464,13 +464,15 @@
       <div class="panel">
         <h2>Papan peringkat cabang</h2>
         <div class="sub">Diurutkan dari capaian tertinggi ke terendah</div>
-        <div id="leaderboard"></div>
+        <div id="leaderboard" style="max-height:420px;overflow-y:auto;padding-right:4px;"></div>
       </div>
       <div class="panel">
         <h2>Target vs realisasi per cabang</h2>
         <div class="sub">Seluruh kantor cabang, diurutkan dari realisasi tertinggi</div>
-        <div style="position:relative;height:340px;">
-          <canvas id="clusterChart" role="img" aria-label="Grafik batang perbandingan target dan realisasi per kantor cabang"></canvas>
+        <div style="max-height:420px;overflow-y:auto;">
+          <div style="position:relative;height:340px;">
+            <canvas id="clusterChart" role="img" aria-label="Grafik batang perbandingan target dan realisasi per kantor cabang"></canvas>
+          </div>
         </div>
       </div>
     </div>
