@@ -92,7 +92,7 @@
     padding:28px 32px 64px;
   }
   .page{}
-  .hidden{display:none;}
+  .hidden{display:none !important;}
 
   .section-title{
     font-size:12px;
@@ -296,19 +296,15 @@
       <div class="panel">
         <h2 id="classRankTitle">Peringkat di kelasnya</h2>
         <div class="sub" id="classRankSub">Posisi skor total unit terpilih dibandingkan unit sekelas</div>
-        <div id="classRankScrollBox" style="max-height:480px;overflow-y:auto;">
-          <div style="position:relative;height:340px;">
-            <canvas id="classRankChart" role="img" aria-label="Grafik batang peringkat skor total unit kerja dibandingkan unit lain sekelasnya"></canvas>
-          </div>
+        <div style="position:relative;height:340px;">
+          <canvas id="classRankChart" role="img" aria-label="Grafik batang peringkat skor total unit kerja dibandingkan unit lain sekelasnya"></canvas>
         </div>
       </div>
       <div class="panel">
         <h2 id="growthRankTitle">Peringkat growth</h2>
         <div class="sub" id="growthRankSub">Posisi growth skor unit terpilih dibandingkan unit sekelas</div>
-        <div id="growthRankScrollBox" style="max-height:480px;overflow-y:auto;">
-          <div style="position:relative;height:340px;">
-            <canvas id="growthRankChart" role="img" aria-label="Grafik batang peringkat growth skor unit kerja dibandingkan unit lain sekelasnya"></canvas>
-          </div>
+        <div style="position:relative;height:340px;">
+          <canvas id="growthRankChart" role="img" aria-label="Grafik batang peringkat growth skor unit kerja dibandingkan unit lain sekelasnya"></canvas>
         </div>
       </div>
     </div>
@@ -317,8 +313,10 @@
       <div class="panel" style="grid-column:1/-1;">
         <h2>Skor per kategori &mdash; seluruh Kantor Wilayah</h2>
         <div class="sub">Kontribusi skor Outcome, Driver, Resources, dan Add/Min pada setiap Kanwil, diurutkan dari skor total tertinggi</div>
-        <div style="position:relative;height:440px;">
-          <canvas id="kanwilCatChart" role="img" aria-label="Grafik batang bertumpuk skor per kategori untuk setiap kantor wilayah"></canvas>
+        <div style="max-height:420px;overflow-y:auto;">
+          <div style="position:relative;height:440px;">
+            <canvas id="kanwilCatChart" role="img" aria-label="Grafik batang bertumpuk skor per kategori untuk setiap kantor wilayah"></canvas>
+          </div>
         </div>
       </div>
     </div>
@@ -494,7 +492,7 @@
               <th class="num" data-key="realisasi">Realisasi</th>
               <th class="num" data-key="pct">%</th>
               <th class="num" data-key="gap">GAP</th>
-              <th class="num" data-key="scoreTotal">Skor</th>
+              <th class="num" data-key="score">Skor</th>
               <th class="num" data-key="gap1">Ketertinggalan</th>
               <th class="num" data-key="vs1">Kebutuhan</th>
               <th class="num" data-key="realisasiGrowth">Growth Realisasi</th>
@@ -1384,7 +1382,7 @@ function renderDetailTable(){
       <td class="num">${fmtBig(r.realisasi)}</td>
       <td class="num"><span class="badge ${st}">${fmtPct(r.pct)}</span></td>
       <td class="num">${(r.gap>=0?'+':'')+fmtBig(r.gap)}</td>
-      <td class="num">${fmtScore(r.scoreTotal)}</td>
+      <td class="num">${fmtScore(r.score)}</td>
       <td class="num ${r.gap1<0?'text-bad':''}">${gap1Disp}</td>
       <td class="num ${r.vs1<0?'text-bad':''}">${vs1Disp}</td>
       <td class="num ${r.realisasiGrowth<0?'text-bad':''}">${realGrowthDisp}</td>
