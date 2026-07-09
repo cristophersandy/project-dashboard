@@ -245,6 +245,7 @@
     <div class="toplinks">
       <button class="toptab active" data-page="exec">Ringkasan Eksekutif</button>
       <button class="toptab" data-page="detail">Detail per Cabang</button>
+      <button class="toptab" data-page="historical">Historical</button>
     </div>
   </div>
 </header>
@@ -510,15 +511,102 @@
       </div>
     </div>
   </div>
+
+  <!-- ================= PAGE 3: HISTORICAL ================= -->
+  <div id="page-historical" class="page hidden">
+    <div id="histLoadingState" class="state-msg">Mengambil data historis&hellip;</div>
+    <div id="histErrorState" class="state-msg hidden">
+      Gagal memuat data historis.<br>
+      <span id="histErrorDetail" style="font-size:12px;"></span>
+    </div>
+
+    <div id="histContent" class="hidden">
+      <div class="table-head-row" style="margin-bottom:18px;">
+        <div>
+          <div class="section-title" style="margin-bottom:2px;">Unit kerja</div>
+          <select id="histUnitSelect" style="min-width:300px;font-weight:600;"></select>
+        </div>
+        <div class="kpi-sub" id="histSubtitle" style="text-align:right;"></div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-lbl">Skor terbaru</div>
+          <div class="kpi-val mono" id="histLatestScore">&mdash;</div>
+          <div class="kpi-sub" id="histLatestDate"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-lbl">Growth vs periode sebelumnya</div>
+          <div class="kpi-val mono" id="histGrowth">&mdash;</div>
+          <div class="kpi-sub" id="histGrowthSub"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-lbl">Skor tertinggi</div>
+          <div class="kpi-val mono" id="histMax">&mdash;</div>
+          <div class="kpi-sub" id="histMaxDate"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-lbl">Skor terendah</div>
+          <div class="kpi-val mono" id="histMin">&mdash;</div>
+          <div class="kpi-sub" id="histMinDate"></div>
+        </div>
+      </div>
+
+      <div class="panel-row">
+        <div class="panel" style="grid-column:1/-1;">
+          <h2>Tren skor total</h2>
+          <div class="sub" id="histTrendSub">Perkembangan skor total dari waktu ke waktu</div>
+          <div style="position:relative;height:300px;">
+            <canvas id="histTrendChart" role="img" aria-label="Grafik garis tren skor total dari waktu ke waktu"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-row">
+        <div class="panel" style="grid-column:1/-1;">
+          <h2>Tren skor per kategori</h2>
+          <div class="sub">Outcome, Driver, Resources, dan Add/Min dari waktu ke waktu</div>
+          <div style="position:relative;height:300px;">
+            <canvas id="histCatChart" role="img" aria-label="Grafik garis tren skor per kategori dari waktu ke waktu"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-panel">
+        <h2 style="margin:0 0 14px 0;font-size:14px;font-weight:600;">Rincian per periode</h2>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th class="num">Target</th>
+                <th class="num">Realisasi</th>
+                <th class="num">Pencapaian</th>
+                <th class="num">Skor total</th>
+                <th class="num">Growth</th>
+              </tr>
+            </thead>
+            <tbody id="histTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSvtCO0B41vi76Vj0nHO3edY3Bqa39PG_5xRQJuvgxG6WeSC4JY62cAtG67HtyoTSyQ-W7CFDxWcrXq/pub?gid=978418270&single=true&output=csv";
+const HIST_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSvtCO0B41vi76Vj0nHO3edY3Bqa39PG_5xRQJuvgxG6WeSC4JY62cAtG67HtyoTSyQ-W7CFDxWcrXq/pub?gid=1610976773&single=true&output=csv";
 const TARGET_WILAYAH_CODE = "905";
 const WILAYAH_ROW_NAME = "KANWIL JATENG DAN DIY";
 
 let allRows = [];
 let jatengRows = [];
+let kodeKantorToName = {};
+let histRows = [];
+let currentHistUnit = null;
+let histChartInstance = null;
+let histCatChartInstance = null;
 let wilayahOptions = [];
 let currentWilayahFilter = "905";
 let currentKelasFilter = new Set();
@@ -605,6 +693,7 @@ function loadData(){
           tipeKantor: (r.tipe_kantor||'').trim(),
           kelas: (r.kelas||'').trim(),
           kodeWilayah: (r.kode_wilayah||'').trim(),
+          kodeKantor: (r.kode_kantor||'').trim(),
           namaKantor: (r.nama_kantor||'').trim(),
           scoreTotal: parseIDNum(r.score_total),
           rank: parseIDNum(r.rank),
@@ -662,11 +751,17 @@ function loadData(){
           .map(code => ({ code, name: kanwilNameByCode[code] }))
           .sort((a,b) => a.name.localeCompare(b.name));
 
+        kodeKantorToName = {};
+        allRows.forEach(r => {
+          if(r.kodeKantor && !kodeKantorToName[r.kodeKantor]) kodeKantorToName[r.kodeKantor] = r.namaKantor;
+        });
+
         unitList = Array.from(new Set(rows.map(r => (r.nama_kantor||'').trim()))).filter(Boolean);
         buildUnitSelect();
 
         document.getElementById('loadingState').classList.add('hidden');
         buildDetailPage();
+        loadHistData();
         showPage('exec');
       }catch(err){
         showError(err.message);
@@ -692,6 +787,7 @@ function showPage(name){
   document.querySelectorAll('.toptab').forEach(b => b.classList.toggle('active', b.getAttribute('data-page')===name));
   document.getElementById('page-exec').classList.toggle('hidden', name!=='exec');
   document.getElementById('page-detail').classList.toggle('hidden', name!=='detail');
+  document.getElementById('page-historical').classList.toggle('hidden', name!=='historical');
 }
 
 /* ============== PAGE 1: EXEC SUMMARY ============== */
@@ -1407,6 +1503,249 @@ function renderDetailTable(){
 }
 
 loadData();
+
+/* ============== PAGE 3: HISTORICAL ============== */
+function parsePlainNum(s){
+  if(s===undefined || s===null) return 0;
+  s = String(s).trim();
+  if(s === '' || s === 'NULL' || s === '#VALUE!' || s === '#N/A') return 0;
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function loadHistData(){
+  Papa.parse(HIST_CSV_URL, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results){
+      try{
+        const rows = results.data.filter(r => (r.kode_kantor||'').trim() !== '' && (r.nama||'').trim() !== '');
+        if(rows.length === 0){ throw new Error('Tidak ada baris data historis yang terbaca.'); }
+
+        histRows = rows.map(r => ({
+          kodeWilayah: (r.kode_wilayah||'').trim(),
+          kodeKantor: (r.kode_kantor||'').trim(),
+          tipeKantor: (r.tipe_kantor||'').trim(),
+          kelas: (r.kelas||'').trim(),
+          kategori: (r.perspektif||'').trim(),
+          kodeDetil: (r.kode_detil||'').trim(),
+          nama: (r.nama||'').trim(),
+          periode: (r.periode||'').trim(),
+          tglProses: (r.tgl_proses||'').trim(),
+          bobot: parsePlainNum(r.bobot),
+          target: parsePlainNum(r.target),
+          realisasi: parsePlainNum(r.realisasi),
+          pct: parsePlainNum(r.pencapaian),
+          score: parsePlainNum(r.score),
+          namaKantor: kodeKantorToName[(r.kode_kantor||'').trim()] || (r.kode_kantor||'').trim()
+        }));
+
+        buildHistUnitSelect();
+
+        document.getElementById('histLoadingState').classList.add('hidden');
+        document.getElementById('histContent').classList.remove('hidden');
+      }catch(err){
+        document.getElementById('histLoadingState').classList.add('hidden');
+        document.getElementById('histErrorState').classList.remove('hidden');
+        document.getElementById('histErrorDetail').textContent = err.message || '';
+      }
+    },
+    error: function(err){
+      document.getElementById('histLoadingState').classList.add('hidden');
+      document.getElementById('histErrorState').classList.remove('hidden');
+      document.getElementById('histErrorDetail').textContent = err && err.message ? err.message : String(err);
+    }
+  });
+}
+
+function buildHistUnitSelect(){
+  const sel = document.getElementById('histUnitSelect');
+  sel.innerHTML = '';
+
+  const kodeKantorList = Array.from(new Set(histRows.map(r => r.kodeKantor)));
+
+  const kanwilGroup = document.createElement('optgroup');
+  kanwilGroup.label = 'Kantor Wilayah (Nasional)';
+  const kanwilCodes = kodeKantorList.filter(kk => {
+    const sample = histRows.find(r => r.kodeKantor === kk);
+    return sample && sample.tipeKantor === 'Kantor Wilayah';
+  }).sort((a,b) => (kodeKantorToName[a]||a).localeCompare(kodeKantorToName[b]||b));
+  kanwilCodes.forEach(kk => {
+    const opt = document.createElement('option');
+    opt.value = kk;
+    opt.textContent = kodeKantorToName[kk] || kk;
+    kanwilGroup.appendChild(opt);
+  });
+  sel.appendChild(kanwilGroup);
+
+  kanwilCodes.forEach(kanwilCode => {
+    const kanwilName = kodeKantorToName[kanwilCode] || kanwilCode;
+    const wilCode = (histRows.find(r=>r.kodeKantor===kanwilCode)||{}).kodeWilayah;
+    const branches = kodeKantorList.filter(kk => {
+      const sample = histRows.find(r => r.kodeKantor === kk);
+      return sample && sample.tipeKantor !== 'Kantor Wilayah' && sample.kodeWilayah === wilCode;
+    }).sort((a,b) => (kodeKantorToName[a]||a).localeCompare(kodeKantorToName[b]||b));
+    if(branches.length === 0) return;
+    const grp = document.createElement('optgroup');
+    grp.label = kanwilName;
+    branches.forEach(kk => {
+      const opt = document.createElement('option');
+      opt.value = kk;
+      opt.textContent = kodeKantorToName[kk] || kk;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  });
+
+  currentHistUnit = TARGET_WILAYAH_CODE;
+  sel.value = currentHistUnit;
+  sel.addEventListener('change', (e) => {
+    currentHistUnit = e.target.value;
+    renderHistPage();
+  });
+
+  renderHistPage();
+}
+
+function renderHistPage(){
+  const rows = histRows.filter(r => r.kodeKantor === currentHistUnit);
+  if(rows.length === 0){
+    document.getElementById('histSubtitle').textContent = 'Tidak ada data historis untuk unit ini.';
+    return;
+  }
+  const unitName = rows[0].namaKantor;
+  document.getElementById('histSubtitle').textContent = 'Menampilkan riwayat skor ' + unitName + ' dari waktu ke waktu';
+
+  const dates = Array.from(new Set(rows.map(r => r.tglProses))).sort();
+
+  const scoreByDate = dates.map(d => {
+    const rd = rows.filter(r => r.tglProses === d);
+    return rd.reduce((a,r)=>a+r.score, 0);
+  });
+  const targetByDate = dates.map(d => rows.filter(r=>r.tglProses===d).reduce((a,r)=>a+r.target,0));
+  const realisasiByDate = dates.map(d => rows.filter(r=>r.tglProses===d).reduce((a,r)=>a+r.realisasi,0));
+  const bobotByDate = dates.map(d => rows.filter(r=>r.tglProses===d).reduce((a,r)=>a+r.bobot,0));
+  const weightedPctByDate = dates.map((d,i) => {
+    const rd = rows.filter(r => r.tglProses === d);
+    const tb = rd.reduce((a,r)=>a+r.bobot,0);
+    return tb ? rd.reduce((a,r)=>a+r.bobot*r.pct,0)/tb : 0;
+  });
+
+  const latestIdx = scoreByDate.length - 1;
+  const latestScore = scoreByDate[latestIdx];
+  const prevScore = latestIdx > 0 ? scoreByDate[latestIdx-1] : latestScore;
+  const growth = latestScore - prevScore;
+  const maxScore = Math.max(...scoreByDate);
+  const minScore = Math.min(...scoreByDate);
+  const maxIdx = scoreByDate.indexOf(maxScore);
+  const minIdx = scoreByDate.indexOf(minScore);
+
+  document.getElementById('histLatestScore').textContent = fmtScore(latestScore);
+  document.getElementById('histLatestDate').textContent = dates[latestIdx];
+  const gEl = document.getElementById('histGrowth');
+  gEl.textContent = (growth>=0?'+':'') + fmtScore(growth);
+  gEl.className = 'kpi-val mono ' + (growth>=0?'pos':'neg');
+  document.getElementById('histGrowthSub').textContent = 'vs ' + (latestIdx>0?dates[latestIdx-1]:'-');
+  document.getElementById('histMax').textContent = fmtScore(maxScore);
+  document.getElementById('histMaxDate').textContent = dates[maxIdx];
+  document.getElementById('histMin').textContent = fmtScore(minScore);
+  document.getElementById('histMinDate').textContent = dates[minIdx];
+
+  renderHistTrendChart(dates, scoreByDate);
+  renderHistCatChart(rows, dates);
+  renderHistTable(dates, targetByDate, realisasiByDate, weightedPctByDate, scoreByDate);
+}
+
+function renderHistTrendChart(dates, scoreByDate){
+  const ctx = document.getElementById('histTrendChart');
+  if(histChartInstance) histChartInstance.destroy();
+  histChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [{
+        label: 'Skor total',
+        data: scoreByDate,
+        borderColor: '#0B5AA6',
+        backgroundColor: 'rgba(11,90,166,0.12)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: '#0B5AA6'
+      }]
+    },
+    plugins: [ChartDataLabels],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          align: 'top',
+          color: '#11284A',
+          font: { size: 11, weight: '700' },
+          formatter: (v) => fmtScore(v)
+        }
+      },
+      scales: {
+        x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { display:false } },
+        y: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } }
+      }
+    }
+  });
+}
+
+function renderHistCatChart(rows, dates){
+  const categories = ['OUTCOME','DRIVER','RESOURCES','ADD/MIN'];
+  const catColors = { 'OUTCOME':'#0B5AA6','DRIVER':'#74B843','RESOURCES':'#F4C300','ADD/MIN':'#6B3FA0' };
+
+  const datasets = categories.map(cat => ({
+    label: cat,
+    data: dates.map(d => rows.filter(r => r.tglProses===d && r.kategori===cat).reduce((a,r)=>a+r.score,0)),
+    borderColor: catColors[cat],
+    backgroundColor: catColors[cat],
+    fill: false,
+    tension: 0.3,
+    pointRadius: 3
+  }));
+
+  const ctx = document.getElementById('histCatChart');
+  if(histCatChartInstance) histCatChartInstance.destroy();
+  histCatChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: { labels: dates, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font:{size:11}, color:'#11284A', boxWidth:10 } }
+      },
+      scales: {
+        x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { display:false } },
+        y: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } }
+      }
+    }
+  });
+}
+
+function renderHistTable(dates, targetByDate, realisasiByDate, weightedPctByDate, scoreByDate){
+  const body = document.getElementById('histTableBody');
+  body.innerHTML = '';
+  dates.forEach((d,i) => {
+    const growth = i>0 ? scoreByDate[i]-scoreByDate[i-1] : 0;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${d}</td>
+      <td class="num">${fmtBig(targetByDate[i])}</td>
+      <td class="num">${fmtBig(realisasiByDate[i])}</td>
+      <td class="num">${fmtPct(weightedPctByDate[i])}</td>
+      <td class="num">${fmtScore(scoreByDate[i])}</td>
+      <td class="num ${growth<0?'text-bad':(growth>0?'text-good':'')}">${i===0?'-':(growth>=0?'+':'')+fmtScore(growth)}</td>
+    `;
+    body.appendChild(tr);
+  });
+}
 </script>
 
 </body>
