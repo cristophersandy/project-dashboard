@@ -526,6 +526,10 @@
           <div class="section-title" style="margin-bottom:2px;">Unit kerja</div>
           <select id="histUnitSelect" style="min-width:300px;font-weight:600;"></select>
         </div>
+        <div>
+          <div class="section-title" style="margin-bottom:2px;">Indikator</div>
+          <select id="histIndikatorSelect" style="min-width:280px;"></select>
+        </div>
         <div class="kpi-sub" id="histSubtitle" style="text-align:right;"></div>
       </div>
 
@@ -554,7 +558,7 @@
 
       <div class="panel-row">
         <div class="panel" style="grid-column:1/-1;">
-          <h2>Tren skor total</h2>
+          <h2 id="histTrendTitle">Tren skor total</h2>
           <div class="sub" id="histTrendSub">Perkembangan skor total dari waktu ke waktu</div>
           <div style="position:relative;height:300px;">
             <canvas id="histTrendChart" role="img" aria-label="Grafik garis tren skor total dari waktu ke waktu"></canvas>
@@ -564,30 +568,11 @@
 
       <div class="panel-row">
         <div class="panel" style="grid-column:1/-1;">
-          <h2>Tren skor per kategori</h2>
-          <div class="sub">Outcome, Driver, Resources, dan Add/Min dari waktu ke waktu</div>
+          <h2 id="histCatChartTitle">Tren skor per kategori</h2>
+          <div class="sub" id="histCatChartSub">Outcome, Driver, Resources, dan Add/Min dari waktu ke waktu</div>
           <div style="position:relative;height:300px;">
             <canvas id="histCatChart" role="img" aria-label="Grafik garis tren skor per kategori dari waktu ke waktu"></canvas>
           </div>
-        </div>
-      </div>
-
-      <div class="table-panel">
-        <h2 style="margin:0 0 14px 0;font-size:14px;font-weight:600;">Rincian per periode</h2>
-        <div style="overflow-x:auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>Tanggal</th>
-                <th class="num">Target</th>
-                <th class="num">Realisasi</th>
-                <th class="num">Pencapaian</th>
-                <th class="num">Skor total</th>
-                <th class="num">Growth</th>
-              </tr>
-            </thead>
-            <tbody id="histTableBody"></tbody>
-          </table>
         </div>
       </div>
     </div>
@@ -605,6 +590,7 @@ let jatengRows = [];
 let kodeKantorToName = {};
 let histRows = [];
 let currentHistUnit = null;
+let currentHistIndikator = 'ALL';
 let histChartInstance = null;
 let histCatChartInstance = null;
 let wilayahOptions = [];
@@ -1602,34 +1588,77 @@ function buildHistUnitSelect(){
   sel.value = currentHistUnit;
   sel.addEventListener('change', (e) => {
     currentHistUnit = e.target.value;
-    renderHistPage();
+    buildHistIndikatorSelect();
   });
+
+  buildHistIndikatorSelect();
+}
+
+function buildHistIndikatorSelect(){
+  const sel = document.getElementById('histIndikatorSelect');
+  const unitRows = histRows.filter(r => r.kodeKantor === currentHistUnit);
+  const prevVal = currentHistIndikator;
+
+  const byKategori = {};
+  unitRows.forEach(r => {
+    if(!byKategori[r.kategori]) byKategori[r.kategori] = new Set();
+    byKategori[r.kategori].add(r.nama);
+  });
+  const order = ['OUTCOME','DRIVER','RESOURCES','ADD/MIN'];
+
+  sel.innerHTML = '';
+  const allOpt = document.createElement('option');
+  allOpt.value = 'ALL';
+  allOpt.textContent = 'Semua Indikator (Skor Total)';
+  sel.appendChild(allOpt);
+
+  Object.keys(byKategori).sort((a,b)=>order.indexOf(a)-order.indexOf(b)).forEach(kat => {
+    const grp = document.createElement('optgroup');
+    grp.label = kat;
+    Array.from(byKategori[kat]).sort().forEach(nm => {
+      const opt = document.createElement('option');
+      opt.value = nm;
+      opt.textContent = nm;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  });
+
+  const allIndikatorNames = unitRows.map(r=>r.nama);
+  currentHistIndikator = (prevVal === 'ALL' || allIndikatorNames.includes(prevVal)) ? prevVal : 'ALL';
+  sel.value = currentHistIndikator;
+  sel.onchange = (e) => {
+    currentHistIndikator = e.target.value;
+    renderHistPage();
+  };
 
   renderHistPage();
 }
 
 function renderHistPage(){
-  const rows = histRows.filter(r => r.kodeKantor === currentHistUnit);
-  if(rows.length === 0){
+  const unitRows = histRows.filter(r => r.kodeKantor === currentHistUnit);
+  if(unitRows.length === 0){
     document.getElementById('histSubtitle').textContent = 'Tidak ada data historis untuk unit ini.';
     return;
   }
-  const unitName = rows[0].namaKantor;
-  document.getElementById('histSubtitle').textContent = 'Menampilkan riwayat skor ' + unitName + ' dari waktu ke waktu';
+  const unitName = unitRows[0].namaKantor;
+  const isAll = currentHistIndikator === 'ALL';
+  const rows = isAll ? unitRows : unitRows.filter(r => r.nama === currentHistIndikator);
+
+  document.getElementById('histSubtitle').textContent = isAll
+    ? ('Menampilkan riwayat skor total ' + unitName + ' dari waktu ke waktu')
+    : ('Menampilkan riwayat indikator "' + currentHistIndikator + '" untuk ' + unitName);
+  document.getElementById('histTrendTitle').textContent = isAll ? 'Tren skor total' : ('Tren skor \u2014 ' + currentHistIndikator);
 
   const dates = Array.from(new Set(rows.map(r => r.tglProses))).sort();
 
-  const scoreByDate = dates.map(d => {
-    const rd = rows.filter(r => r.tglProses === d);
-    return rd.reduce((a,r)=>a+r.score, 0);
-  });
+  const scoreByDate = dates.map(d => rows.filter(r=>r.tglProses===d).reduce((a,r)=>a+r.score, 0));
   const targetByDate = dates.map(d => rows.filter(r=>r.tglProses===d).reduce((a,r)=>a+r.target,0));
   const realisasiByDate = dates.map(d => rows.filter(r=>r.tglProses===d).reduce((a,r)=>a+r.realisasi,0));
-  const bobotByDate = dates.map(d => rows.filter(r=>r.tglProses===d).reduce((a,r)=>a+r.bobot,0));
-  const weightedPctByDate = dates.map((d,i) => {
+  const pctByDate = dates.map((d,i) => {
     const rd = rows.filter(r => r.tglProses === d);
     const tb = rd.reduce((a,r)=>a+r.bobot,0);
-    return tb ? rd.reduce((a,r)=>a+r.bobot*r.pct,0)/tb : 0;
+    return tb ? rd.reduce((a,r)=>a+r.bobot*r.pct,0)/tb : (rd[0]?rd[0].pct:0);
   });
 
   const latestIdx = scoreByDate.length - 1;
@@ -1653,8 +1682,16 @@ function renderHistPage(){
   document.getElementById('histMinDate').textContent = dates[minIdx];
 
   renderHistTrendChart(dates, scoreByDate);
-  renderHistCatChart(rows, dates);
-  renderHistTable(dates, targetByDate, realisasiByDate, weightedPctByDate, scoreByDate);
+
+  if(isAll){
+    document.getElementById('histCatChartTitle').textContent = 'Tren skor per kategori';
+    document.getElementById('histCatChartSub').textContent = 'Outcome, Driver, Resources, dan Add/Min dari waktu ke waktu';
+    renderHistCatChart(rows, dates);
+  } else {
+    document.getElementById('histCatChartTitle').textContent = 'Tren target vs realisasi \u2014 ' + currentHistIndikator;
+    document.getElementById('histCatChartSub').textContent = 'Perbandingan target dan realisasi dari waktu ke waktu (pencapaian: ' + dates.map((d,i)=>fmtPct(pctByDate[i])).join(', ') + ')';
+    renderHistTargetRealisasiChart(dates, targetByDate, realisasiByDate);
+  }
 }
 
 function renderHistTrendChart(dates, scoreByDate){
@@ -1729,21 +1766,47 @@ function renderHistCatChart(rows, dates){
   });
 }
 
-function renderHistTable(dates, targetByDate, realisasiByDate, weightedPctByDate, scoreByDate){
-  const body = document.getElementById('histTableBody');
-  body.innerHTML = '';
-  dates.forEach((d,i) => {
-    const growth = i>0 ? scoreByDate[i]-scoreByDate[i-1] : 0;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${d}</td>
-      <td class="num">${fmtBig(targetByDate[i])}</td>
-      <td class="num">${fmtBig(realisasiByDate[i])}</td>
-      <td class="num">${fmtPct(weightedPctByDate[i])}</td>
-      <td class="num">${fmtScore(scoreByDate[i])}</td>
-      <td class="num ${growth<0?'text-bad':(growth>0?'text-good':'')}">${i===0?'-':(growth>=0?'+':'')+fmtScore(growth)}</td>
-    `;
-    body.appendChild(tr);
+function renderHistTargetRealisasiChart(dates, targetByDate, realisasiByDate){
+  const ctx = document.getElementById('histCatChart');
+  if(histCatChartInstance) histCatChartInstance.destroy();
+  histCatChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [
+        {
+          label: 'Target',
+          data: targetByDate,
+          borderColor: '#B9C3D1',
+          backgroundColor: '#B9C3D1',
+          fill: false,
+          borderDash: [6,4],
+          tension: 0.3,
+          pointRadius: 3
+        },
+        {
+          label: 'Realisasi',
+          data: realisasiByDate,
+          borderColor: '#74B843',
+          backgroundColor: '#74B843',
+          fill: false,
+          tension: 0.3,
+          pointRadius: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font:{size:11}, color:'#11284A', boxWidth:10 } },
+        tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': ' + fmtBig(ctx.raw) } }
+      },
+      scales: {
+        x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { display:false } },
+        y: { ticks: { color:'#6B7280', font:{size:11}, callback: (v) => fmtBig(v) }, grid: { color:'#E5E9ED' } }
+      }
+    }
   });
 }
 </script>
