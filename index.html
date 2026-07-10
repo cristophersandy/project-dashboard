@@ -650,6 +650,14 @@ function fmtBig(n){
   return n.toLocaleString('id-ID', {maximumFractionDigits:0});
 }
 
+function fmtBigDec(n){
+  const abs = Math.abs(n);
+  if(abs < 120){
+    return n.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+  return fmtBig(n);
+}
+
 function fmtPct(n){
   return n.toLocaleString('id-ID', {minimumFractionDigits:1, maximumFractionDigits:1}) + '%';
 }
@@ -1237,8 +1245,8 @@ function renderKpiTable(rows){
     const st = statusClass(r.pct);
     const tr = document.createElement('tr');
     const gap1Disp = r.gap1 === 0 ? '-' : fmtScore(r.gap1);
-    const vs1Disp = r.vs1 === 0 ? '-' : fmtBig(r.vs1);
-    const realGrowthDisp = r.realisasiGrowth === 0 ? '-' : (r.realisasiGrowth>0?'+':'') + fmtBig(r.realisasiGrowth);
+    const vs1Disp = r.vs1 === 0 ? '-' : fmtBigDec(r.vs1);
+    const realGrowthDisp = r.realisasiGrowth === 0 ? '-' : (r.realisasiGrowth>0?'+':'') + fmtBigDec(r.realisasiGrowth);
     const scoreGrowthDisp = r.scoreGrowth === 0 ? '-' : (r.scoreGrowth>0?'+':'') + fmtScore(r.scoreGrowth);
     const deltaRankDisp = r.deltaRankParameter === 0 ? '-' : (r.deltaRankParameter>0?'+':'') + Math.round(r.deltaRankParameter);
     tr.innerHTML = `
@@ -1248,7 +1256,7 @@ function renderKpiTable(rows){
       <td><span class="cat-tag ${catClass(r.kategori)}">${r.kategori}</span></td>
       <td class="num">${r.bobot}</td>
       <td class="num">${fmtBig(r.target)}</td>
-      <td class="num">${fmtBig(r.realisasi)}</td>
+      <td class="num">${fmtBigDec(r.realisasi)}</td>
       <td class="num"><span class="badge ${st}">${fmtPct(r.pct)}</span></td>
       <td class="num">${fmtScore(r.score)}</td>
       <td class="num ${r.gap1<0?'text-bad':''}">${gap1Disp}</td>
