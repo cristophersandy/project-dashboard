@@ -367,8 +367,8 @@
         <div class="mini-list" id="warQuickwins"></div>
       </div>
       <div class="panel">
-        <h2>Bobot tertinggi</h2>
-        <div class="sub">Indikator paling menentukan skor</div>
+        <h2 class="text-bad">Growth bulanan minus</h2>
+        <div class="sub">Indikator dengan pencapaian growth bulanan masih negatif</div>
         <div class="mini-list" id="warHighImpact"></div>
       </div>
       <div class="panel">
@@ -701,6 +701,7 @@ function loadData(){
           unit1: (r.unit_1||'').trim(),
           rankIndikator: parseIDNum(r.rank_indikator),
           realisasiGrowth: parseIDNum(r.realisasi_growth),
+          pencapaianGrowthBulan: parseIDNum(r.pencapaian_growth_bulan),
           scoreGrowth: parseIDNum(r.score_growth),
           deltaRankParameter: parseIDNum(r.delta_rank_parameter),
           tipeKantor: (r.tipe_kantor||'').trim(),
@@ -1171,12 +1172,12 @@ function renderMatrix(rows){
 function renderWarRoom(rows){
   const critical = rows.filter(r => r.bobot >= 6 && r.pct < 90).sort((a,b)=>b.bobot-a.bobot);
   const quickwins = rows.slice().sort((a,b)=>a.gap1-b.gap1).slice(0,5);
-  const highimpact = rows.slice().sort((a,b)=>b.bobot-a.bobot).slice(0,5);
+  const highimpact = rows.filter(r => r.pencapaianGrowthBulan < 0).sort((a,b)=>a.pencapaianGrowthBulan-b.pencapaianGrowthBulan).slice(0,5);
   const scoreGrowthWorst = rows.filter(r => r.scoreGrowth !== 0).sort((a,b)=>b.scoreGrowth-a.scoreGrowth);
 
   fillMini('warCritical', critical, r => fmtPct(r.pct), 'text-bad');
   fillMini('warQuickwins', quickwins, r => fmtBig(r.vs1), 'text-warn');
-  fillMini('warHighImpact', highimpact, r => 'Bobot ' + r.bobot, '');
+  fillMini('warHighImpact', highimpact, r => fmtPct(r.pencapaianGrowthBulan), 'text-bad');
   fillMini('warScoreGrowth', scoreGrowthWorst, r => (r.scoreGrowth>0?'+':'')+fmtScore(r.scoreGrowth), r => r.scoreGrowth>=0?'text-good':'text-bad');
 }
 
