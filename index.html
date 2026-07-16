@@ -465,6 +465,19 @@
       </div>
     </div>
 
+    <div class="kpi-row" style="grid-template-columns:1fr 1fr;">
+      <div class="kpi-card">
+        <div class="kpi-lbl">Growth harian</div>
+        <div class="kpi-val mono" id="kpiGrowthHarian">&mdash;</div>
+        <div class="kpi-sub" id="kpiGrowthHarianSub"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-lbl">Growth bulanan</div>
+        <div class="kpi-val mono" id="kpiGrowthBulanan">&mdash;</div>
+        <div class="kpi-sub" id="kpiGrowthBulananSub"></div>
+      </div>
+    </div>
+
     <div class="panel-row">
       <div class="panel">
         <h2>Papan peringkat cabang</h2>
@@ -566,7 +579,7 @@
         </div>
       </div>
 
-      <div class="panel-row">
+      <div class="panel-row" id="histCatPanelRow">
         <div class="panel" style="grid-column:1/-1;">
           <h2 id="histCatChartTitle">Tren skor per kategori</h2>
           <div class="sub" id="histCatChartSub">Outcome, Driver, Resources, dan Add/Min dari waktu ke waktu</div>
@@ -585,10 +598,10 @@
           </div>
         </div>
         <div class="panel">
-          <h2 id="histIndikatorTitle2">Tren peringkat di kelasnya</h2>
-          <div class="sub" id="histIndikatorSub2">Peringkat dibandingkan unit sekelas pada indikator ini, per periode</div>
+          <h2 id="histIndikatorTitle2">Tren realisasi</h2>
+          <div class="sub" id="histIndikatorSub2">Realisasi indikator ini dari waktu ke waktu, per periode</div>
           <div style="position:relative;height:280px;">
-            <canvas id="histIndikatorRankChart" role="img" aria-label="Grafik garis tren peringkat indikator terpilih dibandingkan unit sekelas dari waktu ke waktu"></canvas>
+            <canvas id="histIndikatorRealisasiChart" role="img" aria-label="Grafik garis tren realisasi indikator terpilih dari waktu ke waktu"></canvas>
           </div>
         </div>
       </div>
@@ -611,7 +624,7 @@ let currentHistIndikator = 'ALL';
 let histChartInstance = null;
 let histCatChartInstance = null;
 let histPctChartInstance = null;
-let histRankChartInstance = null;
+let histRealisasiChartInstance = null;
 let wilayahOptions = [];
 let currentWilayahFilter = "905";
 let currentKelasFilter = new Set();
@@ -702,6 +715,8 @@ function loadData(){
           rankIndikator: parseIDNum(r.rank_indikator),
           realisasiGrowth: parseIDNum(r.realisasi_growth),
           pencapaianGrowthBulan: parseIDNum(r.pencapaian_growth_bulan),
+          pencapaianGrowthHarian: parseIDNum(r.pencapaian_growth),
+          realisasiGrowthBulan: parseIDNum(r.realisasi_growth_bulan),
           scoreGrowth: parseIDNum(r.score_growth),
           deltaRankParameter: parseIDNum(r.delta_rank_parameter),
           tipeKantor: (r.tipe_kantor||'').trim(),
@@ -1416,6 +1431,18 @@ function renderDetailAll(){
   gapEl.className = 'kpi-val mono ' + (totalGap >= 0 ? 'pos' : 'neg');
   document.getElementById('kpiGapSub').textContent = 'realisasi wilayah dikurangi target wilayah';
 
+  const ghEl = document.getElementById('kpiGrowthHarian');
+  const ghVal = wRow ? wRow.realisasiGrowth : 0;
+  ghEl.textContent = (ghVal>=0?'+':'') + fmtBigDec(ghVal);
+  ghEl.className = 'kpi-val mono ' + (ghVal>=0?'pos':'neg');
+  document.getElementById('kpiGrowthHarianSub').textContent = wRow ? ('Pencapaian: ' + (wRow.pencapaianGrowthHarian>=0?'+':'') + fmtPct(wRow.pencapaianGrowthHarian)) : '';
+
+  const gbEl = document.getElementById('kpiGrowthBulanan');
+  const gbVal = wRow ? wRow.realisasiGrowthBulan : 0;
+  gbEl.textContent = (gbVal>=0?'+':'') + fmtBigDec(gbVal);
+  gbEl.className = 'kpi-val mono ' + (gbVal>=0?'pos':'neg');
+  document.getElementById('kpiGrowthBulananSub').textContent = wRow ? ('Pencapaian: ' + (wRow.pencapaianGrowthBulan>=0?'+':'') + fmtPct(wRow.pencapaianGrowthBulan)) : '';
+
   renderLeaderboard(rows);
   renderClusterChart(rows);
   renderDetailTable();
@@ -1670,12 +1697,23 @@ function renderHistPage(){
     return;
   }
   const unitName = unitRows[0].namaKantor;
+  const isAll = currentHistIndikator === 'ALL';
 
-  document.getElementById('histSubtitle').textContent = 'Menampilkan riwayat skor total ' + unitName + ' dari waktu ke waktu';
-  document.getElementById('histTrendTitle').textContent = 'Tren skor total';
+  const dates = Array.from(new Set(unitRows.map(r => r.periode))).sort();
 
-  const dates = Array.from(new Set(unitRows.map(r => r.tglProses))).sort();
-  const scoreByDate = dates.map(d => unitRows.filter(r=>r.tglProses===d).reduce((a,r)=>a+r.score, 0));
+  let scoreByDate;
+  if(isAll){
+    document.getElementById('histSubtitle').textContent = 'Menampilkan riwayat skor total ' + unitName + ' dari waktu ke waktu';
+    document.getElementById('histTrendTitle').textContent = 'Tren skor total';
+    scoreByDate = dates.map(d => unitRows.filter(r=>r.periode===d).reduce((a,r)=>a+r.score, 0));
+  } else {
+    document.getElementById('histSubtitle').textContent = 'Menampilkan riwayat skor ' + currentHistIndikator + ' pada ' + unitName + ' dari waktu ke waktu';
+    document.getElementById('histTrendTitle').textContent = 'Tren skor \u2014 ' + currentHistIndikator;
+    scoreByDate = dates.map(d => {
+      const r = unitRows.find(rr => rr.periode === d && rr.nama === currentHistIndikator);
+      return r ? r.score : 0;
+    });
+  }
 
   const latestIdx = scoreByDate.length - 1;
   const latestScore = scoreByDate[latestIdx];
@@ -1698,11 +1736,14 @@ function renderHistPage(){
   document.getElementById('histMinDate').textContent = dates[minIdx];
 
   renderHistTrendChart(dates, scoreByDate);
-  document.getElementById('histCatChartTitle').textContent = 'Tren skor per kategori';
-  document.getElementById('histCatChartSub').textContent = 'Outcome, Driver, Resources, dan Add/Min dari waktu ke waktu';
-  renderHistCatChart(unitRows, dates);
 
-  const isAll = currentHistIndikator === 'ALL';
+  document.getElementById('histCatPanelRow').classList.toggle('hidden', !isAll);
+  if(isAll){
+    document.getElementById('histCatChartTitle').textContent = 'Tren skor per kategori';
+    document.getElementById('histCatChartSub').textContent = 'Outcome, Driver, Resources, dan Add/Min dari waktu ke waktu';
+    renderHistCatChart(unitRows, dates);
+  }
+
   document.getElementById('histIndikatorPanelRow').classList.toggle('hidden', isAll);
   if(!isAll){
     renderHistIndikatorDetail(unitRows, dates);
@@ -1712,34 +1753,23 @@ function renderHistPage(){
 function renderHistIndikatorDetail(unitRows, dates){
   const rows = unitRows.filter(r => r.nama === currentHistIndikator);
   if(rows.length === 0) return;
-  const sample = rows[0];
-  const isWilayah = sample.tipeKantor === 'Kantor Wilayah';
 
   document.getElementById('histIndikatorTitle1').textContent = 'Tren pencapaian \u2014 ' + currentHistIndikator;
-  document.getElementById('histIndikatorTitle2').textContent = 'Tren peringkat di kelasnya \u2014 ' + currentHistIndikator;
-  document.getElementById('histIndikatorSub2').textContent = isWilayah
-    ? 'Peringkat dibandingkan seluruh Kantor Wilayah se-Indonesia pada indikator ini, per periode'
-    : ('Peringkat dibandingkan kantor cabang kelas ' + (sample.kelas||'-') + ' se-Indonesia pada indikator ini, per periode');
+  document.getElementById('histIndikatorTitle2').textContent = 'Tren realisasi \u2014 ' + currentHistIndikator;
+  document.getElementById('histIndikatorSub2').textContent = 'Realisasi indikator ini dari waktu ke waktu, per periode';
 
   const pctByDate = dates.map(d => {
-    const r = rows.find(rr => rr.tglProses === d);
+    const r = rows.find(rr => rr.periode === d);
     return r ? r.pct : null;
   });
 
-  const rankByDate = dates.map(d => {
-    const r = rows.find(rr => rr.tglProses === d);
-    if(!r) return null;
-    let peerRows = histRows.filter(pr => pr.nama === currentHistIndikator && pr.tglProses === d);
-    peerRows = isWilayah
-      ? peerRows.filter(pr => pr.tipeKantor === 'Kantor Wilayah')
-      : peerRows.filter(pr => pr.tipeKantor !== 'Kantor Wilayah' && pr.kelas === sample.kelas);
-    const sorted = peerRows.slice().sort((a,b) => b.score - a.score);
-    const idx = sorted.findIndex(pr => pr.kodeKantor === currentHistUnit);
-    return { rank: idx>=0 ? idx+1 : null, total: sorted.length };
+  const realisasiByDate = dates.map(d => {
+    const r = rows.find(rr => rr.periode === d);
+    return r ? r.realisasi : null;
   });
 
   renderHistPctChart(dates, pctByDate);
-  renderHistRankChart(dates, rankByDate);
+  renderHistRealisasiChart(dates, realisasiByDate);
 }
 
 function renderHistPctChart(dates, pctByDate){
@@ -1781,22 +1811,22 @@ function renderHistPctChart(dates, pctByDate){
   });
 }
 
-function renderHistRankChart(dates, rankByDate){
-  const ctx = document.getElementById('histIndikatorRankChart');
-  if(histRankChartInstance) histRankChartInstance.destroy();
-  histRankChartInstance = new Chart(ctx, {
+function renderHistRealisasiChart(dates, realisasiByDate){
+  const ctx = document.getElementById('histIndikatorRealisasiChart');
+  if(histRealisasiChartInstance) histRealisasiChartInstance.destroy();
+  histRealisasiChartInstance = new Chart(ctx, {
     type: 'line',
     data: {
       labels: dates,
       datasets: [{
-        label: 'Peringkat',
-        data: rankByDate.map(r => r ? r.rank : null),
-        borderColor: '#0B5AA6',
-        backgroundColor: 'rgba(11,90,166,0.12)',
+        label: 'Realisasi',
+        data: realisasiByDate,
+        borderColor: '#F4C300',
+        backgroundColor: 'rgba(244,195,0,0.12)',
         fill: true,
         tension: 0.3,
         pointRadius: 4,
-        pointBackgroundColor: '#0B5AA6'
+        pointBackgroundColor: '#F4C300'
       }]
     },
     plugins: [ChartDataLabels],
@@ -1805,20 +1835,16 @@ function renderHistRankChart(dates, rankByDate){
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => {
-          const d = rankByDate[ctx.dataIndex];
-          return d ? ('Peringkat ' + d.rank + ' dari ' + d.total) : 'Tidak ada data';
-        }}},
         datalabels: {
           align: 'top',
           color: '#11284A',
           font: { size: 11, weight: '700' },
-          formatter: (v) => v===null ? '' : v
+          formatter: (v) => v===null ? '' : fmtBigDec(v)
         }
       },
       scales: {
         x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { display:false } },
-        y: { reverse: true, ticks: { color:'#6B7280', font:{size:11}, precision:0 }, grid: { color:'#E5E9ED' } }
+        y: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } }
       }
     }
   });
@@ -1869,7 +1895,7 @@ function renderHistCatChart(rows, dates){
 
   const datasets = categories.map(cat => ({
     label: cat,
-    data: dates.map(d => rows.filter(r => r.tglProses===d && r.kategori===cat).reduce((a,r)=>a+r.score,0)),
+    data: dates.map(d => rows.filter(r => r.periode===d && r.kategori===cat).reduce((a,r)=>a+r.score,0)),
     borderColor: catColors[cat],
     backgroundColor: catColors[cat],
     fill: false,
