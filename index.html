@@ -495,6 +495,27 @@
       </div>
     </div>
 
+    <div class="panel-row">
+      <div class="panel">
+        <h2>Growth realisasi bulan per cabang</h2>
+        <div class="sub">Pertumbuhan realisasi dibanding bulan sebelumnya, diurutkan dari growth tertinggi</div>
+        <div style="max-height:420px;overflow-y:auto;">
+          <div style="position:relative;height:340px;">
+            <canvas id="growthBulanRealisasiChart" role="img" aria-label="Grafik batang growth realisasi bulanan per kantor cabang"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Growth pencapaian bulan per cabang</h2>
+        <div class="sub">Pertumbuhan pencapaian (%) dibanding bulan sebelumnya, diurutkan dari growth tertinggi</div>
+        <div style="max-height:420px;overflow-y:auto;">
+          <div style="position:relative;height:340px;">
+            <canvas id="growthBulanPencapaianChart" role="img" aria-label="Grafik batang growth pencapaian bulanan per kantor cabang"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="table-panel">
       <div class="table-head-row">
         <h2 style="margin:0;font-size:14px;font-weight:600;">Rincian per kantor cabang</h2>
@@ -640,6 +661,8 @@ let sortDir = 1;
 let kpiSortKey = 'bobot';
 let kpiSortDir = -1;
 let clusterChartInstance = null;
+let growthBulanRealisasiChartInstance = null;
+let growthBulanPencapaianChartInstance = null;
 let donutChartInstance = null;
 let matrixChartInstance = null;
 let classRankChartInstance = null;
@@ -1445,6 +1468,8 @@ function renderDetailAll(){
 
   renderLeaderboard(rows);
   renderClusterChart(rows);
+  renderGrowthBulanRealisasiChart(rows);
+  renderGrowthBulanPencapaianChart(rows);
   renderDetailTable();
 }
 
@@ -1495,6 +1520,82 @@ function renderClusterChart(rows){
       scales: {
         x: { ticks: { callback: (v) => fmtBig(v), color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
         y: { ticks: { color:'#11284A', font:{size:11} }, grid: { display:false } }
+      }
+    }
+  });
+}
+
+function renderGrowthBulanRealisasiChart(rows){
+  const sorted = rows.slice().sort((a,b)=> b.realisasiGrowthBulan - a.realisasiGrowthBulan);
+  const labels = sorted.map(r => r.namaKantor);
+  const data = sorted.map(r => r.realisasiGrowthBulan);
+  const colors = data.map(v => v >= 0 ? '#74B843' : '#E57373');
+
+  const wrapper = document.getElementById('growthBulanRealisasiChart').parentElement;
+  wrapper.style.height = Math.max(340, sorted.length * 22 + 40) + 'px';
+
+  const ctx = document.getElementById('growthBulanRealisasiChart');
+  if(growthBulanRealisasiChartInstance) growthBulanRealisasiChartInstance.destroy();
+  growthBulanRealisasiChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, maxBarThickness: 16 }] },
+    plugins: [ChartDataLabels],
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => 'Growth realisasi: ' + (ctx.raw>=0?'+':'') + fmtBigDec(ctx.raw) } },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: '#11284A',
+          font: { size: 10, weight: '600' },
+          formatter: (v) => (v>=0?'+':'') + fmtBigDec(v)
+        }
+      },
+      scales: {
+        x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
+        y: { ticks: { color:'#11284A', font:{size: sorted.length>25?9:11} }, grid: { display:false } }
+      }
+    }
+  });
+}
+
+function renderGrowthBulanPencapaianChart(rows){
+  const sorted = rows.slice().sort((a,b)=> b.pencapaianGrowthBulan - a.pencapaianGrowthBulan);
+  const labels = sorted.map(r => r.namaKantor);
+  const data = sorted.map(r => r.pencapaianGrowthBulan);
+  const colors = data.map(v => v >= 0 ? '#74B843' : '#E57373');
+
+  const wrapper = document.getElementById('growthBulanPencapaianChart').parentElement;
+  wrapper.style.height = Math.max(340, sorted.length * 22 + 40) + 'px';
+
+  const ctx = document.getElementById('growthBulanPencapaianChart');
+  if(growthBulanPencapaianChartInstance) growthBulanPencapaianChartInstance.destroy();
+  growthBulanPencapaianChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, maxBarThickness: 16 }] },
+    plugins: [ChartDataLabels],
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => 'Growth pencapaian: ' + (ctx.raw>=0?'+':'') + fmtPct(ctx.raw) } },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: '#11284A',
+          font: { size: 10, weight: '600' },
+          formatter: (v) => (v>=0?'+':'') + fmtPct(v)
+        }
+      },
+      scales: {
+        x: { ticks: { color:'#6B7280', font:{size:11}, callback: (v) => v+'%' }, grid: { color:'#E5E9ED' } },
+        y: { ticks: { color:'#11284A', font:{size: sorted.length>25?9:11} }, grid: { display:false } }
       }
     }
   });
