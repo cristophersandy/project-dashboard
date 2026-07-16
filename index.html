@@ -465,6 +465,19 @@
       </div>
     </div>
 
+    <div class="kpi-row" style="grid-template-columns:1fr 1fr;">
+      <div class="kpi-card">
+        <div class="kpi-lbl">Growth harian</div>
+        <div class="kpi-val mono" id="kpiGrowthHarian">&mdash;</div>
+        <div class="kpi-sub" id="kpiGrowthHarianSub"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-lbl">Growth bulanan</div>
+        <div class="kpi-val mono" id="kpiGrowthBulanan">&mdash;</div>
+        <div class="kpi-sub" id="kpiGrowthBulananSub"></div>
+      </div>
+    </div>
+
     <div class="panel-row">
       <div class="panel">
         <h2>Papan peringkat cabang</h2>
@@ -702,6 +715,8 @@ function loadData(){
           rankIndikator: parseIDNum(r.rank_indikator),
           realisasiGrowth: parseIDNum(r.realisasi_growth),
           pencapaianGrowthBulan: parseIDNum(r.pencapaian_growth_bulan),
+          pencapaianGrowthHarian: parseIDNum(r.pencapaian_growth),
+          realisasiGrowthBulan: parseIDNum(r.realisasi_growth_bulan),
           scoreGrowth: parseIDNum(r.score_growth),
           deltaRankParameter: parseIDNum(r.delta_rank_parameter),
           tipeKantor: (r.tipe_kantor||'').trim(),
@@ -1415,6 +1430,18 @@ function renderDetailAll(){
   gapEl.textContent = (totalGap >= 0 ? '+' : '') + fmtBig(totalGap);
   gapEl.className = 'kpi-val mono ' + (totalGap >= 0 ? 'pos' : 'neg');
   document.getElementById('kpiGapSub').textContent = 'realisasi wilayah dikurangi target wilayah';
+
+  const ghEl = document.getElementById('kpiGrowthHarian');
+  const ghVal = wRow ? wRow.realisasiGrowth : 0;
+  ghEl.textContent = (ghVal>=0?'+':'') + fmtBigDec(ghVal);
+  ghEl.className = 'kpi-val mono ' + (ghVal>=0?'pos':'neg');
+  document.getElementById('kpiGrowthHarianSub').textContent = wRow ? ('Pencapaian: ' + (wRow.pencapaianGrowthHarian>=0?'+':'') + fmtPct(wRow.pencapaianGrowthHarian)) : '';
+
+  const gbEl = document.getElementById('kpiGrowthBulanan');
+  const gbVal = wRow ? wRow.realisasiGrowthBulan : 0;
+  gbEl.textContent = (gbVal>=0?'+':'') + fmtBigDec(gbVal);
+  gbEl.className = 'kpi-val mono ' + (gbVal>=0?'pos':'neg');
+  document.getElementById('kpiGrowthBulananSub').textContent = wRow ? ('Pencapaian: ' + (wRow.pencapaianGrowthBulan>=0?'+':'') + fmtPct(wRow.pencapaianGrowthBulan)) : '';
 
   renderLeaderboard(rows);
   renderClusterChart(rows);
