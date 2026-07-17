@@ -128,6 +128,7 @@
     margin-bottom:24px;
   }
   .panel-row.thirds{grid-template-columns:1fr 1fr 1fr 1fr;}
+  .panel-row.triple{grid-template-columns:1fr 1fr 1fr;}
   .panel{
     background:var(--card);
     border:1px solid var(--line);
@@ -229,6 +230,7 @@
     .kpi-row{grid-template-columns:repeat(2,1fr);}
     .panel-row{grid-template-columns:1fr;}
     .panel-row.thirds{grid-template-columns:1fr 1fr;}
+    .panel-row.triple{grid-template-columns:1fr;}
     .board-name{width:120px;}
   }
 </style>
@@ -495,7 +497,7 @@
       </div>
     </div>
 
-    <div class="panel-row">
+    <div class="panel-row triple">
       <div class="panel">
         <h2>Growth realisasi bulan per cabang</h2>
         <div class="sub">Pertumbuhan realisasi dibanding bulan sebelumnya, diurutkan dari growth tertinggi</div>
@@ -511,6 +513,15 @@
         <div style="max-height:420px;overflow-y:auto;">
           <div style="position:relative;height:340px;">
             <canvas id="growthBulanPencapaianChart" role="img" aria-label="Grafik batang growth pencapaian bulanan per kantor cabang"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Growth score bulan per cabang</h2>
+        <div class="sub">Pertumbuhan skor dibanding bulan sebelumnya, diurutkan dari growth tertinggi</div>
+        <div style="max-height:420px;overflow-y:auto;">
+          <div style="position:relative;height:340px;">
+            <canvas id="growthBulanScoreChart" role="img" aria-label="Grafik batang growth skor bulanan per kantor cabang"></canvas>
           </div>
         </div>
       </div>
@@ -663,6 +674,7 @@ let kpiSortDir = -1;
 let clusterChartInstance = null;
 let growthBulanRealisasiChartInstance = null;
 let growthBulanPencapaianChartInstance = null;
+let growthBulanScoreChartInstance = null;
 let donutChartInstance = null;
 let matrixChartInstance = null;
 let classRankChartInstance = null;
@@ -741,6 +753,7 @@ function loadData(){
           pencapaianGrowthHarian: parseIDNum(r.pencapaian_growth),
           realisasiGrowthBulan: parseIDNum(r.realisasi_growth_bulan),
           scoreGrowth: parseIDNum(r.score_growth),
+          scoreGrowthBulan: parseIDNum(r.score_growth_bulan),
           deltaRankParameter: parseIDNum(r.delta_rank_parameter),
           tipeKantor: (r.tipe_kantor||'').trim(),
           kelas: (r.kelas||'').trim(),
@@ -1470,6 +1483,7 @@ function renderDetailAll(){
   renderClusterChart(rows);
   renderGrowthBulanRealisasiChart(rows);
   renderGrowthBulanPencapaianChart(rows);
+  renderGrowthBulanScoreChart(rows);
   renderDetailTable();
 }
 
@@ -1595,6 +1609,44 @@ function renderGrowthBulanPencapaianChart(rows){
       },
       scales: {
         x: { ticks: { color:'#6B7280', font:{size:11}, callback: (v) => v+'%' }, grid: { color:'#E5E9ED' } },
+        y: { ticks: { color:'#11284A', font:{size: sorted.length>25?9:11} }, grid: { display:false } }
+      }
+    }
+  });
+}
+
+function renderGrowthBulanScoreChart(rows){
+  const sorted = rows.slice().sort((a,b)=> b.scoreGrowthBulan - a.scoreGrowthBulan);
+  const labels = sorted.map(r => r.namaKantor);
+  const data = sorted.map(r => r.scoreGrowthBulan);
+  const colors = data.map(v => v >= 0 ? '#74B843' : '#E57373');
+
+  const wrapper = document.getElementById('growthBulanScoreChart').parentElement;
+  wrapper.style.height = Math.max(340, sorted.length * 22 + 40) + 'px';
+
+  const ctx = document.getElementById('growthBulanScoreChart');
+  if(growthBulanScoreChartInstance) growthBulanScoreChartInstance.destroy();
+  growthBulanScoreChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, maxBarThickness: 16 }] },
+    plugins: [ChartDataLabels],
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => 'Growth skor: ' + (ctx.raw>=0?'+':'') + fmtScore(ctx.raw) } },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: '#11284A',
+          font: { size: 10, weight: '600' },
+          formatter: (v) => (v>=0?'+':'') + fmtScore(v)
+        }
+      },
+      scales: {
+        x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
         y: { ticks: { color:'#11284A', font:{size: sorted.length>25?9:11} }, grid: { display:false } }
       }
     }
