@@ -497,7 +497,7 @@
       </div>
     </div>
 
-    <div class="panel-row triple">
+    <div class="panel-row">
       <div class="panel">
         <h2>Growth realisasi bulan per cabang</h2>
         <div class="sub">Pertumbuhan realisasi dibanding bulan sebelumnya, diurutkan dari growth tertinggi</div>
@@ -508,20 +508,11 @@
         </div>
       </div>
       <div class="panel">
-        <h2>Growth pencapaian bulan per cabang</h2>
-        <div class="sub">Pertumbuhan pencapaian (%) dibanding bulan sebelumnya, diurutkan dari growth tertinggi</div>
+        <h2>Growth pencapaian &amp; score bulan per cabang</h2>
+        <div class="sub">Pertumbuhan pencapaian (%) dan skor dibanding bulan sebelumnya, diurutkan dari growth pencapaian tertinggi</div>
         <div style="max-height:420px;overflow-y:auto;">
           <div style="position:relative;height:340px;">
-            <canvas id="growthBulanPencapaianChart" role="img" aria-label="Grafik batang growth pencapaian bulanan per kantor cabang"></canvas>
-          </div>
-        </div>
-      </div>
-      <div class="panel">
-        <h2>Growth score bulan per cabang</h2>
-        <div class="sub">Pertumbuhan skor dibanding bulan sebelumnya, diurutkan dari growth tertinggi</div>
-        <div style="max-height:420px;overflow-y:auto;">
-          <div style="position:relative;height:340px;">
-            <canvas id="growthBulanScoreChart" role="img" aria-label="Grafik batang growth skor bulanan per kantor cabang"></canvas>
+            <canvas id="growthBulanPencapaianChart" role="img" aria-label="Grafik batang growth pencapaian dan skor bulanan per kantor cabang"></canvas>
           </div>
         </div>
       </div>
@@ -674,7 +665,6 @@ let kpiSortDir = -1;
 let clusterChartInstance = null;
 let growthBulanRealisasiChartInstance = null;
 let growthBulanPencapaianChartInstance = null;
-let growthBulanScoreChartInstance = null;
 let donutChartInstance = null;
 let matrixChartInstance = null;
 let classRankChartInstance = null;
@@ -1483,7 +1473,6 @@ function renderDetailAll(){
   renderClusterChart(rows);
   renderGrowthBulanRealisasiChart(rows);
   renderGrowthBulanPencapaianChart(rows);
-  renderGrowthBulanScoreChart(rows);
   renderDetailTable();
 }
 
@@ -1581,6 +1570,7 @@ function renderGrowthBulanPencapaianChart(rows){
   const sorted = rows.slice().sort((a,b)=> b.pencapaianGrowthBulan - a.pencapaianGrowthBulan);
   const labels = sorted.map(r => r.namaKantor);
   const data = sorted.map(r => r.pencapaianGrowthBulan);
+  const scoreData = sorted.map(r => r.scoreGrowthBulan);
   const colors = data.map(v => v >= 0 ? '#74B843' : '#E57373');
 
   const wrapper = document.getElementById('growthBulanPencapaianChart').parentElement;
@@ -1598,55 +1588,23 @@ function renderGrowthBulanPencapaianChart(rows){
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => 'Growth pencapaian: ' + (ctx.raw>=0?'+':'') + fmtPct(ctx.raw) } },
+        tooltip: { callbacks: { label: (ctx) => {
+          const s = scoreData[ctx.dataIndex];
+          return 'Growth pencapaian: ' + (ctx.raw>=0?'+':'') + fmtPct(ctx.raw) + '  |  Growth skor: ' + (s>=0?'+':'') + fmtScore(s);
+        }}},
         datalabels: {
           anchor: 'end',
           align: 'end',
           color: '#11284A',
           font: { size: 10, weight: '600' },
-          formatter: (v) => (v>=0?'+':'') + fmtPct(v)
+          formatter: (v, ctx) => {
+            const s = scoreData[ctx.dataIndex];
+            return (v>=0?'+':'') + fmtPct(v) + ' (' + (s>=0?'+':'') + fmtScore(s) + ')';
+          }
         }
       },
       scales: {
         x: { ticks: { color:'#6B7280', font:{size:11}, callback: (v) => v+'%' }, grid: { color:'#E5E9ED' } },
-        y: { ticks: { color:'#11284A', font:{size: sorted.length>25?9:11} }, grid: { display:false } }
-      }
-    }
-  });
-}
-
-function renderGrowthBulanScoreChart(rows){
-  const sorted = rows.slice().sort((a,b)=> b.scoreGrowthBulan - a.scoreGrowthBulan);
-  const labels = sorted.map(r => r.namaKantor);
-  const data = sorted.map(r => r.scoreGrowthBulan);
-  const colors = data.map(v => v >= 0 ? '#74B843' : '#E57373');
-
-  const wrapper = document.getElementById('growthBulanScoreChart').parentElement;
-  wrapper.style.height = Math.max(340, sorted.length * 22 + 40) + 'px';
-
-  const ctx = document.getElementById('growthBulanScoreChart');
-  if(growthBulanScoreChartInstance) growthBulanScoreChartInstance.destroy();
-  growthBulanScoreChartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, maxBarThickness: 16 }] },
-    plugins: [ChartDataLabels],
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => 'Growth skor: ' + (ctx.raw>=0?'+':'') + fmtScore(ctx.raw) } },
-        datalabels: {
-          anchor: 'end',
-          align: 'end',
-          color: '#11284A',
-          font: { size: 10, weight: '600' },
-          formatter: (v) => (v>=0?'+':'') + fmtScore(v)
-        }
-      },
-      scales: {
-        x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
         y: { ticks: { color:'#11284A', font:{size: sorted.length>25?9:11} }, grid: { display:false } }
       }
     }
