@@ -716,7 +716,8 @@ function catClass(k){
 
 /* ============== LOAD ============== */
 function loadData(){
-  Papa.parse(CSV_URL, {
+  const bustedUrl = CSV_URL + '&cb=' + Date.now();
+  Papa.parse(bustedUrl, {
     download: true,
     header: true,
     skipEmptyLines: true,
@@ -1666,7 +1667,8 @@ function parsePlainNum(s){
 }
 
 function loadHistData(){
-  Papa.parse(HIST_CSV_URL, {
+  const bustedUrl = HIST_CSV_URL + '&cb=' + Date.now();
+  Papa.parse(bustedUrl, {
     download: true,
     header: true,
     skipEmptyLines: true,
