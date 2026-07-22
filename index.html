@@ -111,6 +111,8 @@
   .subtab.active:hover{background:var(--navy);box-shadow:none;}
 
   .topnav-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
+  .subnav-slot{position:relative;height:38px;}
+  .subnav-slot .toplinks{position:absolute;top:0;right:0;}
   .mainlinks{display:flex;gap:8px;}
   .maintab{
     background:transparent;
@@ -293,10 +295,16 @@
         <button class="maintab active" data-main="kpi">KPI</button>
         <button class="maintab" data-main="summary">Summary</button>
       </div>
-      <div class="toplinks" id="kpiSubNav">
-        <button class="toptab active" data-page="exec">Ringkasan Eksekutif</button>
-        <button class="toptab" data-page="detail">Detail per Cabang</button>
-        <button class="toptab" data-page="historical">Historical</button>
+      <div class="subnav-slot">
+        <div class="toplinks" id="kpiSubNav">
+          <button class="toptab active" data-page="exec">Ringkasan Eksekutif</button>
+          <button class="toptab" data-page="detail">Detail per Cabang</button>
+          <button class="toptab" data-page="historical">Historical</button>
+        </div>
+        <div class="toplinks" id="summarySubNavHeader" style="visibility:hidden;">
+          <button class="toptab active" data-summary-page="all">Semua Parameter</button>
+          <button class="toptab" data-summary-page="param">Per Parameter</button>
+        </div>
       </div>
     </div>
   </div>
@@ -694,11 +702,6 @@
     </div>
 
     <div id="summaryContent" class="hidden">
-      <div class="subtabs" id="summarySubNav" style="display:flex;gap:8px;margin-bottom:18px;position:sticky;z-index:150;background:var(--slate-bg);padding:10px 0;">
-        <button class="subtab active" data-summary-page="all">Semua Parameter</button>
-        <button class="subtab" data-summary-page="param">Per Parameter</button>
-      </div>
-
       <!-- ========== SUMMARY SUB-PAGE: SEMUA PARAMETER ========== -->
       <div id="summarySubAll" class="summary-subpage">
         <div class="table-head-row" style="margin-bottom:18px;">
@@ -754,10 +757,10 @@
                   <th class="num" data-key="target">Target</th>
                   <th class="num" data-key="realisasi">Realisasi</th>
                   <th class="num" data-key="pct">Pencapaian</th>
+                  <th class="num" data-key="gap">GAP</th>
+                  <th class="num" data-key="targetBulanan">Target Bulanan</th>
                   <th class="num" data-key="progressBulanan">Progress Bulanan</th>
                   <th class="num" data-key="pctProgressBulanan">% Progress Bulanan</th>
-                  <th class="num" data-key="targetBulanan">Target Bulanan</th>
-                  <th class="num" data-key="gap">GAP</th>
                 </tr>
               </thead>
               <tbody id="summaryAllTableBody"></tbody>
@@ -835,10 +838,10 @@
                 <th class="num" data-key="target">Target</th>
                 <th class="num" data-key="realisasi">Realisasi</th>
                 <th class="num" data-key="pct">Pencapaian</th>
+                <th class="num" data-key="gap">GAP</th>
+                <th class="num" data-key="targetBulanan">Target Bulanan</th>
                 <th class="num" data-key="progressBulanan">Progress Bulanan</th>
                 <th class="num" data-key="pctProgressBulanan">% Progress Bulanan</th>
-                <th class="num" data-key="targetBulanan">Target Bulanan</th>
-                <th class="num" data-key="gap">GAP</th>
               </tr>
             </thead>
             <tbody id="summaryTableBody"></tbody>
@@ -1055,11 +1058,11 @@ function showError(detail){
 }
 
 /* ============== NAV ============== */
-document.querySelectorAll('.toptab').forEach(btn => {
+document.querySelectorAll('.toptab[data-page]').forEach(btn => {
   btn.addEventListener('click', () => showPage(btn.getAttribute('data-page')));
 });
 function showPage(name){
-  document.querySelectorAll('.toptab').forEach(b => b.classList.toggle('active', b.getAttribute('data-page')===name));
+  document.querySelectorAll('.toptab[data-page]').forEach(b => b.classList.toggle('active', b.getAttribute('data-page')===name));
   document.getElementById('page-exec').classList.toggle('hidden', name!=='exec');
   document.getElementById('page-detail').classList.toggle('hidden', name!=='detail');
   document.getElementById('page-historical').classList.toggle('hidden', name!=='historical');
@@ -1074,22 +1077,15 @@ function showMain(name){
   const kpiNav = document.getElementById('kpiSubNav');
   kpiNav.style.visibility = (name==='kpi') ? 'visible' : 'hidden';
   kpiNav.style.pointerEvents = (name==='kpi') ? 'auto' : 'none';
+  const summaryNav = document.getElementById('summarySubNavHeader');
+  summaryNav.style.visibility = (name==='summary') ? 'visible' : 'hidden';
+  summaryNav.style.pointerEvents = (name==='summary') ? 'auto' : 'none';
   document.getElementById('kpiPages').classList.toggle('hidden', name!=='kpi');
   document.getElementById('page-summary').classList.toggle('hidden', name!=='summary');
   if(name === 'summary' && !summaryLoaded){
     loadSummaryData();
   }
-  positionSummarySubNav();
 }
-
-function positionSummarySubNav(){
-  const header = document.querySelector('header.topbar');
-  const subnav = document.getElementById('summarySubNav');
-  if(header && subnav){ subnav.style.top = header.offsetHeight + 'px'; }
-}
-window.addEventListener('resize', positionSummarySubNav);
-window.addEventListener('load', positionSummarySubNav);
-positionSummarySubNav();
 
 /* ============== PAGE 1: EXEC SUMMARY ============== */
 function buildUnitSelect(){
@@ -1216,7 +1212,7 @@ function renderClassRankChart(){
           anchor: 'center',
           align: 'center',
           clamp: true,
-          color: '#fff',
+          color: (ctx) => sortedPeers[ctx.dataIndex] === currentUnit ? '#08203A' : '#fff',
           font: { size: 10, weight: '700' },
           formatter: (v) => fmtScore(v)
         }
@@ -1276,7 +1272,7 @@ function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
           anchor: 'center',
           align: 'center',
           clamp: true,
-          color: '#fff',
+          color: (ctx) => sortedPeers[ctx.dataIndex] === currentUnit ? '#08203A' : '#fff',
           font: { size: 10, weight: '700' },
           formatter: (v) => (v>=0?'+':'') + fmtScore(v)
         }
@@ -2423,11 +2419,11 @@ function buildSummaryFilters(){
 }
 
 /* ---- Sub-nav: Semua Parameter <-> Per Parameter ---- */
-document.querySelectorAll('#summarySubNav .subtab').forEach(btn => {
+document.querySelectorAll('#summarySubNavHeader .toptab').forEach(btn => {
   btn.addEventListener('click', () => showSummarySubPage(btn.getAttribute('data-summary-page')));
 });
 function showSummarySubPage(name){
-  document.querySelectorAll('#summarySubNav .subtab').forEach(b => b.classList.toggle('active', b.getAttribute('data-summary-page')===name));
+  document.querySelectorAll('#summarySubNavHeader .toptab').forEach(b => b.classList.toggle('active', b.getAttribute('data-summary-page')===name));
   document.getElementById('summarySubAll').classList.toggle('hidden', name!=='all');
   document.getElementById('summarySubParam').classList.toggle('hidden', name!=='param');
 }
@@ -2534,10 +2530,10 @@ function renderSummaryAllTable(rows){
       <td class="num">${fmtSummaryNum(r.target)}</td>
       <td class="num">${fmtSummaryNum(r.realisasi)}</td>
       <td class="num">${fmtSummaryPct(r.pct)}</td>
+      <td class="num">${(r.gap>=0?'+':'') + fmtSummaryNum(r.gap)}</td>
+      <td class="num">${fmtSummaryNum(r.targetBulanan)}</td>
       <td class="num">${fmtSummaryNum(r.progressBulanan)}</td>
       <td class="num">${fmtSummaryPct(r.pctProgressBulanan)}</td>
-      <td class="num">${fmtSummaryNum(r.targetBulanan)}</td>
-      <td class="num">${(r.gap>=0?'+':'') + fmtSummaryNum(r.gap)}</td>
     </tr>
   `).join('');
 }
@@ -2666,10 +2662,10 @@ function renderSummaryTable(rows){
       <td class="num">${fmtSummaryNum(r.target)}</td>
       <td class="num">${fmtSummaryNum(r.realisasi)}</td>
       <td class="num">${fmtSummaryPct(r.pct)}</td>
+      <td class="num">${(r.gap>=0?'+':'') + fmtSummaryNum(r.gap)}</td>
+      <td class="num">${fmtSummaryNum(r.targetBulanan)}</td>
       <td class="num">${fmtSummaryNum(r.progressBulanan)}</td>
       <td class="num">${fmtSummaryPct(r.pctProgressBulanan)}</td>
-      <td class="num">${fmtSummaryNum(r.targetBulanan)}</td>
-      <td class="num">${(r.gap>=0?'+':'') + fmtSummaryNum(r.gap)}</td>
     </tr>
   `).join('');
 }
