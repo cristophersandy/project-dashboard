@@ -43,6 +43,9 @@
     background:var(--navy);
     color:#fff;
     padding:22px 32px;
+    position:sticky;
+    top:0;
+    z-index:200;
   }
   .topbar-inner{
     max-width:1360px;
@@ -88,7 +91,7 @@
 
   .subtab{
     background:#EEF1F5;
-    border:1px solid #DCE1E8;
+    border:none;
     color:var(--navy);
     padding:9px 16px;
     border-radius:8px;
@@ -97,13 +100,13 @@
     cursor:pointer;
     font-family:inherit;
   }
-  .subtab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .subtab.active{background:var(--navy);color:#fff;}
 
   .topnav-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
   .mainlinks{display:flex;gap:8px;}
   .maintab{
-    background:transparent;
-    border:1px solid rgba(255,255,255,0.35);
+    background:rgba(255,255,255,0.12);
+    border:none;
     color:#fff;
     padding:7px 20px;
     border-radius:999px;
@@ -114,7 +117,7 @@
     cursor:pointer;
     font-family:inherit;
   }
-  .maintab.active{background:#F4C300;color:#11284A;border-color:#F4C300;}
+  .maintab.active{background:#F4C300;color:#11284A;}
 
   main{
     max-width:1360px;
@@ -680,7 +683,7 @@
     </div>
 
     <div id="summaryContent" class="hidden">
-      <div class="subtabs" id="summarySubNav" style="display:flex;gap:8px;margin-bottom:18px;">
+      <div class="subtabs" id="summarySubNav" style="display:flex;gap:8px;margin-bottom:18px;position:sticky;z-index:150;background:var(--slate-bg);padding:10px 0;">
         <button class="subtab active" data-summary-page="all">Semua Parameter</button>
         <button class="subtab" data-summary-page="param">Per Parameter</button>
       </div>
@@ -1063,7 +1066,17 @@ function showMain(name){
   if(name === 'summary' && !summaryLoaded){
     loadSummaryData();
   }
+  positionSummarySubNav();
 }
+
+function positionSummarySubNav(){
+  const header = document.querySelector('header.topbar');
+  const subnav = document.getElementById('summarySubNav');
+  if(header && subnav){ subnav.style.top = header.offsetHeight + 'px'; }
+}
+window.addEventListener('resize', positionSummarySubNav);
+window.addEventListener('load', positionSummarySubNav);
+positionSummarySubNav();
 
 /* ============== PAGE 1: EXEC SUMMARY ============== */
 function buildUnitSelect(){
@@ -2366,6 +2379,15 @@ function buildSummaryFilters(){
 
   const unitSel = document.getElementById('summaryAllUnitSelect');
   unitSel.innerHTML = '';
+
+  const provGroup = document.createElement('optgroup');
+  provGroup.label = 'Provinsi';
+  const allOpt = document.createElement('option');
+  allOpt.value = '__ALL__';
+  allOpt.textContent = 'KANWIL JATENG (Gabungan seluruh KCI & KCP)';
+  provGroup.appendChild(allOpt);
+  unitSel.appendChild(provGroup);
+
   const uniqueUnits = new Map();
   summaryRows.forEach(r => { if(!uniqueUnits.has(r.kantorCabang)) uniqueUnits.set(r.kantorCabang, r.kciKcp); });
 
@@ -2409,21 +2431,44 @@ function summaryStatusColor(pct){
 
 function renderSummaryAllPage(){
   const unit = document.getElementById('summaryAllUnitSelect').value;
-  const rows = summaryRows.filter(r => r.kantorCabang === unit);
+  const rows = (unit === '__ALL__') ? buildJatengAggregateRows() : summaryRows.filter(r => r.kantorCabang === unit);
+  const unitLabel = (unit === '__ALL__') ? 'KANWIL JATENG (Gabungan seluruh KCI & KCP)' : unit;
 
   document.getElementById('summaryAllParamCount').textContent = rows.length.toLocaleString('id-ID');
   document.getElementById('summaryAllHijau').textContent = rows.filter(r=>r.pct>=100).length;
   document.getElementById('summaryAllKuning').textContent = rows.filter(r=>r.pct>=85 && r.pct<100).length;
   document.getElementById('summaryAllMerah').textContent = rows.filter(r=>r.pct<85).length;
 
-  const latestDate = rows.map(r => r.tglProses).sort().slice(-1)[0];
+  const latestDate = rows.map(r => r.tglProses).filter(Boolean).sort().slice(-1)[0];
   document.getElementById('summaryAllUpdatedText').textContent = latestDate ? ('Data per ' + latestDate) : '';
 
-  document.getElementById('summaryAllChartTitle').textContent = 'Pencapaian seluruh parameter \u2014 ' + (unit||'-');
-  document.getElementById('summaryAllTableTitle').textContent = 'Rincian seluruh parameter \u2014 ' + (unit||'-');
+  document.getElementById('summaryAllChartTitle').textContent = 'Pencapaian seluruh parameter \u2014 ' + (unitLabel||'-');
+  document.getElementById('summaryAllTableTitle').textContent = 'Rincian seluruh parameter \u2014 ' + (unitLabel||'-');
 
   renderSummaryAllChart(rows);
   renderSummaryAllTable(rows);
+}
+
+function buildJatengAggregateRows(){
+  return summaryParamList.map(param => {
+    const rows = summaryRows.filter(r => r.parameter === param);
+    const target = rows.reduce((a,r)=>a+r.target, 0);
+    const realisasi = rows.reduce((a,r)=>a+r.realisasi, 0);
+    const progressBulanan = rows.reduce((a,r)=>a+r.progressBulanan, 0);
+    const targetBulanan = rows.reduce((a,r)=>a+r.targetBulanan, 0);
+    const gap = rows.reduce((a,r)=>a+r.gap, 0);
+    const tglProses = rows.map(r=>r.tglProses).filter(Boolean).sort().slice(-1)[0] || '';
+    return {
+      parameter: param,
+      target, realisasi,
+      pct: target !== 0 ? (realisasi/target*100) : 0,
+      progressBulanan,
+      pctProgressBulanan: targetBulanan !== 0 ? (progressBulanan/targetBulanan*100) : 0,
+      targetBulanan,
+      gap,
+      tglProses
+    };
+  });
 }
 
 function renderSummaryAllChart(rows){
@@ -2484,7 +2529,7 @@ function renderSummaryAllTable(rows){
 document.getElementById('summaryAllSearch').addEventListener('input', function(){
   const q = this.value.trim().toLowerCase();
   const unit = document.getElementById('summaryAllUnitSelect').value;
-  let rows = summaryRows.filter(r => r.kantorCabang === unit);
+  let rows = (unit === '__ALL__') ? buildJatengAggregateRows() : summaryRows.filter(r => r.kantorCabang === unit);
   if(q){ rows = rows.filter(r => r.parameter.toLowerCase().includes(q)); }
   renderSummaryAllTable(rows);
 });
@@ -2500,10 +2545,10 @@ function renderSummaryPage(){
   const param = currentSummaryParam();
   const kanwil = currentSummaryKanwil();
 
-  const kciRows = summaryRows.filter(r => r.parameter === param && r.kciKcp === 'KCI' && (!kanwil || r.namaKci === kanwil));
-  const totalTarget = kciRows.reduce((a,r)=>a+r.target, 0);
-  const totalRealisasi = kciRows.reduce((a,r)=>a+r.realisasi, 0);
-  const totalGap = kciRows.reduce((a,r)=>a+r.gap, 0);
+  const totalScopeRows = summaryRows.filter(r => r.parameter === param && (!kanwil || r.namaKci === kanwil));
+  const totalTarget = totalScopeRows.reduce((a,r)=>a+r.target, 0);
+  const totalRealisasi = totalScopeRows.reduce((a,r)=>a+r.realisasi, 0);
+  const totalGap = totalScopeRows.reduce((a,r)=>a+r.gap, 0);
   const totalPct = totalTarget !== 0 ? (totalRealisasi/totalTarget*100) : 0;
 
   document.getElementById('summaryTotalTarget').textContent = fmtSummaryNum(totalTarget);
