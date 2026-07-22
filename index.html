@@ -40,7 +40,7 @@
   .mono{font-family:'IBM Plex Mono', monospace;}
 
   header.topbar{
-    background:var(--navy);
+    background:linear-gradient(90deg, #67F3CE 0%, #4B90EA 100%);
     color:#fff;
     padding:22px 32px;
     position:sticky;
@@ -77,8 +77,8 @@
   }
   .toplinks{display:flex;gap:8px;}
   .toptab{
-    background:rgba(255,255,255,0.08);
-    border:1px solid rgba(255,255,255,0.18);
+    background:transparent;
+    border:none;
     color:#C9D5E8;
     padding:9px 16px;
     border-radius:8px;
@@ -86,11 +86,14 @@
     font-weight:500;
     cursor:pointer;
     font-family:inherit;
+    transition:background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
   }
-  .toptab.active{background:#fff;color:var(--navy);border-color:#fff;}
+  .toptab:hover{background:rgba(255,255,255,0.12);box-shadow:0 2px 10px rgba(0,0,0,0.18);color:#fff;}
+  .toptab.active{background:#fff;color:var(--navy);}
+  .toptab.active:hover{background:#fff;box-shadow:none;}
 
   .subtab{
-    background:#EEF1F5;
+    background:transparent;
     border:none;
     color:var(--navy);
     padding:9px 16px;
@@ -99,13 +102,16 @@
     font-weight:600;
     cursor:pointer;
     font-family:inherit;
+    transition:background 0.15s ease, box-shadow 0.15s ease;
   }
+  .subtab:hover{background:#EEF1F5;box-shadow:0 2px 10px rgba(17,40,74,0.12);}
   .subtab.active{background:var(--navy);color:#fff;}
+  .subtab.active:hover{background:var(--navy);box-shadow:none;}
 
   .topnav-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
   .mainlinks{display:flex;gap:8px;}
   .maintab{
-    background:rgba(255,255,255,0.12);
+    background:transparent;
     border:none;
     color:#fff;
     padding:7px 20px;
@@ -116,8 +122,11 @@
     text-transform:uppercase;
     cursor:pointer;
     font-family:inherit;
+    transition:background 0.15s ease, box-shadow 0.15s ease;
   }
+  .maintab:hover{background:rgba(255,255,255,0.18);box-shadow:0 2px 10px rgba(0,0,0,0.18);}
   .maintab.active{background:#F4C300;color:#11284A;}
+  .maintab.active:hover{background:#F4C300;box-shadow:none;}
 
   main{
     max-width:1360px;
@@ -1060,7 +1069,9 @@ document.querySelectorAll('.maintab').forEach(btn => {
 });
 function showMain(name){
   document.querySelectorAll('.maintab').forEach(b => b.classList.toggle('active', b.getAttribute('data-main')===name));
-  document.getElementById('kpiSubNav').classList.toggle('hidden', name!=='kpi');
+  const kpiNav = document.getElementById('kpiSubNav');
+  kpiNav.style.visibility = (name==='kpi') ? 'visible' : 'hidden';
+  kpiNav.style.pointerEvents = (name==='kpi') ? 'auto' : 'none';
   document.getElementById('kpiPages').classList.toggle('hidden', name!=='kpi');
   document.getElementById('page-summary').classList.toggle('hidden', name!=='summary');
   if(name === 'summary' && !summaryLoaded){
