@@ -86,6 +86,23 @@
   }
   .toptab.active{background:#fff;color:var(--navy);border-color:#fff;}
 
+  .topnav-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
+  .mainlinks{display:flex;gap:8px;}
+  .maintab{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.35);
+    color:#fff;
+    padding:7px 20px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .maintab.active{background:#F4C300;color:#11284A;border-color:#F4C300;}
+
   main{
     max-width:1360px;
     margin:0 auto;
@@ -244,10 +261,16 @@
       <h1 class="title display">Executive Dashboard KPI &middot; Jawa Tengah &amp; DIY</h1>
       <p class="updated" id="updatedText">Memuat data&hellip;</p>
     </div>
-    <div class="toplinks">
-      <button class="toptab active" data-page="exec">Ringkasan Eksekutif</button>
-      <button class="toptab" data-page="detail">Detail per Cabang</button>
-      <button class="toptab" data-page="historical">Historical</button>
+    <div class="topnav-wrap">
+      <div class="mainlinks">
+        <button class="maintab active" data-main="kpi">KPI</button>
+        <button class="maintab" data-main="summary">Summary</button>
+      </div>
+      <div class="toplinks" id="kpiSubNav">
+        <button class="toptab active" data-page="exec">Ringkasan Eksekutif</button>
+        <button class="toptab" data-page="detail">Detail per Cabang</button>
+        <button class="toptab" data-page="historical">Historical</button>
+      </div>
     </div>
   </div>
 </header>
@@ -258,6 +281,8 @@
     Gagal memuat data. Periksa apakah spreadsheet sudah di-publish sebagai CSV dan dapat diakses publik.<br>
     <span id="errorDetail" style="font-size:12px;"></span>
   </div>
+
+  <div id="kpiPages">
 
   <!-- ================= PAGE 1: EXECUTIVE SUMMARY ================= -->
   <div id="page-exec" class="page hidden">
@@ -630,11 +655,103 @@
       </div>
     </div>
   </div>
+
+  </div><!-- /#kpiPages -->
+
+  <!-- ================= PAGE 4: SUMMARY ================= -->
+  <div id="page-summary" class="page hidden">
+    <div id="summaryLoadingState" class="state-msg">Mengambil data summary&hellip;</div>
+    <div id="summaryErrorState" class="state-msg hidden">
+      Gagal memuat data summary.<br>
+      <span id="summaryErrorDetail" style="font-size:12px;"></span>
+    </div>
+
+    <div id="summaryContent" class="hidden">
+      <div class="table-head-row" style="margin-bottom:18px;">
+        <div class="controls">
+          <select id="summaryParamSelect"></select>
+          <select id="summaryKanwilSelect">
+            <option value="">Semua Kanwil</option>
+          </select>
+        </div>
+        <div class="updated" id="summaryUpdatedText" style="color:var(--muted);"></div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Target</div>
+          <div class="kpi-val mono" id="summaryTotalTarget">-</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Realisasi</div>
+          <div class="kpi-val mono" id="summaryTotalRealisasi">-</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">% Pencapaian</div>
+          <div class="kpi-val mono" id="summaryTotalPct">-</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total GAP</div>
+          <div class="kpi-val mono" id="summaryTotalGap">-</div>
+        </div>
+      </div>
+
+      <div class="panel-row">
+        <div class="panel" style="grid-column:1/-1;">
+          <h2 id="summaryCabangChartTitle">Pencapaian per kantor cabang</h2>
+          <div class="sub" id="summaryCabangChartSub">Persentase realisasi terhadap target, diurutkan dari pencapaian tertinggi</div>
+          <div style="max-height:460px;overflow-y:auto;">
+            <div style="position:relative;height:380px;">
+              <canvas id="summaryCabangChart" role="img" aria-label="Grafik batang pencapaian parameter terpilih per kantor cabang"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-row">
+        <div class="panel" style="grid-column:1/-1;">
+          <h2>Pencapaian per Kanwil</h2>
+          <div class="sub">Persentase realisasi terhadap target di tingkat Kantor Wilayah</div>
+          <div style="position:relative;height:280px;">
+            <canvas id="summaryKanwilChart" role="img" aria-label="Grafik batang pencapaian parameter terpilih per kantor wilayah"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-panel">
+        <div class="table-head-row">
+          <h2 style="margin:0;font-size:14px;font-weight:600;" id="summaryTableTitle">Rincian per kantor cabang</h2>
+          <div class="controls">
+            <input type="text" id="summarySearch" placeholder="Cari kantor cabang&hellip;">
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th data-key="kantorCabang">Kantor Cabang</th>
+                <th data-key="namaKci">Kanwil</th>
+                <th class="num" data-key="target">Target</th>
+                <th class="num" data-key="realisasi">Realisasi</th>
+                <th class="num" data-key="pct">Pencapaian</th>
+                <th class="num" data-key="progressBulanan">Progress Bulanan</th>
+                <th class="num" data-key="pctProgressBulanan">% Progress Bulanan</th>
+                <th class="num" data-key="targetBulanan">Target Bulanan</th>
+                <th class="num" data-key="gap">GAP</th>
+              </tr>
+            </thead>
+            <tbody id="summaryTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSvtCO0B41vi76Vj0nHO3edY3Bqa39PG_5xRQJuvgxG6WeSC4JY62cAtG67HtyoTSyQ-W7CFDxWcrXq/pub?gid=978418270&single=true&output=csv";
 const HIST_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSvtCO0B41vi76Vj0nHO3edY3Bqa39PG_5xRQJuvgxG6WeSC4JY62cAtG67HtyoTSyQ-W7CFDxWcrXq/pub?gid=1610976773&single=true&output=csv";
+const SUMMARY_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSvtCO0B41vi76Vj0nHO3edY3Bqa39PG_5xRQJuvgxG6WeSC4JY62cAtG67HtyoTSyQ-W7CFDxWcrXq/pub?gid=1211227761&single=true&output=csv";
 const TARGET_WILAYAH_CODE = "905";
 const WILAYAH_ROW_NAME = "KANWIL JATENG DAN DIY";
 
@@ -844,6 +961,20 @@ function showPage(name){
   document.getElementById('page-exec').classList.toggle('hidden', name!=='exec');
   document.getElementById('page-detail').classList.toggle('hidden', name!=='detail');
   document.getElementById('page-historical').classList.toggle('hidden', name!=='historical');
+}
+
+let summaryLoaded = false;
+document.querySelectorAll('.maintab').forEach(btn => {
+  btn.addEventListener('click', () => showMain(btn.getAttribute('data-main')));
+});
+function showMain(name){
+  document.querySelectorAll('.maintab').forEach(b => b.classList.toggle('active', b.getAttribute('data-main')===name));
+  document.getElementById('kpiSubNav').classList.toggle('hidden', name!=='kpi');
+  document.getElementById('kpiPages').classList.toggle('hidden', name!=='kpi');
+  document.getElementById('page-summary').classList.toggle('hidden', name!=='summary');
+  if(name === 'summary' && !summaryLoaded){
+    loadSummaryData();
+  }
 }
 
 /* ============== PAGE 1: EXEC SUMMARY ============== */
@@ -2035,6 +2166,260 @@ function renderHistCatChart(rows, dates){
   });
 }
 
+/* ============== PAGE: SUMMARY ============== */
+let summaryRows = [];
+let summaryParamList = [];
+let summaryKanwilList = [];
+let summaryCabangChartInstance = null;
+let summaryKanwilChartInstance = null;
+
+function escapeHtml(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function parseIDPct(s){
+  if(s == null) return 0;
+  s = String(s).trim().replace('%','').trim();
+  if(s === '' || s === 'NULL' || s === '#VALUE!' || s === '#N/A') return 0;
+  s = s.replace(/\./g,'').replace(',', '.');
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function loadSummaryData(){
+  document.getElementById('summaryLoadingState').classList.remove('hidden');
+  document.getElementById('summaryErrorState').classList.add('hidden');
+  document.getElementById('summaryContent').classList.add('hidden');
+
+  const bustedUrl = SUMMARY_CSV_URL + '&cb=' + Date.now();
+  Papa.parse(bustedUrl, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results){
+      try{
+        const raw = results.data.filter(r => (r['Kantor Cabang']||'').trim() !== '' && (r['Parameter']||'').trim() !== '');
+        if(raw.length === 0){ throw new Error('Tidak ada baris data yang terbaca dari sheet Summary.'); }
+
+        summaryRows = raw.map(r => ({
+          kciKcp: (r['KCI/KCP']||'').trim(),
+          kci: (r['KCI']||'').trim(),
+          kd: (r['KD']||'').trim(),
+          kantorCabang: (r['Kantor Cabang']||'').trim(),
+          parameter: (r['Parameter']||'').trim(),
+          target: parseIDNum(r['Target']),
+          realisasi: parseIDNum(r['Realisasi']),
+          pct: parseIDPct(r['%']),
+          progressBulanan: parseIDNum(r['Progress Bulanan']),
+          pctProgressBulanan: parseIDPct(r['% Progress Bulanan']),
+          progressHarian: parseIDNum(r['Progress Harian']),
+          pctProgressHarian: parseIDPct(r['% Prograss Harian']),
+          tglProses: (r['Tgl_Proses']||'').trim(),
+          targetBulanan: parseIDNum(r['Target Bulanan']),
+          gap: parseIDNum(r['GAP']),
+          growthSd: parseIDNum(r['Growth s.d']),
+          namaKci: (r['Nama KCI']||'').trim(),
+          pctKanwil: parseIDPct(r['% Kanwil'])
+        }));
+
+        summaryParamList = Array.from(new Set(summaryRows.map(r => r.parameter))).sort((a,b)=>a.localeCompare(b));
+        summaryKanwilList = Array.from(new Set(summaryRows.map(r => r.namaKci))).filter(Boolean).sort((a,b)=>a.localeCompare(b));
+
+        buildSummaryFilters();
+
+        const latestDate = summaryRows.map(r => r.tglProses).sort().slice(-1)[0];
+        document.getElementById('summaryUpdatedText').textContent = latestDate ? ('Data per ' + latestDate) : '';
+
+        summaryLoaded = true;
+        renderSummaryPage();
+
+        document.getElementById('summaryLoadingState').classList.add('hidden');
+        document.getElementById('summaryContent').classList.remove('hidden');
+      }catch(err){
+        showSummaryError(err.message);
+      }
+    },
+    error: function(err){
+      showSummaryError(err && err.message ? err.message : String(err));
+    }
+  });
+}
+
+function showSummaryError(detail){
+  document.getElementById('summaryLoadingState').classList.add('hidden');
+  document.getElementById('summaryErrorState').classList.remove('hidden');
+  document.getElementById('summaryErrorDetail').textContent = detail || '';
+}
+
+function buildSummaryFilters(){
+  const paramSel = document.getElementById('summaryParamSelect');
+  paramSel.innerHTML = '';
+  summaryParamList.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p;
+    opt.textContent = p;
+    paramSel.appendChild(opt);
+  });
+  paramSel.addEventListener('change', renderSummaryPage);
+
+  const kanwilSel = document.getElementById('summaryKanwilSelect');
+  kanwilSel.innerHTML = '<option value="">Semua Kanwil</option>';
+  summaryKanwilList.forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = k;
+    kanwilSel.appendChild(opt);
+  });
+  kanwilSel.addEventListener('change', renderSummaryPage);
+}
+
+function fmtSummaryNum(v){
+  return Math.round(v).toLocaleString('id-ID');
+}
+function fmtSummaryPct(v){
+  return v.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2}) + '%';
+}
+
+function currentSummaryParam(){
+  return document.getElementById('summaryParamSelect').value;
+}
+function currentSummaryKanwil(){
+  return document.getElementById('summaryKanwilSelect').value;
+}
+
+function renderSummaryPage(){
+  const param = currentSummaryParam();
+  const kanwil = currentSummaryKanwil();
+
+  const kciRows = summaryRows.filter(r => r.parameter === param && r.kciKcp === 'KCI' && (!kanwil || r.namaKci === kanwil));
+  const totalTarget = kciRows.reduce((a,r)=>a+r.target, 0);
+  const totalRealisasi = kciRows.reduce((a,r)=>a+r.realisasi, 0);
+  const totalGap = kciRows.reduce((a,r)=>a+r.gap, 0);
+  const totalPct = totalTarget !== 0 ? (totalRealisasi/totalTarget*100) : 0;
+
+  document.getElementById('summaryTotalTarget').textContent = fmtSummaryNum(totalTarget);
+  document.getElementById('summaryTotalRealisasi').textContent = fmtSummaryNum(totalRealisasi);
+  document.getElementById('summaryTotalPct').textContent = fmtSummaryPct(totalPct);
+  document.getElementById('summaryTotalGap').textContent = (totalGap>=0?'+':'') + fmtSummaryNum(totalGap);
+
+  const cabangRows = summaryRows.filter(r => r.parameter === param && r.kciKcp === 'KCP' && (!kanwil || r.namaKci === kanwil));
+
+  document.getElementById('summaryCabangChartTitle').textContent = 'Pencapaian ' + param + ' per kantor cabang';
+  document.getElementById('summaryTableTitle').textContent = 'Rincian ' + param + ' per kantor cabang';
+  renderSummaryCabangChart(cabangRows);
+  renderSummaryTable(cabangRows);
+
+  const kanwilChartRows = summaryRows.filter(r => r.parameter === param && r.kciKcp === 'KCI');
+  renderSummaryKanwilChart(kanwilChartRows);
+}
+
+function summaryStatusColor(pct){
+  if(pct >= 100) return '#74B843';
+  if(pct >= 85) return '#F4C300';
+  return '#E57373';
+}
+
+function renderSummaryCabangChart(rows){
+  const sorted = rows.slice().sort((a,b)=> b.pct - a.pct);
+  const labels = sorted.map(r => r.kantorCabang);
+  const data = sorted.map(r => r.pct);
+  const colors = data.map(v => summaryStatusColor(v));
+
+  const wrapper = document.getElementById('summaryCabangChart').parentElement;
+  wrapper.style.height = Math.max(380, sorted.length * 22 + 40) + 'px';
+
+  const ctx = document.getElementById('summaryCabangChart');
+  if(summaryCabangChartInstance) summaryCabangChartInstance.destroy();
+  summaryCabangChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, maxBarThickness: 16 }] },
+    plugins: [ChartDataLabels],
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => 'Pencapaian: ' + fmtSummaryPct(ctx.raw) } },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: '#11284A',
+          font: { size: 10, weight: '600' },
+          formatter: (v) => fmtSummaryPct(v)
+        }
+      },
+      scales: {
+        x: { ticks: { color:'#6B7280', font:{size:11}, callback: (v)=>v+'%' }, grid: { color:'#E5E9ED' } },
+        y: { ticks: { color:'#11284A', font:{size: sorted.length>25?9:11} }, grid: { display:false } }
+      }
+    }
+  });
+}
+
+function renderSummaryKanwilChart(rows){
+  const sorted = rows.slice().sort((a,b)=> b.pct - a.pct);
+  const labels = sorted.map(r => r.kantorCabang);
+  const data = sorted.map(r => r.pct);
+  const colors = data.map(v => summaryStatusColor(v));
+
+  const ctx = document.getElementById('summaryKanwilChart');
+  if(summaryKanwilChartInstance) summaryKanwilChartInstance.destroy();
+  summaryKanwilChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, maxBarThickness: 20 }] },
+    plugins: [ChartDataLabels],
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => 'Pencapaian: ' + fmtSummaryPct(ctx.raw) } },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: '#11284A',
+          font: { size: 10, weight: '600' },
+          formatter: (v) => fmtSummaryPct(v)
+        }
+      },
+      scales: {
+        x: { ticks: { color:'#6B7280', font:{size:11}, callback: (v)=>v+'%' }, grid: { color:'#E5E9ED' } },
+        y: { ticks: { color:'#11284A', font:{size:11} }, grid: { display:false } }
+      }
+    }
+  });
+}
+
+function renderSummaryTable(rows){
+  const tbody = document.getElementById('summaryTableBody');
+  const sorted = rows.slice().sort((a,b)=> b.pct - a.pct);
+  tbody.innerHTML = sorted.map(r => `
+    <tr>
+      <td>${escapeHtml(r.kantorCabang)}</td>
+      <td>${escapeHtml(r.namaKci)}</td>
+      <td class="num">${fmtSummaryNum(r.target)}</td>
+      <td class="num">${fmtSummaryNum(r.realisasi)}</td>
+      <td class="num">${fmtSummaryPct(r.pct)}</td>
+      <td class="num">${fmtSummaryNum(r.progressBulanan)}</td>
+      <td class="num">${fmtSummaryPct(r.pctProgressBulanan)}</td>
+      <td class="num">${fmtSummaryNum(r.targetBulanan)}</td>
+      <td class="num">${(r.gap>=0?'+':'') + fmtSummaryNum(r.gap)}</td>
+    </tr>
+  `).join('');
+}
+
+document.getElementById('summarySearch').addEventListener('input', function(){
+  const q = this.value.trim().toLowerCase();
+  const param = currentSummaryParam();
+  const kanwil = currentSummaryKanwil();
+  let rows = summaryRows.filter(r => r.parameter === param && r.kciKcp === 'KCP' && (!kanwil || r.namaKci === kanwil));
+  if(q){ rows = rows.filter(r => r.kantorCabang.toLowerCase().includes(q) || r.namaKci.toLowerCase().includes(q)); }
+  renderSummaryTable(rows);
+});
 
 </script>
 
