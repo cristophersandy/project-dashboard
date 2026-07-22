@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Executive Dashboard</title>
+<title>Executive Dashboard KPI &mdash; Kanwil Jateng &amp; DIY</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <style>
   :root{
-    --navy:#11284A;
+    --navy:#5AC7DA;
     --navy-2:#0B5AA6;
     --slate-bg:#F5F7FA;
     --card:#FFFFFF;
@@ -60,9 +60,10 @@
     font-size:11px;
     letter-spacing:0.12em;
     text-transform:uppercase;
-    color:#8FA6C7;
+    color:#0B2A4A;
     margin:0 0 6px 0;
-    font-weight:600;
+    font-weight:700;
+    text-shadow:0 1px 2px rgba(255,255,255,0.25);
   }
   h1.title{
     font-size:24px;
@@ -72,8 +73,9 @@
   }
   .updated{
     font-size:12px;
-    color:#9FB2CC;
+    color:#0B2A4A;
     margin-top:6px;
+    font-weight:600;
   }
   .toplinks{display:flex;gap:8px;}
   .toptab{
@@ -125,8 +127,8 @@
     transition:background 0.15s ease, box-shadow 0.15s ease;
   }
   .maintab:hover{background:rgba(255,255,255,0.18);box-shadow:0 2px 10px rgba(0,0,0,0.18);}
-  .maintab.active{background:#F4C300;color:#11284A;}
-  .maintab.active:hover{background:#F4C300;box-shadow:none;}
+  .maintab.active{background:#fff;color:#11284A;}
+  .maintab.active:hover{background:#fff;box-shadow:none;}
 
   main{
     max-width:1360px;
@@ -256,15 +258,15 @@
 
   .insight-box{
     background:var(--navy);
-    color:#E8EDF5;
+    color:#0B2A4A;
     border-radius:10px;
     padding:20px 24px;
     font-size:14px;
     line-height:1.6;
     margin-bottom:24px;
   }
-  .insight-box b{color:#fff;}
-  .insight-icon{font-size:12px;color:#8FA6C7;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;margin-bottom:8px;display:block;}
+  .insight-box b{color:#08203A;}
+  .insight-icon{font-size:12px;color:#0B2A4A;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;margin-bottom:8px;display:block;}
 
   .state-msg{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;}
 
@@ -282,8 +284,8 @@
 <header class="topbar">
   <div class="topbar-inner">
     <div>
-      <p class="brand-eyebrow">BPJS Ketenagakerjaan &mdash; Kantor Wilayah Jawa Tengah &amp; DIY</p>
-      <h1 class="title display">Executive Dashboard</h1>
+      <p class="brand-eyebrow">BPJS Ketenagakerjaan &mdash; Kantor Wilayah</p>
+      <h1 class="title display">Executive Dashboard KPI &middot; Jawa Tengah &amp; DIY</h1>
       <p class="updated" id="updatedText">Memuat data&hellip;</p>
     </div>
     <div class="topnav-wrap">
@@ -1192,7 +1194,7 @@ function renderClassRankChart(){
   const sortedPeers = peers.slice().sort((a,b) => (unitMetaMap[b].scoreTotal||0) - (unitMetaMap[a].scoreTotal||0));
   const labels = sortedPeers;
   const data = sortedPeers.map(nk => unitMetaMap[nk].scoreTotal || 0);
-  const colors = sortedPeers.map(nk => nk === currentUnit ? '#11284A' : '#B9C3D1');
+  const colors = sortedPeers.map(nk => nk === currentUnit ? '#5AC7DA' : '#B9C3D1');
 
   const wrapper = document.getElementById('classRankChart').parentElement;
   wrapper.style.height = Math.max(300, sortedPeers.length * 20 + 40) + 'px';
@@ -1250,7 +1252,7 @@ function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
   const labels = sortedPeers;
   const data = sortedPeers.map(nk => growthOf(nk));
   const colors = sortedPeers.map(nk => {
-    if(nk === currentUnit) return '#11284A';
+    if(nk === currentUnit) return '#5AC7DA';
     return growthOf(nk) < 0 ? '#F5C6C3' : '#B9C3D1';
   });
 
