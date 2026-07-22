@@ -1905,6 +1905,7 @@ function parsePlainNum(s){
   if(s===undefined || s===null) return 0;
   s = String(s).trim();
   if(s === '' || s === 'NULL' || s === '#VALUE!' || s === '#N/A') return 0;
+  s = s.replace('%','').replace(/\./g,'').replace(',', '.');
   const n = parseFloat(s);
   return isNaN(n) ? 0 : n;
 }
@@ -2061,10 +2062,12 @@ function renderHistPage(){
   if(isAll){
     document.getElementById('histSubtitle').textContent = 'Menampilkan riwayat skor total ' + unitName + ' dari waktu ke waktu';
     document.getElementById('histTrendTitle').textContent = 'Tren skor total';
+    document.getElementById('histTrendSub').textContent = 'Perkembangan skor total dari waktu ke waktu';
     scoreByDate = dates.map(d => unitRows.filter(r=>r.periode===d).reduce((a,r)=>a+r.score, 0));
   } else {
     document.getElementById('histSubtitle').textContent = 'Menampilkan riwayat skor ' + currentHistIndikator + ' pada ' + unitName + ' dari waktu ke waktu';
     document.getElementById('histTrendTitle').textContent = 'Tren skor \u2014 ' + currentHistIndikator;
+    document.getElementById('histTrendSub').textContent = 'Perkembangan skor indikator ini dari waktu ke waktu';
     scoreByDate = dates.map(d => {
       const r = unitRows.find(rr => rr.periode === d && rr.nama === currentHistIndikator);
       return r ? r.score : 0;
