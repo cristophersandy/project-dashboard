@@ -86,6 +86,19 @@
   }
   .toptab.active{background:#fff;color:var(--navy);border-color:#fff;}
 
+  .subtab{
+    background:#EEF1F5;
+    border:1px solid #DCE1E8;
+    color:var(--navy);
+    padding:9px 16px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .subtab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
   .topnav-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
   .mainlinks{display:flex;gap:8px;}
   .maintab{
@@ -667,11 +680,85 @@
     </div>
 
     <div id="summaryContent" class="hidden">
+      <div class="subtabs" id="summarySubNav" style="display:flex;gap:8px;margin-bottom:18px;">
+        <button class="subtab active" data-summary-page="all">Semua Parameter</button>
+        <button class="subtab" data-summary-page="param">Per Parameter</button>
+      </div>
+
+      <!-- ========== SUMMARY SUB-PAGE: SEMUA PARAMETER ========== -->
+      <div id="summarySubAll" class="summary-subpage">
+        <div class="table-head-row" style="margin-bottom:18px;">
+          <div class="controls">
+            <select id="summaryAllUnitSelect"></select>
+          </div>
+          <div class="updated" id="summaryAllUpdatedText" style="color:var(--muted);"></div>
+        </div>
+
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-label">Jumlah Parameter</div>
+            <div class="kpi-val mono" id="summaryAllParamCount">-</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Tercapai (&ge;100%)</div>
+            <div class="kpi-val mono pos" id="summaryAllHijau">-</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Mendekati (85&ndash;99%)</div>
+            <div class="kpi-val mono" id="summaryAllKuning">-</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Perlu Perhatian (&lt;85%)</div>
+            <div class="kpi-val mono neg" id="summaryAllMerah">-</div>
+          </div>
+        </div>
+
+        <div class="panel-row">
+          <div class="panel" style="grid-column:1/-1;">
+            <h2 id="summaryAllChartTitle">Pencapaian seluruh parameter</h2>
+            <div class="sub" id="summaryAllChartSub">Persentase realisasi terhadap target untuk setiap parameter, diurutkan dari pencapaian tertinggi</div>
+            <div style="max-height:520px;overflow-y:auto;">
+              <div style="position:relative;height:440px;">
+                <canvas id="summaryAllChart" role="img" aria-label="Grafik batang pencapaian seluruh parameter pada unit kerja terpilih"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-panel">
+          <div class="table-head-row">
+            <h2 style="margin:0;font-size:14px;font-weight:600;" id="summaryAllTableTitle">Rincian seluruh parameter</h2>
+            <div class="controls">
+              <input type="text" id="summaryAllSearch" placeholder="Cari parameter&hellip;">
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th data-key="parameter">Parameter</th>
+                  <th class="num" data-key="target">Target</th>
+                  <th class="num" data-key="realisasi">Realisasi</th>
+                  <th class="num" data-key="pct">Pencapaian</th>
+                  <th class="num" data-key="progressBulanan">Progress Bulanan</th>
+                  <th class="num" data-key="pctProgressBulanan">% Progress Bulanan</th>
+                  <th class="num" data-key="targetBulanan">Target Bulanan</th>
+                  <th class="num" data-key="gap">GAP</th>
+                </tr>
+              </thead>
+              <tbody id="summaryAllTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== SUMMARY SUB-PAGE: PER PARAMETER ========== -->
+      <div id="summarySubParam" class="summary-subpage hidden">
       <div class="table-head-row" style="margin-bottom:18px;">
         <div class="controls">
           <select id="summaryParamSelect"></select>
           <select id="summaryKanwilSelect">
-            <option value="">Semua Kanwil</option>
+            <option value="">Semua KCI</option>
           </select>
         </div>
         <div class="updated" id="summaryUpdatedText" style="color:var(--muted);"></div>
@@ -710,10 +797,10 @@
 
       <div class="panel-row">
         <div class="panel" style="grid-column:1/-1;">
-          <h2>Pencapaian per Kanwil</h2>
-          <div class="sub">Persentase realisasi terhadap target di tingkat Kantor Wilayah</div>
+          <h2>Pencapaian per KCI</h2>
+          <div class="sub">Persentase realisasi terhadap target di tingkat KCI</div>
           <div style="position:relative;height:280px;">
-            <canvas id="summaryKanwilChart" role="img" aria-label="Grafik batang pencapaian parameter terpilih per kantor wilayah"></canvas>
+            <canvas id="summaryKanwilChart" role="img" aria-label="Grafik batang pencapaian parameter terpilih per KCI"></canvas>
           </div>
         </div>
       </div>
@@ -730,7 +817,7 @@
             <thead>
               <tr>
                 <th data-key="kantorCabang">Kantor Cabang</th>
-                <th data-key="namaKci">Kanwil</th>
+                <th data-key="namaKci">KCI</th>
                 <th class="num" data-key="target">Target</th>
                 <th class="num" data-key="realisasi">Realisasi</th>
                 <th class="num" data-key="pct">Pencapaian</th>
@@ -743,6 +830,7 @@
             <tbody id="summaryTableBody"></tbody>
           </table>
         </div>
+      </div>
       </div>
     </div>
   </div>
@@ -2172,6 +2260,7 @@ let summaryParamList = [];
 let summaryKanwilList = [];
 let summaryCabangChartInstance = null;
 let summaryKanwilChartInstance = null;
+let summaryAllChartInstance = null;
 
 function escapeHtml(s){
   return String(s==null?'':s)
@@ -2233,6 +2322,7 @@ function loadSummaryData(){
         document.getElementById('summaryUpdatedText').textContent = latestDate ? ('Data per ' + latestDate) : '';
 
         summaryLoaded = true;
+        renderSummaryAllPage();
         renderSummaryPage();
 
         document.getElementById('summaryLoadingState').classList.add('hidden');
@@ -2265,7 +2355,7 @@ function buildSummaryFilters(){
   paramSel.addEventListener('change', renderSummaryPage);
 
   const kanwilSel = document.getElementById('summaryKanwilSelect');
-  kanwilSel.innerHTML = '<option value="">Semua Kanwil</option>';
+  kanwilSel.innerHTML = '<option value="">Semua KCI</option>';
   summaryKanwilList.forEach(k => {
     const opt = document.createElement('option');
     opt.value = k;
@@ -2273,6 +2363,35 @@ function buildSummaryFilters(){
     kanwilSel.appendChild(opt);
   });
   kanwilSel.addEventListener('change', renderSummaryPage);
+
+  const unitSel = document.getElementById('summaryAllUnitSelect');
+  unitSel.innerHTML = '';
+  const uniqueUnits = new Map();
+  summaryRows.forEach(r => { if(!uniqueUnits.has(r.kantorCabang)) uniqueUnits.set(r.kantorCabang, r.kciKcp); });
+
+  const kciGroup = document.createElement('optgroup');
+  kciGroup.label = 'KCI';
+  const kcpGroup = document.createElement('optgroup');
+  kcpGroup.label = 'Kantor Cabang (KCP)';
+  Array.from(uniqueUnits.entries()).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([name, type]) => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    (type === 'KCI' ? kciGroup : kcpGroup).appendChild(opt);
+  });
+  unitSel.appendChild(kciGroup);
+  unitSel.appendChild(kcpGroup);
+  unitSel.addEventListener('change', renderSummaryAllPage);
+}
+
+/* ---- Sub-nav: Semua Parameter <-> Per Parameter ---- */
+document.querySelectorAll('#summarySubNav .subtab').forEach(btn => {
+  btn.addEventListener('click', () => showSummarySubPage(btn.getAttribute('data-summary-page')));
+});
+function showSummarySubPage(name){
+  document.querySelectorAll('#summarySubNav .subtab').forEach(b => b.classList.toggle('active', b.getAttribute('data-summary-page')===name));
+  document.getElementById('summarySubAll').classList.toggle('hidden', name!=='all');
+  document.getElementById('summarySubParam').classList.toggle('hidden', name!=='param');
 }
 
 function fmtSummaryNum(v){
@@ -2281,6 +2400,94 @@ function fmtSummaryNum(v){
 function fmtSummaryPct(v){
   return v.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2}) + '%';
 }
+
+function summaryStatusColor(pct){
+  if(pct >= 100) return '#74B843';
+  if(pct >= 85) return '#F4C300';
+  return '#E57373';
+}
+
+function renderSummaryAllPage(){
+  const unit = document.getElementById('summaryAllUnitSelect').value;
+  const rows = summaryRows.filter(r => r.kantorCabang === unit);
+
+  document.getElementById('summaryAllParamCount').textContent = rows.length.toLocaleString('id-ID');
+  document.getElementById('summaryAllHijau').textContent = rows.filter(r=>r.pct>=100).length;
+  document.getElementById('summaryAllKuning').textContent = rows.filter(r=>r.pct>=85 && r.pct<100).length;
+  document.getElementById('summaryAllMerah').textContent = rows.filter(r=>r.pct<85).length;
+
+  const latestDate = rows.map(r => r.tglProses).sort().slice(-1)[0];
+  document.getElementById('summaryAllUpdatedText').textContent = latestDate ? ('Data per ' + latestDate) : '';
+
+  document.getElementById('summaryAllChartTitle').textContent = 'Pencapaian seluruh parameter \u2014 ' + (unit||'-');
+  document.getElementById('summaryAllTableTitle').textContent = 'Rincian seluruh parameter \u2014 ' + (unit||'-');
+
+  renderSummaryAllChart(rows);
+  renderSummaryAllTable(rows);
+}
+
+function renderSummaryAllChart(rows){
+  const sorted = rows.slice().sort((a,b)=> b.pct - a.pct);
+  const labels = sorted.map(r => r.parameter);
+  const data = sorted.map(r => r.pct);
+  const colors = data.map(v => summaryStatusColor(v));
+
+  const wrapper = document.getElementById('summaryAllChart').parentElement;
+  wrapper.style.height = Math.max(440, sorted.length * 26 + 40) + 'px';
+
+  const ctx = document.getElementById('summaryAllChart');
+  if(summaryAllChartInstance) summaryAllChartInstance.destroy();
+  summaryAllChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, maxBarThickness: 18 }] },
+    plugins: [ChartDataLabels],
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => 'Pencapaian: ' + fmtSummaryPct(ctx.raw) } },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: '#11284A',
+          font: { size: 10, weight: '600' },
+          formatter: (v) => fmtSummaryPct(v)
+        }
+      },
+      scales: {
+        x: { ticks: { color:'#6B7280', font:{size:11}, callback: (v)=>v+'%' }, grid: { color:'#E5E9ED' } },
+        y: { ticks: { color:'#11284A', font:{size: sorted.length>25?9:11} }, grid: { display:false } }
+      }
+    }
+  });
+}
+
+function renderSummaryAllTable(rows){
+  const tbody = document.getElementById('summaryAllTableBody');
+  const sorted = rows.slice().sort((a,b)=> b.pct - a.pct);
+  tbody.innerHTML = sorted.map(r => `
+    <tr>
+      <td>${escapeHtml(r.parameter)}</td>
+      <td class="num">${fmtSummaryNum(r.target)}</td>
+      <td class="num">${fmtSummaryNum(r.realisasi)}</td>
+      <td class="num">${fmtSummaryPct(r.pct)}</td>
+      <td class="num">${fmtSummaryNum(r.progressBulanan)}</td>
+      <td class="num">${fmtSummaryPct(r.pctProgressBulanan)}</td>
+      <td class="num">${fmtSummaryNum(r.targetBulanan)}</td>
+      <td class="num">${(r.gap>=0?'+':'') + fmtSummaryNum(r.gap)}</td>
+    </tr>
+  `).join('');
+}
+
+document.getElementById('summaryAllSearch').addEventListener('input', function(){
+  const q = this.value.trim().toLowerCase();
+  const unit = document.getElementById('summaryAllUnitSelect').value;
+  let rows = summaryRows.filter(r => r.kantorCabang === unit);
+  if(q){ rows = rows.filter(r => r.parameter.toLowerCase().includes(q)); }
+  renderSummaryAllTable(rows);
+});
 
 function currentSummaryParam(){
   return document.getElementById('summaryParamSelect').value;
@@ -2313,12 +2520,6 @@ function renderSummaryPage(){
 
   const kanwilChartRows = summaryRows.filter(r => r.parameter === param && r.kciKcp === 'KCI');
   renderSummaryKanwilChart(kanwilChartRows);
-}
-
-function summaryStatusColor(pct){
-  if(pct >= 100) return '#74B843';
-  if(pct >= 85) return '#F4C300';
-  return '#E57373';
 }
 
 function renderSummaryCabangChart(rows){
