@@ -287,8 +287,8 @@
 <header class="topbar">
   <div class="topbar-inner">
     <div>
-      <p class="brand-eyebrow">BPJS Ketenagakerjaan &mdash; Kantor Wilayah</p>
-      <h1 class="title display">Executive Dashboard KPI &middot; Jawa Tengah &amp; DIY</h1>
+      <p class="brand-eyebrow">BPJS Ketenagakerjaan &mdash; Kantor Wilayah Jawa Tengah &amp; DIY</p>
+      <h1 class="title display">Executive Dashboard</h1>
       <p class="updated" id="updatedText">Memuat data&hellip;</p>
     </div>
     <div class="topnav-wrap">
@@ -299,12 +299,12 @@
       <div class="subnav-slot">
         <div class="toplinks" id="kpiSubNav">
           <button class="toptab active" data-page="exec">Ringkasan Eksekutif</button>
-          <button class="toptab" data-page="detail">Detail per Cabang</button>
+          <button class="toptab" data-page="detail">Parameter</button>
           <button class="toptab" data-page="historical">Historical</button>
         </div>
         <div class="toplinks" id="summarySubNavHeader" style="visibility:hidden;">
-          <button class="toptab active" data-summary-page="all">Semua Parameter</button>
-          <button class="toptab" data-summary-page="param">Per Parameter</button>
+          <button class="toptab active" data-summary-page="all">Unit Kerja</button>
+          <button class="toptab" data-summary-page="param">Parameter</button>
         </div>
       </div>
     </div>
@@ -1199,7 +1199,7 @@ function renderClassRankChart(){
   }
 
   document.getElementById('classRankTitle').textContent = isWilayah ? 'Peringkat antar Kantor Wilayah' : ('Peringkat di kelasnya (' + (meta.kelas||'-') + ')');
-  document.getElementById('classRankSub').innerHTML = 'Skor total ' + (currentUnit===WILAYAH_ROW_NAME?'Kanwil Jateng &amp; DIY':currentUnit) + ' dibandingkan ' + groupLabel + ' &mdash; diurutkan dari skor tertinggi';
+  document.getElementById('classRankSub').innerHTML = 'Skor total ' + (currentUnit===WILAYAH_ROW_NAME?'Kanwil Jateng &amp; DIY':currentUnit) + ' dibandingkan ' + groupLabel;
 
   const sortedPeers = peers.slice().sort((a,b) => (unitMetaMap[b].scoreTotal||0) - (unitMetaMap[a].scoreTotal||0));
   const labels = sortedPeers;
@@ -1248,8 +1248,8 @@ function renderClassRankChart(){
 function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
   const growthOf = (nk) => (unitMetaMap[nk].scoreTotal||0) - (unitMetaMap[nk].scoreTotalH1||0);
 
-  document.getElementById('growthRankTitle').textContent = isWilayah ? 'Peringkat growth antar Kantor Wilayah' : ('Peringkat growth di kelasnya (Kelas ' + (meta.kelas||'-') + ')');
-  document.getElementById('growthRankSub').innerHTML = 'Growth skor harian ' + (currentUnit===WILAYAH_ROW_NAME?'Kanwil Jateng &amp; DIY':currentUnit) + ' dibandingkan ' + groupLabel + ' &mdash; diurutkan dari growth tertinggi';
+  document.getElementById('growthRankTitle').textContent = isWilayah ? 'Peringkat growth harian antar Kantor Wilayah' : ('Peringkat growth harian di kelasnya (' + (meta.kelas||'-') + ')');
+  document.getElementById('growthRankSub').innerHTML = 'Growth skor harian ' + (currentUnit===WILAYAH_ROW_NAME?'Kanwil Jateng &amp; DIY':currentUnit) + ' dibandingkan ' + groupLabel;
 
   const sortedPeers = peers.slice().sort((a,b) => growthOf(b) - growthOf(a));
 
