@@ -113,6 +113,7 @@
   .topnav-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
   .subnav-slot{position:relative;height:38px;}
   .subnav-slot .toplinks{position:absolute;top:0;right:0;}
+  .subnav-slot .toptab{white-space:nowrap;}
   .mainlinks{display:flex;gap:8px;}
   .maintab{
     background:transparent;
@@ -378,6 +379,39 @@
             <canvas id="growthRankChart" role="img" aria-label="Grafik batang peringkat growth skor unit kerja dibandingkan unit lain sekelasnya"></canvas>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="panel-row">
+      <div class="panel">
+        <h2 id="growthBulanUnitTitle">Growth score bulanan antar unit kerja</h2>
+        <div class="sub" id="growthBulanUnitSub">Pertumbuhan skor total dibanding bulan sebelumnya, unit dengan kelas yang sama dengan unit terpilih</div>
+        <div style="max-height:480px;overflow-y:auto;">
+          <div style="position:relative;height:340px;">
+            <canvas id="growthBulanUnitChart" role="img" aria-label="Grafik batang growth score bulanan antar unit kerja sekelas"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-panel">
+      <div class="table-head-row">
+        <h2 style="margin:0;font-size:14px;font-weight:600;" id="growthBulanIndikatorTitle">Growth score bulanan per indikator &mdash; seluruh unit sekelas</h2>
+        <div class="controls">
+          <input type="text" id="growthBulanIndikatorSearch" placeholder="Cari unit kerja / indikator&hellip;">
+        </div>
+      </div>
+      <div style="overflow-x:auto;max-height:520px;overflow-y:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th data-key="namaKantor">Unit Kerja</th>
+              <th data-key="nama">Indikator / Parameter</th>
+              <th class="num" data-key="scoreGrowthBulan">Growth Score Bulanan</th>
+            </tr>
+          </thead>
+          <tbody id="growthBulanIndikatorBody"></tbody>
+        </table>
       </div>
     </div>
 
@@ -861,6 +895,7 @@ const TARGET_WILAYAH_CODE = "905";
 const WILAYAH_ROW_NAME = "KANWIL JATENG DAN DIY";
 
 let allRows = [];
+let growthBulanIndikatorRows = [];
 let jatengRows = [];
 let kodeKantorToName = {};
 let histRows = [];
@@ -891,6 +926,7 @@ let donutChartInstance = null;
 let matrixChartInstance = null;
 let classRankChartInstance = null;
 let growthRankChartInstance = null;
+let growthBulanUnitChartInstance = null;
 let kanwilCatChartInstance = null;
 
 function parseIDNum(s){
@@ -1227,6 +1263,8 @@ function renderClassRankChart(){
   renderCategoryBreakdownChart(peers, isWilayah, meta, groupLabel);
 
   renderGrowthRankChart(peers, isWilayah, meta, groupLabel);
+
+  renderGrowthBulanPeerPanels(peers, isWilayah, meta);
 }
 
 function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
@@ -1284,6 +1322,87 @@ function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
     }
   });
 }
+
+function renderGrowthBulanPeerPanels(peers, isWilayah, meta){
+  const growthBulanOf = (nk) => (unitMetaMap[nk].scoreTotal||0) - (unitMetaMap[nk].scoreTotalB1||0);
+
+  document.getElementById('growthBulanUnitTitle').textContent = 'Growth score bulanan antar unit kerja';
+  document.getElementById('growthBulanUnitSub').innerHTML = isWilayah
+    ? ('Pertumbuhan skor total dibanding bulan sebelumnya, dibandingkan seluruh ' + peers.length + ' Kantor Wilayah se-Indonesia')
+    : ('Pertumbuhan skor total dibanding bulan sebelumnya, dibandingkan ' + peers.length + ' kantor cabang kelas ' + (meta.kelas||'-') + ' se-Indonesia');
+
+  const sortedPeers = peers.slice().sort((a,b) => growthBulanOf(b) - growthBulanOf(a));
+  const labels = sortedPeers;
+  const data = sortedPeers.map(nk => growthBulanOf(nk));
+  const colors = sortedPeers.map(nk => {
+    if(nk === currentUnit) return '#5AC7DA';
+    return growthBulanOf(nk) < 0 ? '#F5C6C3' : '#B9C3D1';
+  });
+
+  const wrapper = document.getElementById('growthBulanUnitChart').parentElement;
+  wrapper.style.height = Math.max(300, sortedPeers.length * 20 + 40) + 'px';
+
+  const ctx = document.getElementById('growthBulanUnitChart');
+  if(growthBulanUnitChartInstance) growthBulanUnitChartInstance.destroy();
+  growthBulanUnitChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, maxBarThickness: 16 }] },
+    plugins: [ChartDataLabels],
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => 'Growth skor bulanan: ' + (ctx.raw>=0?'+':'') + fmtScore(ctx.raw) } },
+        datalabels: {
+          anchor: 'center',
+          align: 'center',
+          clamp: true,
+          color: (ctx) => sortedPeers[ctx.dataIndex] === currentUnit ? '#08203A' : '#fff',
+          font: { size: 10, weight: '700' },
+          formatter: (v) => (v>=0?'+':'') + fmtScore(v)
+        }
+      },
+      scales: {
+        x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
+        y: { ticks: { color:'#11284A', font:{size: sortedPeers.length>25?9:11} }, grid: { display:false } }
+      }
+    }
+  });
+
+  renderGrowthBulanIndikatorTable(peers, isWilayah, meta);
+}
+
+function renderGrowthBulanIndikatorTable(peers, isWilayah, meta){
+  document.getElementById('growthBulanIndikatorTitle').textContent = isWilayah
+    ? 'Growth score bulanan per indikator \u2014 seluruh Kantor Wilayah'
+    : ('Growth score bulanan per indikator \u2014 seluruh kantor cabang kelas ' + (meta.kelas||'-'));
+
+  const peerSet = new Set(peers);
+  growthBulanIndikatorRows = allRows.filter(r => peerSet.has(r.namaKantor));
+
+  renderGrowthBulanIndikatorBody(growthBulanIndikatorRows);
+}
+
+function renderGrowthBulanIndikatorBody(rows){
+  const tbody = document.getElementById('growthBulanIndikatorBody');
+  const sorted = rows.slice().sort((a,b) => b.scoreGrowthBulan - a.scoreGrowthBulan);
+  tbody.innerHTML = sorted.map(r => `
+    <tr>
+      <td>${escapeHtml(r.namaKantor)}</td>
+      <td>${escapeHtml(r.nama)}</td>
+      <td class="num">${(r.scoreGrowthBulan>=0?'+':'') + fmtScore(r.scoreGrowthBulan)}</td>
+    </tr>
+  `).join('');
+}
+
+document.getElementById('growthBulanIndikatorSearch').addEventListener('input', function(){
+  const q = this.value.trim().toLowerCase();
+  let rows = growthBulanIndikatorRows;
+  if(q){ rows = rows.filter(r => r.namaKantor.toLowerCase().includes(q) || r.nama.toLowerCase().includes(q)); }
+  renderGrowthBulanIndikatorBody(rows);
+});
 
 function renderCategoryBreakdownChart(peers, isWilayah, meta, groupLabel){
   document.getElementById('kanwilCatTitle').textContent = isWilayah
