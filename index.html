@@ -1467,7 +1467,7 @@ function renderGrowthParamList(peers, isWilayah, meta){
     : ('Indikator dengan growth skor harian terbesar, seluruh kantor cabang kelas ' + (meta.kelas||'-'));
 
   const peerSet = new Set(peers);
-  const rows = allRows.filter(r => peerSet.has(r.namaKantor));
+  const rows = allRows.filter(r => peerSet.has(r.namaKantor) && r.scoreGrowth !== 0);
   const sorted = rows.slice().sort((a,b) => b.scoreGrowth - a.scoreGrowth);
 
   const listEl = document.getElementById('growthParamList');
@@ -1995,7 +1995,7 @@ function parsePlainNum(s){
   if(s===undefined || s===null) return 0;
   s = String(s).trim();
   if(s === '' || s === 'NULL' || s === '#VALUE!' || s === '#N/A') return 0;
-  s = s.replace('%','').replace(/\./g,'').replace(',', '.');
+  s = s.replace('%','').replace(/,/g,'');
   const n = parseFloat(s);
   return isNaN(n) ? 0 : n;
 }
