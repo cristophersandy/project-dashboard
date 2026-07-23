@@ -394,27 +394,6 @@
       </div>
     </div>
 
-    <div class="table-panel">
-      <div class="table-head-row">
-        <h2 style="margin:0;font-size:14px;font-weight:600;" id="growthBulanIndikatorTitle">Growth score bulanan per indikator &mdash; seluruh unit sekelas</h2>
-        <div class="controls">
-          <input type="text" id="growthBulanIndikatorSearch" placeholder="Cari unit kerja / indikator&hellip;">
-        </div>
-      </div>
-      <div style="overflow-x:auto;max-height:520px;overflow-y:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th data-key="namaKantor">Unit Kerja</th>
-              <th data-key="nama">Indikator / Parameter</th>
-              <th class="num" data-key="scoreGrowthBulan">Growth Score Bulanan</th>
-            </tr>
-          </thead>
-          <tbody id="growthBulanIndikatorBody"></tbody>
-        </table>
-      </div>
-    </div>
-
     <div class="panel-row" id="kanwilCatPanelRow">
       <div class="panel" style="grid-column:1/-1;">
         <h2 id="kanwilCatTitle">Skor per kategori &mdash; seluruh Kantor Wilayah</h2>
@@ -895,7 +874,6 @@ const TARGET_WILAYAH_CODE = "905";
 const WILAYAH_ROW_NAME = "KANWIL JATENG DAN DIY";
 
 let allRows = [];
-let growthBulanIndikatorRows = [];
 let jatengRows = [];
 let kodeKantorToName = {};
 let histRows = [];
@@ -1370,39 +1348,7 @@ function renderGrowthBulanPeerPanels(peers, isWilayah, meta){
       }
     }
   });
-
-  renderGrowthBulanIndikatorTable(peers, isWilayah, meta);
 }
-
-function renderGrowthBulanIndikatorTable(peers, isWilayah, meta){
-  document.getElementById('growthBulanIndikatorTitle').textContent = isWilayah
-    ? 'Growth score bulanan per indikator \u2014 seluruh Kantor Wilayah'
-    : ('Growth score bulanan per indikator \u2014 seluruh kantor cabang kelas ' + (meta.kelas||'-'));
-
-  const peerSet = new Set(peers);
-  growthBulanIndikatorRows = allRows.filter(r => peerSet.has(r.namaKantor));
-
-  renderGrowthBulanIndikatorBody(growthBulanIndikatorRows);
-}
-
-function renderGrowthBulanIndikatorBody(rows){
-  const tbody = document.getElementById('growthBulanIndikatorBody');
-  const sorted = rows.slice().sort((a,b) => b.scoreGrowthBulan - a.scoreGrowthBulan);
-  tbody.innerHTML = sorted.map(r => `
-    <tr>
-      <td>${escapeHtml(r.namaKantor)}</td>
-      <td>${escapeHtml(r.nama)}</td>
-      <td class="num">${(r.scoreGrowthBulan>=0?'+':'') + fmtScore(r.scoreGrowthBulan)}</td>
-    </tr>
-  `).join('');
-}
-
-document.getElementById('growthBulanIndikatorSearch').addEventListener('input', function(){
-  const q = this.value.trim().toLowerCase();
-  let rows = growthBulanIndikatorRows;
-  if(q){ rows = rows.filter(r => r.namaKantor.toLowerCase().includes(q) || r.nama.toLowerCase().includes(q)); }
-  renderGrowthBulanIndikatorBody(rows);
-});
 
 function renderCategoryBreakdownChart(peers, isWilayah, meta, groupLabel){
   document.getElementById('kanwilCatTitle').textContent = isWilayah
