@@ -384,7 +384,7 @@
 
     <div class="panel-row">
       <div class="panel">
-        <h2 id="growthBulanUnitTitle">Growth score bulanan antar unit kerja</h2>
+        <h2 id="growthBulanUnitTitle">Growth skor bulanan</h2>
         <div class="sub" id="growthBulanUnitSub">Pertumbuhan skor total dibanding bulan sebelumnya, unit dengan kelas yang sama dengan unit terpilih</div>
         <div style="max-height:480px;overflow-y:auto;">
           <div style="position:relative;height:340px;">
@@ -1248,7 +1248,7 @@ function renderClassRankChart(){
 function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
   const growthOf = (nk) => (unitMetaMap[nk].scoreTotal||0) - (unitMetaMap[nk].scoreTotalH1||0);
 
-  document.getElementById('growthRankTitle').textContent = isWilayah ? 'Peringkat growth harian antar Kantor Wilayah' : ('Peringkat growth harian di kelasnya (' + (meta.kelas||'-') + ')');
+  document.getElementById('growthRankTitle').textContent = isWilayah ? 'Growth skor harian' : ('Growth skor harian');
   document.getElementById('growthRankSub').innerHTML = 'Growth skor harian ' + (currentUnit===WILAYAH_ROW_NAME?'Kanwil Jateng &amp; DIY':currentUnit) + ' dibandingkan ' + groupLabel;
 
   const sortedPeers = peers.slice().sort((a,b) => growthOf(b) - growthOf(a));
