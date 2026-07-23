@@ -1304,7 +1304,7 @@ function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
 function renderGrowthBulanPeerPanels(peers, isWilayah, meta){
   const growthBulanOf = (nk) => (unitMetaMap[nk].scoreTotal||0) - (unitMetaMap[nk].scoreTotalB1||0);
 
-  document.getElementById('growthBulanUnitTitle').textContent = 'Growth score bulanan antar unit kerja';
+  document.getElementById('growthBulanUnitTitle').textContent = 'Growth skor bulanan';
   document.getElementById('growthBulanUnitSub').innerHTML = isWilayah
     ? ('Pertumbuhan skor total dibanding bulan sebelumnya, dibandingkan seluruh ' + peers.length + ' Kantor Wilayah se-Indonesia')
     : ('Pertumbuhan skor total dibanding bulan sebelumnya, dibandingkan ' + peers.length + ' kantor cabang kelas ' + (meta.kelas||'-') + ' se-Indonesia');
