@@ -373,7 +373,7 @@
       </div>
       <div class="panel">
         <h2 id="growthBulanUnitTitle">Growth skor bulanan</h2>
-        <div class="sub" id="growthBulanUnitSub">Growth skor total dibanding bulan sebelumnya, unit dengan kelas yang sama dengan unit terpilih</div>
+        <div class="sub" id="growthBulanUnitSub">Pertumbuhan skor total dibanding bulan sebelumnya, unit dengan kelas yang sama dengan unit terpilih</div>
         <div style="max-height:480px;overflow-y:auto;">
           <div style="position:relative;height:340px;">
             <canvas id="growthBulanUnitChart" role="img" aria-label="Grafik batang growth score bulanan antar unit kerja sekelas"></canvas>
@@ -394,12 +394,8 @@
       </div>
       <div class="panel">
         <h2 id="growthParamTitle">Growth skor harian per parameter</h2>
-        <div class="sub" id="growthParamSub">Growth skor harian tiap parameter pada unit terpilih, diurutkan dari yang terbesar</div>
-        <div style="max-height:480px;overflow-y:auto;">
-          <div style="position:relative;height:340px;">
-            <canvas id="growthParamChart" role="img" aria-label="Grafik batang growth skor harian per parameter pada unit terpilih"></canvas>
-          </div>
-        </div>
+        <div class="sub" id="growthParamSub">Indikator dengan growth skor harian terbesar, seluruh unit kerja sekelas</div>
+        <div id="growthParamList" style="overflow-y:auto;"></div>
       </div>
     </div>
 
@@ -914,7 +910,6 @@ let matrixChartInstance = null;
 let classRankChartInstance = null;
 let growthRankChartInstance = null;
 let growthBulanUnitChartInstance = null;
-let growthParamChartInstance = null;
 let kanwilCatChartInstance = null;
 
 function parseIDNum(s){
@@ -1182,7 +1177,6 @@ function buildExecPage(){
   renderClassRankChart();
   renderDonut(unitRows);
   renderContributors(unitRows);
-  renderGrowthParamChart(unitRows);
   renderInsight(unitRows, meta, weightedPct, growthDay);
   renderMatrix(unitRows);
   renderWarRoom(unitRows);
@@ -1310,6 +1304,8 @@ function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
       }
     }
   });
+
+  renderGrowthParamList(peers, isWilayah, meta);
 }
 
 function renderGrowthBulanPeerPanels(peers, isWilayah, meta){
@@ -1317,8 +1313,8 @@ function renderGrowthBulanPeerPanels(peers, isWilayah, meta){
 
   document.getElementById('growthBulanUnitTitle').textContent = 'Growth skor bulanan';
   document.getElementById('growthBulanUnitSub').innerHTML = isWilayah
-    ? ('Growth skor total dibanding bulan sebelumnya, dibandingkan seluruh ' + peers.length + ' Kantor Wilayah se-Indonesia')
-    : ('Growth skor total dibanding bulan sebelumnya, dibandingkan ' + peers.length + ' kantor cabang kelas ' + (meta.kelas||'-') + ' se-Indonesia');
+    ? ('Pertumbuhan skor total dibanding bulan sebelumnya, dibandingkan seluruh ' + peers.length + ' Kantor Wilayah se-Indonesia')
+    : ('Pertumbuhan skor total dibanding bulan sebelumnya, dibandingkan ' + peers.length + ' kantor cabang kelas ' + (meta.kelas||'-') + ' se-Indonesia');
 
   const sortedPeers = peers.slice().sort((a,b) => growthBulanOf(b) - growthBulanOf(a));
   const labels = sortedPeers;
@@ -1465,42 +1461,24 @@ function renderContributors(rows){
   });
 }
 
-function renderGrowthParamChart(rows){
+function renderGrowthParamList(peers, isWilayah, meta){
+  document.getElementById('growthParamSub').textContent = isWilayah
+    ? 'Indikator dengan growth skor harian terbesar, seluruh Kantor Wilayah se-Indonesia'
+    : ('Indikator dengan growth skor harian terbesar, seluruh kantor cabang kelas ' + (meta.kelas||'-'));
+
+  const peerSet = new Set(peers);
+  const rows = allRows.filter(r => peerSet.has(r.namaKantor));
   const sorted = rows.slice().sort((a,b) => b.scoreGrowth - a.scoreGrowth);
-  const labels = sorted.map(r => r.nama);
-  const data = sorted.map(r => r.scoreGrowth);
-  const colors = data.map(v => v >= 0 ? '#74B843' : '#E57373');
 
-  const wrapper = document.getElementById('growthParamChart').parentElement;
-  wrapper.style.height = Math.max(300, sorted.length * 20 + 40) + 'px';
+  const listEl = document.getElementById('growthParamList');
+  listEl.style.height = Math.max(300, peers.length * 20 + 40) + 'px';
 
-  const ctx = document.getElementById('growthParamChart');
-  if(growthParamChartInstance) growthParamChartInstance.destroy();
-  growthParamChartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, maxBarThickness: 16 }] },
-    plugins: [ChartDataLabels],
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => 'Growth skor harian: ' + (ctx.raw>=0?'+':'') + fmtScore(ctx.raw) } },
-        datalabels: {
-          anchor: 'end',
-          align: 'end',
-          color: '#11284A',
-          font: { size: 10, weight: '600' },
-          formatter: (v) => (v>=0?'+':'') + fmtScore(v)
-        }
-      },
-      scales: {
-        x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
-        y: { ticks: { color:'#11284A', font:{size: sorted.length>25?9:11} }, grid: { display:false } }
-      }
-    }
-  });
+  listEl.innerHTML = sorted.map(r => `
+    <div class="mini-row">
+      <span class="mini-name" title="${escapeHtml(r.namaKantor)}">${escapeHtml(r.nama)} <span style="color:var(--muted);font-weight:400;">&mdash; ${escapeHtml(r.namaKantor)}</span></span>
+      <span class="mini-val ${r.scoreGrowth>=0?'text-good':'text-bad'}">${(r.scoreGrowth>=0?'+':'') + fmtScore(r.scoreGrowth)}</span>
+    </div>
+  `).join('');
 }
 
 function renderInsight(rows, meta, weightedPct, growthDay){
