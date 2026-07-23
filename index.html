@@ -1248,7 +1248,7 @@ function renderClassRankChart(){
 function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
   const growthOf = (nk) => (unitMetaMap[nk].scoreTotal||0) - (unitMetaMap[nk].scoreTotalH1||0);
 
-  document.getElementById('growthRankTitle').textContent = = 'Growth skor harian';
+  document.getElementById('growthRankTitle').textContent = isWilayah ? 'Peringkat growth harian antar Kantor Wilayah' : ('Peringkat growth harian di kelasnya (' + (meta.kelas||'-') + ')');
   document.getElementById('growthRankSub').innerHTML = 'Growth skor harian ' + (currentUnit===WILAYAH_ROW_NAME?'Kanwil Jateng &amp; DIY':currentUnit) + ' dibandingkan ' + groupLabel;
 
   const sortedPeers = peers.slice().sort((a,b) => growthOf(b) - growthOf(a));
@@ -1304,10 +1304,10 @@ function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
 function renderGrowthBulanPeerPanels(peers, isWilayah, meta){
   const growthBulanOf = (nk) => (unitMetaMap[nk].scoreTotal||0) - (unitMetaMap[nk].scoreTotalB1||0);
 
-  document.getElementById('growthBulanUnitTitle').textContent = 'Growth skor bulanan';
+  document.getElementById('growthBulanUnitTitle').textContent = 'Growth score bulanan antar unit kerja';
   document.getElementById('growthBulanUnitSub').innerHTML = isWilayah
-    ? ('Growth skor total dibanding bulan sebelumnya, dibandingkan seluruh ' + peers.length + ' Kantor Wilayah se-Indonesia')
-    : ('Growth skor total dibanding bulan sebelumnya, dibandingkan ' + peers.length + ' kantor cabang kelas ' + (meta.kelas||'-') + ' se-Indonesia');
+    ? ('Pertumbuhan skor total dibanding bulan sebelumnya, dibandingkan seluruh ' + peers.length + ' Kantor Wilayah se-Indonesia')
+    : ('Pertumbuhan skor total dibanding bulan sebelumnya, dibandingkan ' + peers.length + ' kantor cabang kelas ' + (meta.kelas||'-') + ' se-Indonesia');
 
   const sortedPeers = peers.slice().sort((a,b) => growthBulanOf(b) - growthBulanOf(a));
   const labels = sortedPeers;
