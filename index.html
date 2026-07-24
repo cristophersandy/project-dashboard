@@ -1217,7 +1217,7 @@ function renderClassRankChart(){
   const colors = sortedPeers.map(nk => nk === currentUnit ? '#5AC7DA' : '#B9C3D1');
 
   const wrapper = document.getElementById('classRankChart').parentElement;
-  wrapper.style.height = Math.max(300, sortedPeers.length * 20 + 40) + 'px';
+  wrapper.style.height = Math.min(600, Math.max(300, sortedPeers.length * 20 + 40)) + 'px';
 
   const ctx = document.getElementById('classRankChart');
   if(classRankChartInstance) classRankChartInstance.destroy();
@@ -1276,7 +1276,7 @@ function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
   });
 
   const wrapper = document.getElementById('growthRankChart').parentElement;
-  wrapper.style.height = Math.max(300, sortedPeers.length * 20 + 40) + 'px';
+  wrapper.style.height = Math.min(600, Math.max(300, sortedPeers.length * 20 + 40)) + 'px';
 
   const ctx = document.getElementById('growthRankChart');
   if(growthRankChartInstance) growthRankChartInstance.destroy();
@@ -1333,7 +1333,7 @@ function renderGrowthBulanPeerPanels(peers, isWilayah, meta){
   });
 
   const wrapper = document.getElementById('growthBulanUnitChart').parentElement;
-  wrapper.style.height = Math.max(300, sortedPeers.length * 20 + 40) + 'px';
+  wrapper.style.height = Math.min(600, Math.max(300, sortedPeers.length * 20 + 40)) + 'px';
 
   const ctx = document.getElementById('growthBulanUnitChart');
   if(growthBulanUnitChartInstance) growthBulanUnitChartInstance.destroy();
@@ -1479,7 +1479,7 @@ function renderGrowthParamList(peers, isWilayah, meta){
   const sorted = rows.slice().sort((a,b) => b.scoreGrowth - a.scoreGrowth);
 
   const listEl = document.getElementById('growthParamList');
-  listEl.style.height = Math.max(300, peers.length * 20 + 40) + 'px';
+  listEl.style.height = Math.min(600, Math.max(300, peers.length * 20 + 40)) + 'px';
 
   listEl.innerHTML = sorted.map(r => `
     <div class="mini-row">
@@ -1684,7 +1684,7 @@ function buildDetailPage(){
   kategoriList.forEach((k, i) => {
     const btn = document.createElement('button');
     btn.className = 'toptab' + (i===0 ? ' active' : '');
-    btn.style.color = i===0 ? '' : 'var(--muted)';
+    btn.style.color = i===0 ? '#08203A' : 'var(--muted)';
     btn.style.background = i===0 ? 'var(--navy)' : 'var(--card)';
     btn.style.border = '1px solid var(--line)';
     btn.textContent = k;
@@ -1747,7 +1747,7 @@ function selectKategori(k){
   document.querySelectorAll('#kategoriTabs .toptab').forEach(b => {
     const active = b.textContent === k;
     b.style.background = active ? 'var(--navy)' : 'var(--card)';
-    b.style.color = active ? '#fff' : 'var(--muted)';
+    b.style.color = active ? '#08203A' : 'var(--muted)';
   });
   buildIndikatorSelect();
 }
