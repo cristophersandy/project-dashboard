@@ -347,12 +347,12 @@
       <div class="kpi-card">
         <div class="kpi-lbl">Growth harian skor</div>
         <div class="kpi-val mono" id="execGrowthDay">&mdash;</div>
-        <div class="kpi-sub">dibanding H-1</div>
+        <div class="kpi-sub" id="execGrowthDaySub"></div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-lbl">Peringkat growth</div>
-        <div class="kpi-val mono" id="execGrowthRank">&mdash;</div>
-        <div class="kpi-sub" id="execGrowthRankSub"></div>
+        <div class="kpi-lbl">Growth bulanan skor</div>
+        <div class="kpi-val mono" id="execGrowthBulan">&mdash;</div>
+        <div class="kpi-sub" id="execGrowthBulanSub"></div>
       </div>
     </div>
 
@@ -1171,6 +1171,12 @@ function buildExecPage(){
   gEl.textContent = (growthDay>=0?'+':'') + fmtScore(growthDay);
   gEl.className = 'kpi-val mono ' + (growthDay>=0?'pos':'neg');
 
+  const growthBulan = meta.scoreTotal - (meta.scoreTotalB1||0);
+  const gbEl = document.getElementById('execGrowthBulan');
+  gbEl.textContent = (growthBulan>=0?'+':'') + fmtScore(growthBulan);
+  gbEl.className = 'kpi-val mono ' + (growthBulan>=0?'pos':'neg');
+  document.getElementById('execGrowthBulanSub').textContent = 'vs bulan lalu: ' + fmtScore(meta.scoreTotalB1||0);
+
   const totalBobot = unitRows.reduce((a,r)=>a+r.bobot,0);
   const weightedPct = totalBobot ? unitRows.reduce((a,r)=>a+r.bobot*r.pct,0)/totalBobot : 0;
 
@@ -1259,12 +1265,9 @@ function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
   const sortedPeers = peers.slice().sort((a,b) => growthOf(b) - growthOf(a));
 
   const growthRankPos = sortedPeers.indexOf(currentUnit) + 1;
-  const grEl = document.getElementById('execGrowthRank');
-  grEl.textContent = growthRankPos > 0 ? growthRankPos : '-';
-  grEl.className = 'kpi-val mono ' + (growthOf(currentUnit) >= 0 ? 'pos' : 'neg');
-  document.getElementById('execGrowthRankSub').textContent = isWilayah
-    ? ('dari ' + sortedPeers.length + ' Kantor Wilayah')
-    : ('dari ' + sortedPeers.length + ' cabang kelas ' + (meta.kelas||'-'));
+  document.getElementById('execGrowthDaySub').textContent = isWilayah
+    ? ('Peringkat ' + (growthRankPos>0?growthRankPos:'-') + ' dari ' + sortedPeers.length + ' kantor wilayah')
+    : ('Peringkat ' + (growthRankPos>0?growthRankPos:'-') + ' dari ' + sortedPeers.length + ' cabang kelas ' + (meta.kelas||'-'));
 
   const labels = sortedPeers;
   const data = sortedPeers.map(nk => growthOf(nk));
