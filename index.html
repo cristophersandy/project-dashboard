@@ -1175,7 +1175,6 @@ function buildExecPage(){
   const gbEl = document.getElementById('execGrowthBulan');
   gbEl.textContent = (growthBulan>=0?'+':'') + fmtScore(growthBulan);
   gbEl.className = 'kpi-val mono ' + (growthBulan>=0?'pos':'neg');
-  document.getElementById('execGrowthBulanSub').textContent = 'vs bulan lalu: ' + fmtScore(meta.scoreTotalB1||0);
 
   const totalBobot = unitRows.reduce((a,r)=>a+r.bobot,0);
   const weightedPct = totalBobot ? unitRows.reduce((a,r)=>a+r.bobot*r.pct,0)/totalBobot : 0;
@@ -1320,6 +1319,12 @@ function renderGrowthBulanPeerPanels(peers, isWilayah, meta){
     : ('Pertumbuhan skor total dibanding bulan sebelumnya, dibandingkan ' + peers.length + ' kantor cabang kelas ' + (meta.kelas||'-') + ' se-Indonesia');
 
   const sortedPeers = peers.slice().sort((a,b) => growthBulanOf(b) - growthBulanOf(a));
+
+  const growthBulanRankPos = sortedPeers.indexOf(currentUnit) + 1;
+  document.getElementById('execGrowthBulanSub').textContent = isWilayah
+    ? ('Peringkat ' + (growthBulanRankPos>0?growthBulanRankPos:'-') + ' dari ' + sortedPeers.length + ' kantor wilayah')
+    : ('Peringkat ' + (growthBulanRankPos>0?growthBulanRankPos:'-') + ' dari ' + sortedPeers.length + ' cabang kelas ' + (meta.kelas||'-'));
+
   const labels = sortedPeers;
   const data = sortedPeers.map(nk => growthBulanOf(nk));
   const colors = sortedPeers.map(nk => {
