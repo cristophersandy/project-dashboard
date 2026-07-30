@@ -565,11 +565,11 @@
         <div id="leaderboard" style="max-height:420px;overflow-y:auto;padding-right:4px;"></div>
       </div>
       <div class="panel">
-        <h2>Target vs realisasi per cabang</h2>
-        <div class="sub">Seluruh kantor cabang, diurutkan dari realisasi tertinggi</div>
+        <h2>Growth skor harian per cabang</h2>
+        <div class="sub">Seluruh kantor cabang, diurutkan dari growth tertinggi</div>
         <div style="max-height:420px;overflow-y:auto;">
           <div style="position:relative;height:340px;">
-            <canvas id="clusterChart" role="img" aria-label="Grafik batang perbandingan target dan realisasi per kantor cabang"></canvas>
+            <canvas id="growthHarianCabangChart" role="img" aria-label="Grafik batang growth skor harian per kantor cabang"></canvas>
           </div>
         </div>
       </div>
@@ -1812,7 +1812,7 @@ function renderDetailAll(){
   document.getElementById('kpiGrowthBulananSub').textContent = wRow ? ('Pencapaian: ' + (wRow.pencapaianGrowthBulan>=0?'+':'') + fmtPct(wRow.pencapaianGrowthBulan)) : '';
 
   renderLeaderboard(rows);
-  renderClusterChart(rows);
+  renderGrowthHarianCabangChart(rows);
   renderGrowthBulanRealisasiChart(rows);
   renderGrowthBulanPencapaianChart(rows);
   renderDetailTable();
@@ -1837,33 +1837,38 @@ function renderLeaderboard(rows){
   });
 }
 
-function renderClusterChart(rows){
-  const sorted = rows.slice().sort((a,b)=> b.realisasi - a.realisasi);
-  const clusters = sorted.map(r => r.namaKantor);
-  const targetData = sorted.map(r => r.target);
-  const realisasiData = sorted.map(r => r.realisasi);
+function renderGrowthHarianCabangChart(rows){
+  const sorted = rows.slice().sort((a,b)=> b.scoreGrowth - a.scoreGrowth);
+  const labels = sorted.map(r => r.namaKantor);
+  const data = sorted.map(r => r.scoreGrowth);
+  const colors = data.map(v => v >= 0 ? '#74B843' : '#E57373');
 
-  const wrapper = document.getElementById('clusterChart').parentElement;
-  wrapper.style.height = Math.max(340, clusters.length * 22 + 40) + 'px';
+  const wrapper = document.getElementById('growthHarianCabangChart').parentElement;
+  wrapper.style.height = Math.max(340, labels.length * 22 + 40) + 'px';
 
-  const ctx = document.getElementById('clusterChart');
+  const ctx = document.getElementById('growthHarianCabangChart');
   if(clusterChartInstance) clusterChartInstance.destroy();
   clusterChartInstance = new Chart(ctx, {
     type: 'bar',
-    data: {
-      labels: clusters,
-      datasets: [
-        { label: 'Target', data: targetData, backgroundColor: '#B9C3D1', borderRadius: 3, maxBarThickness: 14 },
-        { label: 'Realisasi', data: realisasiData, backgroundColor: '#74B843', borderRadius: 3, maxBarThickness: 14 }
-      ]
-    },
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, maxBarThickness: 16 }] },
+    plugins: [ChartDataLabels],
     options: {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => 'Growth skor harian: ' + (ctx.raw>=0?'+':'') + fmtScore(ctx.raw) } },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: '#11284A',
+          font: { size: 10, weight: '600' },
+          formatter: (v) => (v>=0?'+':'') + fmtScore(v)
+        }
+      },
       scales: {
-        x: { ticks: { callback: (v) => fmtBig(v), color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
+        x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
         y: { ticks: { color:'#11284A', font:{size:11} }, grid: { display:false } }
       }
     }
