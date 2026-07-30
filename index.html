@@ -10,6 +10,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 <style>
   :root{
     --navy:#5AC7DA;
@@ -238,6 +240,19 @@
     background:#F9FAFB;
   }
   #search{width:220px;}
+  .download-btn{
+    background:var(--navy);
+    color:#08203A;
+    border:none;
+    border-radius:8px;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:inherit;
+    transition:filter 0.15s ease;
+  }
+  .download-btn:hover{filter:brightness(0.95);}
   table{width:100%;border-collapse:collapse;font-size:12.5px;}
   thead th{
     text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.04em;
@@ -598,8 +613,14 @@
 
     <div class="table-panel">
       <div class="table-head-row">
-        <h2 style="margin:0;font-size:14px;font-weight:600;">Rincian per kantor cabang</h2>
-        <input type="text" id="search" placeholder="Cari nama kantor cabang&hellip;">
+        <div>
+          <h2 style="margin:0;font-size:14px;font-weight:600;">Rincian per Unit Kerja</h2>
+          <div class="sub" id="detailTableSub" style="margin:2px 0 0 0;"></div>
+        </div>
+        <div class="controls">
+          <input type="text" id="search" placeholder="Cari nama kantor cabang&hellip;">
+          <button id="downloadReportBtn" class="download-btn" type="button">&#8681; Download PDF</button>
+        </div>
       </div>
       <div style="overflow-x:auto;">
         <table>
@@ -1798,6 +1819,7 @@ function renderDetailAll(){
   gapEl.textContent = (totalGap >= 0 ? '+' : '') + fmtBig(totalGap);
   gapEl.className = 'kpi-val mono ' + (totalGap >= 0 ? 'pos' : 'neg');
   document.getElementById('kpiGapSub').textContent = 'realisasi wilayah dikurangi target wilayah';
+  document.getElementById('detailTableSub').textContent = 'Parameter: ' + currentIndikator;
 
   const ghEl = document.getElementById('kpiGrowthHarian');
   const ghVal = wRow ? wRow.realisasiGrowth : 0;
@@ -2009,6 +2031,72 @@ function renderDetailTable(){
 }
 
 loadData();
+
+function downloadDetailReport(){
+  const rows = currentDetailRows();
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  let filtered = q ? rows.filter(r => r.namaKantor.toLowerCase().includes(q)) : rows;
+  filtered = filtered.slice().sort((a,b) => {
+    if(sortKey === 'kelas'){
+      const c = sortDir * (a.kelas||'').localeCompare(b.kelas||'');
+      if(c !== 0) return c;
+      return (a.rankIndikator||0) - (b.rankIndikator||0);
+    }
+    const av = a[sortKey], bv = b[sortKey];
+    if(typeof av === 'string') return sortDir * av.localeCompare(bv);
+    return sortDir * ((av||0) - (bv||0));
+  });
+
+  const headers = ['Rank','+/-','Kelas','Kantor Cabang','Target','Realisasi','%','GAP','Skor','Ketertinggalan','Kebutuhan','Growth Realisasi','Growth Harian'];
+
+  const body = filtered.map(r => {
+    const gap1Disp = r.gap1 === 0 ? '-' : fmtScore(r.gap1);
+    const vs1Disp = r.vs1 === 0 ? '-' : fmtBig(r.vs1);
+    const realGrowthDisp = r.realisasiGrowth === 0 ? '-' : (r.realisasiGrowth>0?'+':'') + fmtBig(r.realisasiGrowth);
+    const scoreGrowthDisp = r.scoreGrowth === 0 ? '-' : (r.scoreGrowth>0?'+':'') + fmtScore(r.scoreGrowth);
+    const deltaRankDisp = r.deltaRankParameter === 0 ? '-' : (r.deltaRankParameter>0?'+':'') + Math.round(r.deltaRankParameter);
+    return [
+      Math.round(r.rankIndikator),
+      deltaRankDisp,
+      r.kelas,
+      r.namaKantor,
+      fmtBig(r.target),
+      fmtBig(r.realisasi),
+      fmtPct(r.pct),
+      (r.gap>=0?'+':'')+fmtBig(r.gap),
+      fmtScore(r.score),
+      gap1Disp,
+      vs1Disp,
+      realGrowthDisp,
+      scoreGrowthDisp
+    ];
+  });
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+
+  doc.setFontSize(14);
+  doc.setTextColor(11,42,74);
+  doc.text('Rincian per Unit Kerja', 40, 40);
+  doc.setFontSize(10);
+  doc.setTextColor(80,80,80);
+  doc.text('Parameter: ' + (currentIndikator||'-'), 40, 58);
+  doc.text('Data per ' + (document.getElementById('updatedText').textContent||'-').replace('Data per ',''), 40, 72);
+
+  doc.autoTable({
+    startY: 88,
+    head: [headers],
+    body: body,
+    styles: { fontSize: 8, cellPadding: 4 },
+    headStyles: { fillColor: [90,199,218], textColor: [8,32,58], fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [247,249,251] },
+    margin: { left: 40, right: 40 }
+  });
+
+  const safeParam = (currentIndikator||'parameter').replace(/[^a-z0-9]+/gi, '_');
+  doc.save('rincian_per_unit_kerja_' + safeParam + '.pdf');
+}
+document.getElementById('downloadReportBtn').addEventListener('click', downloadDetailReport);
 
 /* ============== PAGE 3: HISTORICAL ============== */
 function parsePlainNum(s){
