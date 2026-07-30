@@ -2073,24 +2073,24 @@ function downloadDetailReport(){
   });
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
 
   doc.setFontSize(14);
   doc.setTextColor(11,42,74);
-  doc.text('Rincian per Unit Kerja', 40, 40);
+  doc.text('Rincian per Unit Kerja', 30, 36);
   doc.setFontSize(10);
   doc.setTextColor(80,80,80);
-  doc.text('Parameter: ' + (currentIndikator||'-'), 40, 58);
-  doc.text('Data per ' + (document.getElementById('updatedText').textContent||'-').replace('Data per ',''), 40, 72);
+  doc.text('Parameter: ' + (currentIndikator||'-'), 30, 52);
+  doc.text('Data per ' + (document.getElementById('updatedText').textContent||'-').replace('Data per ',''), 30, 65);
 
   doc.autoTable({
-    startY: 88,
+    startY: 80,
     head: [headers],
     body: body,
-    styles: { fontSize: 8, cellPadding: 4 },
-    headStyles: { fillColor: [90,199,218], textColor: [8,32,58], fontStyle: 'bold' },
+    styles: { fontSize: 6.5, cellPadding: 3, overflow: 'linebreak' },
+    headStyles: { fillColor: [11,87,208], textColor: [255,255,255], fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [247,249,251] },
-    margin: { left: 40, right: 40 }
+    margin: { left: 30, right: 30 }
   });
 
   const safeParam = (currentIndikator||'parameter').replace(/[^a-z0-9]+/gi, '_');
