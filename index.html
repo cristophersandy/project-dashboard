@@ -1841,6 +1841,7 @@ function renderGrowthHarianCabangChart(rows){
   const sorted = rows.slice().sort((a,b)=> b.scoreGrowth - a.scoreGrowth);
   const labels = sorted.map(r => r.namaKantor);
   const data = sorted.map(r => r.scoreGrowth);
+  const realGrowthData = sorted.map(r => r.realisasiGrowth);
   const colors = data.map(v => v >= 0 ? '#74B843' : '#E57373');
 
   const wrapper = document.getElementById('growthHarianCabangChart').parentElement;
@@ -1858,13 +1859,19 @@ function renderGrowthHarianCabangChart(rows){
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => 'Growth skor harian: ' + (ctx.raw>=0?'+':'') + fmtScore(ctx.raw) } },
+        tooltip: { callbacks: { label: (ctx) => {
+          const rg = realGrowthData[ctx.dataIndex];
+          return 'Growth skor harian: ' + (ctx.raw>=0?'+':'') + fmtScore(ctx.raw) + '  |  Growth realisasi harian: ' + (rg>=0?'+':'') + fmtBigDec(rg);
+        }}},
         datalabels: {
           anchor: 'end',
           align: 'end',
           color: '#11284A',
           font: { size: 10, weight: '600' },
-          formatter: (v) => (v>=0?'+':'') + fmtScore(v)
+          formatter: (v, ctx) => {
+            const rg = realGrowthData[ctx.dataIndex];
+            return (v>=0?'+':'') + fmtScore(v) + ' (' + (rg>=0?'+':'') + fmtBigDec(rg) + ')';
+          }
         }
       },
       scales: {
