@@ -240,6 +240,11 @@
     background:#F9FAFB;
   }
   #search{width:220px;}
+  #weeklyMatrixTable{font-size:11.5px;}
+  #weeklyMatrixTable th, #weeklyMatrixTable td{white-space:nowrap;}
+  #weeklyMatrixTable .grp-border-l{border-left:2px solid var(--line);}
+  #weeklyMatrixTable .null-cell{color:#B0B7C0;font-style:italic;}
+  #weeklyMatrixTable tfoot td{font-weight:700;border-top:2px solid var(--navy);background:#F7F9FB;}
   .download-btn{
     background:var(--navy);
     color:#fff;
@@ -894,95 +899,54 @@
       <div id="summarySubWeekly" class="summary-subpage hidden">
       <div class="table-head-row" style="margin-bottom:18px;">
         <div class="controls">
+          <label style="font-size:13px;font-weight:600;color:var(--muted);display:flex;align-items:center;">Parameter&nbsp;</label>
           <select id="weeklyParamSelect"></select>
-          <select id="weeklyWeekSelect"></select>
-          <select id="weeklyKciSelect">
-            <option value="">Semua KCI</option>
-          </select>
         </div>
         <div class="updated" id="weeklyUpdatedText" style="color:var(--muted);"></div>
       </div>
 
       <div class="kpi-row">
         <div class="kpi-card">
-          <div class="kpi-label">Total Target</div>
-          <div class="kpi-val mono" id="weeklyTotalTarget">-</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Total Realisasi</div>
+          <div class="kpi-label">Realisasi Terbaru</div>
           <div class="kpi-val mono" id="weeklyTotalRealisasi">-</div>
+          <div class="kpi-sub" id="weeklyLatestWeekSub"></div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">% Pencapaian</div>
           <div class="kpi-val mono" id="weeklyTotalPct">-</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Total Net Growth</div>
+          <div class="kpi-label">Growth Minggu Terakhir</div>
           <div class="kpi-val mono" id="weeklyTotalNetGrowth">-</div>
         </div>
-      </div>
-
-      <div class="panel-row">
-        <div class="panel" style="grid-column:1/-1;">
-          <h2 id="weeklyCabangChartTitle">Pencapaian per kantor cabang</h2>
-          <div class="sub" id="weeklyCabangChartSub">Persentase realisasi terhadap target, diurutkan dari pencapaian tertinggi</div>
-          <div style="max-height:460px;overflow-y:auto;">
-            <div style="position:relative;height:380px;">
-              <canvas id="weeklyCabangChart" role="img" aria-label="Grafik batang pencapaian parameter terpilih per kantor cabang pada minggu terpilih"></canvas>
-            </div>
-          </div>
+        <div class="kpi-card">
+          <div class="kpi-label">% Growth (vs baseline)</div>
+          <div class="kpi-val mono" id="weeklyTotalPctGrowth">-</div>
         </div>
       </div>
 
       <div class="panel-row">
         <div class="panel" style="grid-column:1/-1;">
-          <h2 id="weeklyKciChartTitle">Net Growth per kantor cabang</h2>
-          <div class="sub" id="weeklyKciChartSub">Pertumbuhan bersih (Net Growth) dibanding minggu sebelumnya, diurutkan dari growth tertinggi</div>
-          <div style="max-height:460px;overflow-y:auto;">
-            <div style="position:relative;height:380px;">
-              <canvas id="weeklyNetGrowthChart" role="img" aria-label="Grafik batang net growth parameter terpilih per kantor cabang pada minggu terpilih"></canvas>
-            </div>
+          <h2 id="weeklyTrendTitle">Tren realisasi per minggu &mdash; Jateng &amp; DIY</h2>
+          <div class="sub" id="weeklyTrendSub">Total realisasi seluruh kantor cabang dari waktu ke waktu (minggu tanpa data ditampilkan terputus)</div>
+          <div style="position:relative;height:280px;">
+            <canvas id="weeklyTrendChart" role="img" aria-label="Grafik garis tren realisasi total per minggu"></canvas>
           </div>
         </div>
       </div>
 
       <div class="table-panel">
         <div class="table-head-row">
-          <h2 style="margin:0;font-size:14px;font-weight:600;" id="weeklyMatrixTitle">Progress mingguan per kantor cabang</h2>
+          <h2 style="margin:0;font-size:14px;font-weight:600;" id="weeklyMatrixTitle">Progress mingguan per unit kerja</h2>
           <div class="controls">
-            <input type="text" id="weeklyMatrixSearch" placeholder="Cari kantor cabang&hellip;">
+            <input type="text" id="weeklyMatrixSearch" placeholder="Cari unit kerja&hellip;">
           </div>
         </div>
-        <div class="sub" id="weeklyMatrixSub" style="margin-bottom:12px;">Pencapaian (%) dan Net Growth per minggu</div>
         <div style="overflow-x:auto;">
-          <table>
+          <table id="weeklyMatrixTable">
             <thead id="weeklyMatrixHead"></thead>
             <tbody id="weeklyMatrixBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="table-panel">
-        <div class="table-head-row">
-          <h2 style="margin:0;font-size:14px;font-weight:600;" id="weeklyTableTitle">Rincian per kantor cabang</h2>
-          <div class="controls">
-            <input type="text" id="weeklySearch" placeholder="Cari kantor cabang&hellip;">
-          </div>
-        </div>
-        <div style="overflow-x:auto;">
-          <table>
-            <thead>
-              <tr>
-                <th data-key="kantorCabang">Kantor Cabang</th>
-                <th data-key="namaKci">KCI</th>
-                <th class="num" data-key="target">Target</th>
-                <th class="num" data-key="realisasi">Realisasi</th>
-                <th class="num" data-key="pct">Pencapaian</th>
-                <th class="num" data-key="netGrowth">Net Growth</th>
-                <th class="num" data-key="pctNetGrowth">% Net Growth</th>
-              </tr>
-            </thead>
-            <tbody id="weeklyTableBody"></tbody>
+            <tfoot id="weeklyMatrixFoot"></tfoot>
           </table>
         </div>
       </div>
@@ -2987,10 +2951,9 @@ document.getElementById('summarySearch').addEventListener('input', function(){
 /* ============== SUB-PAGE: WEEKLY ============== */
 let weeklyRows = [];
 let weeklyParamList = [];
-let weeklyKciList = [];
 let weeklyWeekList = [];
-let weeklyCabangChartInstance = null;
-let weeklyNetGrowthChartInstance = null;
+let weeklyTrendChartInstance = null;
+let weeklyMatrixRows = [];
 
 function loadWeeklyData(){
   document.getElementById('summaryLoadingState').classList.remove('hidden');
@@ -3006,32 +2969,27 @@ function loadWeeklyData(){
         const raw = results.data.filter(r => (r['Kantor Cabang']||'').trim() !== '' && (r['Parameter']||'').trim() !== '');
         if(raw.length === 0){ throw new Error('Tidak ada baris data yang terbaca dari sheet Weekly.'); }
 
-        const fields = results.meta.fields || [];
-        const pctNetGrowthKey = fields.find(f => f.trim() === '') || '';
-
         weeklyRows = raw.map(r => ({
           kciKcp: (r['KCI/KCP']||'').trim(),
           kci: (r['KCI']||'').trim(),
           kd: (r['KD']||'').trim(),
           kantorCabang: (r['Kantor Cabang']||'').trim(),
-          namaKci: (r['Kantor Cabang']||'').trim(),
           parameter: (r['Parameter']||'').trim(),
           target: parseIDNum(r['Target']),
           realisasi: parseIDNum(r['Realisasi']),
           pct: parseIDPct(r['%']),
           week: (r['Week']||'').trim(),
+          tglProses: (r['Tgl Proses']||'').trim(),
           netGrowth: parseIDNum(r['Net Growth']),
-          pctNetGrowth: parseIDPct(r[pctNetGrowthKey])
+          pctGrowth: parseIDPct(r['% Growth']),
+          hasData: (r['Realisasi']||'').trim() !== ''
         }));
 
-        // Nama KCI (nama unit induk) perlu diambil dari baris KCI itu sendiri per kode KCI
-        const kciNameByCode = {};
-        weeklyRows.forEach(r => { if(r.kciKcp === 'KCI') kciNameByCode[r.kci] = r.kantorCabang; });
-        weeklyRows.forEach(r => { r.namaKci = kciNameByCode[r.kci] || r.kantorCabang; });
-
         weeklyParamList = Array.from(new Set(weeklyRows.map(r => r.parameter))).sort((a,b)=>a.localeCompare(b));
-        weeklyKciList = Array.from(new Set(weeklyRows.map(r => r.namaKci))).filter(Boolean).sort((a,b)=>a.localeCompare(b));
-        weeklyWeekList = Array.from(new Set(weeklyRows.map(r => r.week))).sort((a,b)=>(parseInt(a)||0)-(parseInt(b)||0));
+        weeklyWeekList = Array.from(new Set(weeklyRows.map(r => r.week))).sort((a,b)=>{
+          const na = parseInt(a.replace(/\D/g,''))||0, nb = parseInt(b.replace(/\D/g,''))||0;
+          return na-nb;
+        });
 
         buildWeeklyFilters();
         weeklyLoaded = true;
@@ -3059,224 +3017,252 @@ function buildWeeklyFilters(){
     paramSel.appendChild(opt);
   });
   paramSel.addEventListener('change', renderWeeklyPage);
-
-  const weekSel = document.getElementById('weeklyWeekSelect');
-  weekSel.innerHTML = '';
-  weeklyWeekList.forEach(w => {
-    const opt = document.createElement('option');
-    opt.value = w;
-    opt.textContent = (w === '0') ? 'Minggu Awal (0)' : ('Minggu ke-' + w);
-    weekSel.appendChild(opt);
-  });
-  weekSel.value = weeklyWeekList[weeklyWeekList.length-1];
-  weekSel.addEventListener('change', renderWeeklyPage);
-
-  const kciSel = document.getElementById('weeklyKciSelect');
-  kciSel.innerHTML = '<option value="">Semua KCI</option>';
-  weeklyKciList.forEach(k => {
-    const opt = document.createElement('option');
-    opt.value = k;
-    opt.textContent = k;
-    kciSel.appendChild(opt);
-  });
-  kciSel.addEventListener('change', renderWeeklyPage);
 }
 
 function currentWeeklyParam(){ return document.getElementById('weeklyParamSelect').value; }
-function currentWeeklyWeek(){ return document.getElementById('weeklyWeekSelect').value; }
-function currentWeeklyKci(){ return document.getElementById('weeklyKciSelect').value; }
+
+function fmtTglSingkat(tgl){
+  if(!tgl) return '-';
+  const parts = tgl.split('-');
+  if(parts.length !== 3) return tgl;
+  const bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const m = parseInt(parts[1],10) - 1;
+  return parseInt(parts[2],10) + '-' + (bulan[m]||parts[1]);
+}
+
+function weeklyLabel(w){
+  return (w === 'W0') ? 'Baseline' : w;
+}
+
+/* Ambil baseline (Tgl Proses W0) untuk label kolom pertama grup parameter */
+function weeklyBaselineDateLabel(rows){
+  const w0 = rows.find(r => r.week === 'W0' && r.tglProses);
+  return w0 ? fmtTglSingkat(w0.tglProses) : 'Baseline';
+}
 
 function renderWeeklyPage(){
   const param = currentWeeklyParam();
-  const week = currentWeeklyWeek();
-  const kci = currentWeeklyKci();
+  const paramRows = weeklyRows.filter(r => r.parameter === param);
 
-  const kciRows = weeklyRows.filter(r => r.parameter === param && r.week === week && r.kciKcp === 'KCI' && (!kci || r.namaKci === kci));
-  const totalTarget = kciRows.reduce((a,r)=>a+r.target, 0);
-  const totalRealisasi = kciRows.reduce((a,r)=>a+r.realisasi, 0);
-  const totalNetGrowth = kciRows.reduce((a,r)=>a+r.netGrowth, 0);
-  const totalPct = totalTarget !== 0 ? (totalRealisasi/totalTarget*100) : 0;
+  /* ---- Ringkasan provinsi (jumlah seluruh 35 unit -- KCI + KCP) ---- */
+  const weekTotals = weeklyWeekList.map(w => {
+    const rows = paramRows.filter(r => r.week === w);
+    const withData = rows.filter(r => r.hasData);
+    if(withData.length === 0) return { week: w, realisasi: null, target: 0, netGrowth: null };
+    return {
+      week: w,
+      realisasi: rows.reduce((a,r)=>a + (r.hasData ? r.realisasi : 0), 0),
+      target: rows.reduce((a,r)=>a + r.target, 0),
+      netGrowth: rows.some(r=>r.hasData && r.week!=='W0') ? rows.reduce((a,r)=> a + (r.hasData ? r.netGrowth : 0), 0) : null
+    };
+  });
 
-  document.getElementById('weeklyTotalTarget').textContent = fmtSummaryNum(totalTarget);
-  document.getElementById('weeklyTotalRealisasi').textContent = fmtSummaryNum(totalRealisasi);
-  document.getElementById('weeklyTotalPct').textContent = fmtSummaryPct(totalPct);
-  document.getElementById('weeklyTotalNetGrowth').textContent = (totalNetGrowth>=0?'+':'') + fmtSummaryNum(totalNetGrowth);
+  const withDataTotals = weekTotals.filter(w => w.realisasi !== null);
+  const latest = withDataTotals[withDataTotals.length-1];
+  const baseline = weekTotals.find(w => w.week === 'W0');
 
-  document.getElementById('weeklyUpdatedText').textContent = (week === '0') ? 'Minggu Awal (0)' : ('Minggu ke-' + week);
+  document.getElementById('weeklyTotalRealisasi').textContent = latest ? fmtSummaryNum(latest.realisasi) : '-';
+  document.getElementById('weeklyLatestWeekSub').textContent = latest ? ('Data ' + weeklyLabel(latest.week)) : '';
+  document.getElementById('weeklyTotalPct').textContent = (latest && latest.target) ? fmtSummaryPct(latest.realisasi/latest.target*100) : '-';
 
-  const cabangRows = weeklyRows.filter(r => r.parameter === param && r.week === week && r.kciKcp === 'KCP' && (!kci || r.namaKci === kci));
+  const lastGrowthWeek = withDataTotals.filter(w => w.week !== 'W0').slice(-1)[0];
+  document.getElementById('weeklyTotalNetGrowth').textContent = lastGrowthWeek ? ((lastGrowthWeek.netGrowth>=0?'+':'') + fmtSummaryNum(lastGrowthWeek.netGrowth)) : 'NULL';
 
-  const weekLabel = (week === '0') ? 'Minggu Awal' : ('Minggu ke-' + week);
-  document.getElementById('weeklyCabangChartTitle').textContent = 'Pencapaian ' + param + ' per kantor cabang \u2014 ' + weekLabel;
-  document.getElementById('weeklyKciChartTitle').textContent = 'Net Growth ' + param + ' per kantor cabang \u2014 ' + weekLabel;
-  document.getElementById('weeklyTableTitle').textContent = 'Rincian ' + param + ' per kantor cabang \u2014 ' + weekLabel;
+  const totalAgt = (latest && baseline && baseline.realisasi!==null) ? (latest.realisasi - baseline.realisasi) : null;
+  const pctAgt = (totalAgt!==null && baseline.realisasi) ? (totalAgt/baseline.realisasi*100) : null;
+  document.getElementById('weeklyTotalPctGrowth').textContent = pctAgt!==null ? ((pctAgt>=0?'+':'') + fmtSummaryPct(pctAgt)) : 'NULL';
 
-  renderWeeklyCabangChart(cabangRows);
-  renderWeeklyNetGrowthChart(cabangRows);
-  renderWeeklyTable(cabangRows);
-  renderWeeklyMatrixTable(param, kci);
+  document.getElementById('weeklyUpdatedText').textContent = latest ? ('Data terbaru: ' + weeklyLabel(latest.week)) : '';
+  document.getElementById('weeklyTrendTitle').textContent = 'Tren realisasi per minggu \u2014 ' + param;
+
+  renderWeeklyTrendChart(weekTotals);
+  renderWeeklyMatrixTable(param, paramRows);
 }
 
-function renderWeeklyCabangChart(rows){
-  const sorted = rows.slice().sort((a,b)=> b.pct - a.pct);
-  const labels = sorted.map(r => r.kantorCabang);
-  const data = sorted.map(r => r.pct);
-  const colors = data.map(v => summaryStatusColor(v));
+function renderWeeklyTrendChart(weekTotals){
+  const labels = weekTotals.map(w => weeklyLabel(w.week));
+  const data = weekTotals.map(w => w.realisasi);
 
-  const wrapper = document.getElementById('weeklyCabangChart').parentElement;
-  wrapper.style.height = Math.max(380, sorted.length * 22 + 40) + 'px';
-
-  const ctx = document.getElementById('weeklyCabangChart');
-  if(weeklyCabangChartInstance) weeklyCabangChartInstance.destroy();
-  weeklyCabangChartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, maxBarThickness: 16 }] },
+  const ctx = document.getElementById('weeklyTrendChart');
+  if(weeklyTrendChartInstance) weeklyTrendChartInstance.destroy();
+  weeklyTrendChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Realisasi',
+        data,
+        spanGaps: false,
+        borderColor: 'var(--navy)'.startsWith('var') ? '#0B57D0' : '#0B57D0',
+        backgroundColor: 'rgba(11,87,208,0.10)',
+        fill: true,
+        tension: 0.25,
+        pointRadius: 4,
+        pointBackgroundColor: '#0B57D0'
+      }]
+    },
     plugins: [ChartDataLabels],
     options: {
-      indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => 'Pencapaian: ' + fmtSummaryPct(ctx.raw) } },
+        tooltip: { callbacks: { label: (ctx) => ctx.raw===null ? 'NULL' : ('Realisasi: ' + fmtSummaryNum(ctx.raw)) } },
         datalabels: {
-          anchor: 'end',
-          align: 'end',
+          align: 'top',
           color: '#11284A',
-          font: { size: 10, weight: '600' },
-          formatter: (v) => fmtSummaryPct(v)
+          font: { size: 10, weight: '700' },
+          formatter: (v) => v===null ? '' : fmtSummaryNum(v)
         }
       },
       scales: {
-        x: { ticks: { color:'#6B7280', font:{size:11}, callback: (v)=>v+'%' }, grid: { color:'#E5E9ED' } },
-        y: { ticks: { color:'#11284A', font:{size: sorted.length>25?9:11} }, grid: { display:false } }
+        x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { display:false } },
+        y: { ticks: { color:'#6B7280', font:{size:11}, callback:(v)=>fmtSummaryNum(v) }, grid: { color:'#E5E9ED' } }
       }
     }
   });
 }
 
-function renderWeeklyNetGrowthChart(rows){
-  const sorted = rows.slice().sort((a,b)=> b.netGrowth - a.netGrowth);
-  const labels = sorted.map(r => r.kantorCabang);
-  const data = sorted.map(r => r.netGrowth);
-  const colors = data.map(v => v >= 0 ? '#74B843' : '#E57373');
-
-  const wrapper = document.getElementById('weeklyNetGrowthChart').parentElement;
-  wrapper.style.height = Math.max(380, sorted.length * 22 + 40) + 'px';
-
-  const ctx = document.getElementById('weeklyNetGrowthChart');
-  if(weeklyNetGrowthChartInstance) weeklyNetGrowthChartInstance.destroy();
-  weeklyNetGrowthChartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, maxBarThickness: 16 }] },
-    plugins: [ChartDataLabels],
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => 'Net Growth: ' + (ctx.raw>=0?'+':'') + fmtSummaryNum(ctx.raw) } },
-        datalabels: {
-          anchor: 'end',
-          align: 'end',
-          color: '#11284A',
-          font: { size: 10, weight: '600' },
-          formatter: (v) => (v>=0?'+':'') + fmtSummaryNum(v)
-        }
-      },
-      scales: {
-        x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
-        y: { ticks: { color:'#11284A', font:{size: sorted.length>25?9:11} }, grid: { display:false } }
-      }
-    }
-  });
-}
-
-function renderWeeklyTable(rows){
-  const tbody = document.getElementById('weeklyTableBody');
-  const sorted = rows.slice().sort((a,b)=> b.pct - a.pct);
-  tbody.innerHTML = sorted.map(r => `
-    <tr>
-      <td>${escapeHtml(r.kantorCabang)}</td>
-      <td>${escapeHtml(r.namaKci)}</td>
-      <td class="num">${fmtSummaryNum(r.target)}</td>
-      <td class="num">${fmtSummaryNum(r.realisasi)}</td>
-      <td class="num">${fmtSummaryPct(r.pct)}</td>
-      <td class="num">${(r.netGrowth>=0?'+':'') + fmtSummaryNum(r.netGrowth)}</td>
-      <td class="num">${(r.pctNetGrowth>=0?'+':'') + fmtSummaryPct(r.pctNetGrowth)}</td>
-    </tr>
-  `).join('');
-}
-
-let weeklyMatrixRows = [];
-
-function renderWeeklyMatrixTable(param, kci){
-  document.getElementById('weeklyMatrixSub').textContent = 'Pencapaian (%) dan Net Growth per minggu \u2014 parameter: ' + param;
+/* ================= TABEL MATRIKS PROGRESS MINGGUAN ================= */
+function renderWeeklyMatrixTable(param, paramRows){
+  const baselineLabel = weeklyBaselineDateLabel(paramRows);
+  const growthWeeks = weeklyWeekList.filter(w => w !== 'W0');
 
   const thead = document.getElementById('weeklyMatrixHead');
-  thead.innerHTML = '<tr>' +
-    '<th data-key="kantorCabang">Kantor Cabang</th>' +
-    '<th data-key="namaKci">KCI</th>' +
-    weeklyWeekList.map(w => '<th class="num">' + (w==='0' ? 'Minggu Awal' : ('Minggu ' + w)) + '</th>').join('') +
+  thead.innerHTML =
+    '<tr>' +
+      '<th rowspan="2" style="vertical-align:bottom;">NO</th>' +
+      '<th rowspan="2" style="vertical-align:bottom;">KODE</th>' +
+      '<th rowspan="2" style="vertical-align:bottom;">UNIT KERJA</th>' +
+      '<th colspan="' + weeklyWeekList.length + '" class="grp-border-l" style="text-align:center;">' + escapeHtml(param) + '</th>' +
+      '<th colspan="' + (growthWeeks.length + 3) + '" class="grp-border-l" style="text-align:center;">NET GROWTH</th>' +
+    '</tr>' +
+    '<tr>' +
+      weeklyWeekList.map((w,i) => '<th class="num' + (i===0?' grp-border-l':'') + '">' + (w==='W0' ? baselineLabel : w) + '</th>').join('') +
+      growthWeeks.map((w,i) => '<th class="num' + (i===0?' grp-border-l':'') + '">' + w + '</th>').join('') +
+      '<th class="num">AGT</th>' +
+      '<th class="num">RATA2</th>' +
+      '<th class="num">%</th>' +
     '</tr>';
 
-  const cabangNames = Array.from(new Set(
-    weeklyRows.filter(r => r.parameter === param && r.kciKcp === 'KCP' && (!kci || r.namaKci === kci)).map(r => r.kantorCabang)
-  ));
+  const uniqueUnits = [];
+  const seen = new Set();
+  paramRows.forEach(r => { if(!seen.has(r.kantorCabang)){ seen.add(r.kantorCabang); uniqueUnits.push(r); } });
 
-  const lastWeek = weeklyWeekList[weeklyWeekList.length-1];
-  weeklyMatrixRows = cabangNames.map(nama => {
-    const cells = weeklyWeekList.map(w => {
-      const r = weeklyRows.find(rr => rr.parameter === param && rr.week === w && rr.kciKcp === 'KCP' && rr.kantorCabang === nama);
-      return r ? { pct: r.pct, netGrowth: r.netGrowth, week: w } : null;
+  weeklyMatrixRows = uniqueUnits.map(u => {
+    const byWeek = {};
+    paramRows.filter(r => r.kantorCabang === u.kantorCabang).forEach(r => { byWeek[r.week] = r; });
+
+    const realisasiCells = weeklyWeekList.map(w => {
+      const r = byWeek[w];
+      return (r && r.hasData) ? r.realisasi : null;
     });
-    const lastCell = weeklyRows.find(rr => rr.parameter === param && rr.week === lastWeek && rr.kciKcp === 'KCP' && rr.kantorCabang === nama);
-    const namaKciRow = weeklyRows.find(rr => rr.kantorCabang === nama && rr.kciKcp === 'KCP');
+    const growthCells = growthWeeks.map(w => {
+      const r = byWeek[w];
+      return (r && r.hasData) ? r.netGrowth : null;
+    });
+    const validGrowths = growthCells.filter(v => v !== null);
+    const agt = validGrowths.length ? validGrowths.reduce((a,v)=>a+v,0) : null;
+    const rata2 = (agt!==null && validGrowths.length) ? agt/validGrowths.length : null;
+    const baselineVal = byWeek['W0'] ? byWeek['W0'].realisasi : 0;
+    const pct = (agt!==null && baselineVal) ? (agt/baselineVal*100) : null;
+
+    const lastValid = realisasiCells.filter(v=>v!==null).slice(-1)[0];
+
     return {
-      kantorCabang: nama,
-      namaKci: namaKciRow ? namaKciRow.namaKci : '-',
-      cells,
-      sortPct: lastCell ? lastCell.pct : -1
+      kd: u.kd,
+      kantorCabang: u.kantorCabang,
+      namaKci: u.kciKcp === 'KCI' ? u.kantorCabang : u.kci,
+      realisasiCells,
+      growthCells,
+      agt, rata2, pct,
+      sortVal: lastValid !== undefined ? lastValid : -Infinity
     };
-  }).sort((a,b) => b.sortPct - a.sortPct);
+  }).sort((a,b) => b.sortVal - a.sortVal);
 
   renderWeeklyMatrixBody(weeklyMatrixRows);
+  renderWeeklyMatrixFoot(weeklyWeekList, growthWeeks, paramRows);
+}
+
+function weeklyCellHtml(v, isPct){
+  if(v === null || v === 0) return '<td class="num null-cell">NULL</td>';
+  const txt = isPct ? fmtSummaryPct(v) : ((v>0?'+':'') + fmtSummaryNum(v));
+  return '<td class="num">' + txt + '</td>';
 }
 
 function renderWeeklyMatrixBody(rows){
   const tbody = document.getElementById('weeklyMatrixBody');
-  tbody.innerHTML = rows.map(r => {
-    const cellsHtml = r.cells.map(c => {
-      if(!c) return '<td class="num">-</td>';
-      const pctTxt = fmtSummaryPct(c.pct);
-      const color = summaryStatusColor(c.pct);
-      if(c.week === '0'){
-        return '<td class="num" style="color:' + color + ';font-weight:600;">' + pctTxt + '</td>';
-      }
-      const gTxt = (c.netGrowth>=0?'+':'') + fmtSummaryNum(c.netGrowth);
-      return '<td class="num" style="color:' + color + ';font-weight:600;">' + pctTxt + ' <span style="color:var(--muted);font-weight:400;">(' + gTxt + ')</span></td>';
+  tbody.innerHTML = rows.map((r,i) => {
+    const realCells = r.realisasiCells.map((v,ci) => {
+      const cls = (v===null||v===0) ? 'num null-cell' : 'num';
+      const border = ci===0 ? ' grp-border-l' : '';
+      return '<td class="' + cls + border + '">' + ((v===null||v===0) ? 'NULL' : fmtSummaryNum(v)) + '</td>';
     }).join('');
-    return '<tr><td>' + escapeHtml(r.kantorCabang) + '</td><td>' + escapeHtml(r.namaKci) + '</td>' + cellsHtml + '</tr>';
+    const growthCellsHtml = r.growthCells.map((v,ci) => {
+      const border = ci===0 ? ' grp-border-l' : '';
+      if(v===null||v===0) return '<td class="num null-cell' + border + '">NULL</td>';
+      return '<td class="num' + border + '">' + ((v>0?'+':'') + fmtSummaryNum(v)) + '</td>';
+    }).join('');
+    const agtTxt = (r.agt===null||r.agt===0) ? '<td class="num null-cell">NULL</td>' : ('<td class="num">' + (r.agt>0?'+':'') + fmtSummaryNum(r.agt) + '</td>');
+    const rata2Txt = (r.rata2===null||r.rata2===0) ? '<td class="num null-cell">NULL</td>' : ('<td class="num">' + (r.rata2>0?'+':'') + fmtSummaryNum(Math.round(r.rata2)) + '</td>');
+    const pctTxt = (r.pct===null) ? '<td class="num null-cell">NULL</td>' : ('<td class="num">' + (r.pct>0?'+':'') + fmtSummaryPct(r.pct) + '</td>');
+
+    return '<tr>' +
+      '<td>' + (i+1) + '</td>' +
+      '<td>' + escapeHtml(r.kd) + '</td>' +
+      '<td>' + escapeHtml(r.kantorCabang) + '</td>' +
+      realCells +
+      growthCellsHtml +
+      agtTxt + rata2Txt + pctTxt +
+    '</tr>';
   }).join('');
+}
+
+function renderWeeklyMatrixFoot(allWeeks, growthWeeks, paramRows){
+  const tfoot = document.getElementById('weeklyMatrixFoot');
+
+  const realTotals = allWeeks.map(w => {
+    const rows = paramRows.filter(r => r.week === w && r.hasData);
+    return rows.length ? rows.reduce((a,r)=>a+r.realisasi,0) : null;
+  });
+  const growthTotals = growthWeeks.map(w => {
+    const rows = paramRows.filter(r => r.week === w && r.hasData);
+    return rows.length ? rows.reduce((a,r)=>a+r.netGrowth,0) : null;
+  });
+  const validGrowthTotals = growthTotals.filter(v=>v!==null);
+  const agt = validGrowthTotals.length ? validGrowthTotals.reduce((a,v)=>a+v,0) : null;
+  const rata2 = (agt!==null && validGrowthTotals.length) ? agt/validGrowthTotals.length : null;
+  const baselineTotal = realTotals[0];
+  const pct = (agt!==null && baselineTotal) ? (agt/baselineTotal*100) : null;
+
+  const realCells = realTotals.map((v,ci) => {
+    const border = ci===0 ? ' grp-border-l' : '';
+    return '<td class="num' + border + '">' + ((v===null||v===0) ? 'NULL' : fmtSummaryNum(v)) + '</td>';
+  }).join('');
+  const growthCellsHtml = growthTotals.map((v,ci) => {
+    const border = ci===0 ? ' grp-border-l' : '';
+    if(v===null||v===0) return '<td class="num' + border + '">NULL</td>';
+    return '<td class="num' + border + '">' + ((v>0?'+':'') + fmtSummaryNum(v)) + '</td>';
+  }).join('');
+  const agtTxt = (agt===null||agt===0) ? '<td class="num">NULL</td>' : ('<td class="num">' + (agt>0?'+':'') + fmtSummaryNum(agt) + '</td>');
+  const rata2Txt = (rata2===null||rata2===0) ? '<td class="num">NULL</td>' : ('<td class="num">' + (rata2>0?'+':'') + fmtSummaryNum(Math.round(rata2)) + '</td>');
+  const pctTxt = (pct===null) ? '<td class="num">NULL</td>' : ('<td class="num">' + (pct>0?'+':'') + fmtSummaryPct(pct) + '</td>');
+
+  tfoot.innerHTML = '<tr>' +
+    '<td colspan="3">Jateng &amp; DIY</td>' +
+    realCells +
+    growthCellsHtml +
+    agtTxt + rata2Txt + pctTxt +
+  '</tr>';
 }
 
 document.getElementById('weeklyMatrixSearch').addEventListener('input', function(){
   const q = this.value.trim().toLowerCase();
   let rows = weeklyMatrixRows;
-  if(q){ rows = rows.filter(r => r.kantorCabang.toLowerCase().includes(q) || r.namaKci.toLowerCase().includes(q)); }
+  if(q){ rows = rows.filter(r => r.kantorCabang.toLowerCase().includes(q)); }
   renderWeeklyMatrixBody(rows);
 });
 
-document.getElementById('weeklySearch').addEventListener('input', function(){
-  const q = this.value.trim().toLowerCase();
-  const param = currentWeeklyParam();
-  const week = currentWeeklyWeek();
-  const kci = currentWeeklyKci();
-  let rows = weeklyRows.filter(r => r.parameter === param && r.week === week && r.kciKcp === 'KCP' && (!kci || r.namaKci === kci));
-  if(q){ rows = rows.filter(r => r.kantorCabang.toLowerCase().includes(q) || r.namaKci.toLowerCase().includes(q)); }
-  renderWeeklyTable(rows);
-});
 
 </script>
 
