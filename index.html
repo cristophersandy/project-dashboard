@@ -948,6 +948,22 @@
 
       <div class="table-panel">
         <div class="table-head-row">
+          <h2 style="margin:0;font-size:14px;font-weight:600;" id="weeklyMatrixTitle">Progress mingguan per kantor cabang</h2>
+          <div class="controls">
+            <input type="text" id="weeklyMatrixSearch" placeholder="Cari kantor cabang&hellip;">
+          </div>
+        </div>
+        <div class="sub" id="weeklyMatrixSub" style="margin-bottom:12px;">Pencapaian (%) dan Net Growth per minggu</div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead id="weeklyMatrixHead"></thead>
+            <tbody id="weeklyMatrixBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-panel">
+        <div class="table-head-row">
           <h2 style="margin:0;font-size:14px;font-weight:600;" id="weeklyTableTitle">Rincian per kantor cabang</h2>
           <div class="controls">
             <input type="text" id="weeklySearch" placeholder="Cari kantor cabang&hellip;">
@@ -3098,6 +3114,7 @@ function renderWeeklyPage(){
   renderWeeklyCabangChart(cabangRows);
   renderWeeklyNetGrowthChart(cabangRows);
   renderWeeklyTable(cabangRows);
+  renderWeeklyMatrixTable(param, kci);
 }
 
 function renderWeeklyCabangChart(rows){
@@ -3191,6 +3208,65 @@ function renderWeeklyTable(rows){
     </tr>
   `).join('');
 }
+
+let weeklyMatrixRows = [];
+
+function renderWeeklyMatrixTable(param, kci){
+  document.getElementById('weeklyMatrixSub').textContent = 'Pencapaian (%) dan Net Growth per minggu \u2014 parameter: ' + param;
+
+  const thead = document.getElementById('weeklyMatrixHead');
+  thead.innerHTML = '<tr>' +
+    '<th data-key="kantorCabang">Kantor Cabang</th>' +
+    '<th data-key="namaKci">KCI</th>' +
+    weeklyWeekList.map(w => '<th class="num">' + (w==='0' ? 'Minggu Awal' : ('Minggu ' + w)) + '</th>').join('') +
+    '</tr>';
+
+  const cabangNames = Array.from(new Set(
+    weeklyRows.filter(r => r.parameter === param && r.kciKcp === 'KCP' && (!kci || r.namaKci === kci)).map(r => r.kantorCabang)
+  ));
+
+  const lastWeek = weeklyWeekList[weeklyWeekList.length-1];
+  weeklyMatrixRows = cabangNames.map(nama => {
+    const cells = weeklyWeekList.map(w => {
+      const r = weeklyRows.find(rr => rr.parameter === param && rr.week === w && rr.kciKcp === 'KCP' && rr.kantorCabang === nama);
+      return r ? { pct: r.pct, netGrowth: r.netGrowth, week: w } : null;
+    });
+    const lastCell = weeklyRows.find(rr => rr.parameter === param && rr.week === lastWeek && rr.kciKcp === 'KCP' && rr.kantorCabang === nama);
+    const namaKciRow = weeklyRows.find(rr => rr.kantorCabang === nama && rr.kciKcp === 'KCP');
+    return {
+      kantorCabang: nama,
+      namaKci: namaKciRow ? namaKciRow.namaKci : '-',
+      cells,
+      sortPct: lastCell ? lastCell.pct : -1
+    };
+  }).sort((a,b) => b.sortPct - a.sortPct);
+
+  renderWeeklyMatrixBody(weeklyMatrixRows);
+}
+
+function renderWeeklyMatrixBody(rows){
+  const tbody = document.getElementById('weeklyMatrixBody');
+  tbody.innerHTML = rows.map(r => {
+    const cellsHtml = r.cells.map(c => {
+      if(!c) return '<td class="num">-</td>';
+      const pctTxt = fmtSummaryPct(c.pct);
+      const color = summaryStatusColor(c.pct);
+      if(c.week === '0'){
+        return '<td class="num" style="color:' + color + ';font-weight:600;">' + pctTxt + '</td>';
+      }
+      const gTxt = (c.netGrowth>=0?'+':'') + fmtSummaryNum(c.netGrowth);
+      return '<td class="num" style="color:' + color + ';font-weight:600;">' + pctTxt + ' <span style="color:var(--muted);font-weight:400;">(' + gTxt + ')</span></td>';
+    }).join('');
+    return '<tr><td>' + escapeHtml(r.kantorCabang) + '</td><td>' + escapeHtml(r.namaKci) + '</td>' + cellsHtml + '</tr>';
+  }).join('');
+}
+
+document.getElementById('weeklyMatrixSearch').addEventListener('input', function(){
+  const q = this.value.trim().toLowerCase();
+  let rows = weeklyMatrixRows;
+  if(q){ rows = rows.filter(r => r.kantorCabang.toLowerCase().includes(q) || r.namaKci.toLowerCase().includes(q)); }
+  renderWeeklyMatrixBody(rows);
+});
 
 document.getElementById('weeklySearch').addEventListener('input', function(){
   const q = this.value.trim().toLowerCase();
