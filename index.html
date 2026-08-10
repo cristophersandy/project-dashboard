@@ -3058,12 +3058,12 @@ function fmtTglSingkat(tgl){
 }
 
 function weeklyLabel(w){
-  return (w === 'W0') ? 'Baseline' : w;
+  return (w === weeklyWeekList[0]) ? 'Baseline' : w;
 }
 
 /* Ambil baseline (Tgl Proses W0) untuk label kolom pertama grup parameter */
 function weeklyBaselineDateLabel(rows){
-  const w0 = rows.find(r => r.week === 'W0' && r.tglProses);
+  const w0 = rows.find(r => r.week === weeklyWeekList[0] && r.tglProses);
   return w0 ? fmtTglSingkat(w0.tglProses) : 'Baseline';
 }
 
@@ -3080,19 +3080,19 @@ function renderWeeklyPage(){
       week: w,
       realisasi: rows.reduce((a,r)=>a + (r.hasData ? r.realisasi : 0), 0),
       target: rows.reduce((a,r)=>a + r.target, 0),
-      netGrowth: rows.some(r=>r.hasData && r.week!=='W0') ? rows.reduce((a,r)=> a + (r.hasData ? r.netGrowth : 0), 0) : null
+      netGrowth: rows.some(r=>r.hasData && r.week!==weeklyWeekList[0]) ? rows.reduce((a,r)=> a + (r.hasData ? r.netGrowth : 0), 0) : null
     };
   });
 
   const withDataTotals = weekTotals.filter(w => w.realisasi !== null);
   const latest = withDataTotals[withDataTotals.length-1];
-  const baseline = weekTotals.find(w => w.week === 'W0');
+  const baseline = weekTotals.find(w => w.week === weeklyWeekList[0]);
 
   document.getElementById('weeklyTotalRealisasi').textContent = latest ? fmtSummaryNum(latest.realisasi) : '-';
   document.getElementById('weeklyLatestWeekSub').textContent = latest ? ('Data ' + weeklyLabel(latest.week)) : '';
   document.getElementById('weeklyTotalPct').textContent = (latest && latest.target) ? fmtSummaryPct(latest.realisasi/latest.target*100) : '-';
 
-  const lastGrowthWeek = withDataTotals.filter(w => w.week !== 'W0').slice(-1)[0];
+  const lastGrowthWeek = withDataTotals.filter(w => w.week !== weeklyWeekList[0]).slice(-1)[0];
   document.getElementById('weeklyTotalNetGrowth').textContent = lastGrowthWeek ? ((lastGrowthWeek.netGrowth>=0?'+':'') + fmtSummaryNum(lastGrowthWeek.netGrowth)) : 'NULL';
 
   const totalAgt = (latest && baseline && baseline.realisasi!==null) ? (latest.realisasi - baseline.realisasi) : null;
@@ -3153,7 +3153,7 @@ function renderWeeklyTrendChart(weekTotals){
 /* ================= TABEL MATRIKS PROGRESS MINGGUAN ================= */
 function renderWeeklyMatrixTable(param, paramRows){
   const baselineLabel = weeklyBaselineDateLabel(paramRows);
-  const growthWeeks = weeklyWeekList.filter(w => w !== 'W0');
+  const growthWeeks = weeklyWeekList.filter(w => w !== weeklyWeekList[0]);
 
   const thead = document.getElementById('weeklyMatrixHead');
   thead.innerHTML =
@@ -3165,7 +3165,7 @@ function renderWeeklyMatrixTable(param, paramRows){
       '<th colspan="' + (growthWeeks.length + 3) + '" class="grp-border-l" style="text-align:center;">NET GROWTH</th>' +
     '</tr>' +
     '<tr>' +
-      weeklyWeekList.map((w,i) => '<th class="num' + (i===0?' grp-border-l':'') + '">' + (w==='W0' ? baselineLabel : w) + '</th>').join('') +
+      weeklyWeekList.map((w,i) => '<th class="num' + (i===0?' grp-border-l':'') + '">' + (w===weeklyWeekList[0] ? baselineLabel : w) + '</th>').join('') +
       growthWeeks.map((w,i) => '<th class="num' + (i===0?' grp-border-l':'') + '">' + w + '</th>').join('') +
       '<th class="num">AGT</th>' +
       '<th class="num">RATA2</th>' +
@@ -3186,12 +3186,12 @@ function renderWeeklyMatrixTable(param, paramRows){
     });
     const growthCells = growthWeeks.map(w => {
       const r = byWeek[w];
-      return (r && r.hasData) ? r.netGrowth : null;
+      return (r && r.hasData && r.netGrowth !== 0) ? r.netGrowth : null;
     });
     const validGrowths = growthCells.filter(v => v !== null);
     const agt = validGrowths.length ? validGrowths.reduce((a,v)=>a+v,0) : null;
     const rata2 = (agt!==null && validGrowths.length) ? agt/validGrowths.length : null;
-    const baselineVal = byWeek['W0'] ? byWeek['W0'].realisasi : 0;
+    const baselineVal = byWeek[weeklyWeekList[0]] ? byWeek[weeklyWeekList[0]].realisasi : 0;
     const pct = (agt!==null && baselineVal) ? (agt/baselineVal*100) : null;
 
     const lastValid = realisasiCells.filter(v=>v!==null).slice(-1)[0];
@@ -3217,6 +3217,12 @@ function weeklyCellHtml(v, isPct){
   return '<td class="num">' + txt + '</td>';
 }
 
+function growthCellStyle(v){
+  if(v > 0) return 'background:#EAF7E9;color:#1B7A34;';
+  if(v < 0) return 'background:#FDEBEA;color:#C0392B;';
+  return '';
+}
+
 function renderWeeklyMatrixBody(rows){
   const tbody = document.getElementById('weeklyMatrixBody');
   tbody.innerHTML = rows.map((r,i) => {
@@ -3228,11 +3234,11 @@ function renderWeeklyMatrixBody(rows){
     const growthCellsHtml = r.growthCells.map((v,ci) => {
       const border = ci===0 ? ' grp-border-l' : '';
       if(v===null||v===0) return '<td class="num null-cell' + border + '">NULL</td>';
-      return '<td class="num' + border + '">' + ((v>0?'+':'') + fmtSummaryNum(v)) + '</td>';
+      return '<td class="num' + border + '" style="' + growthCellStyle(v) + '">' + ((v>0?'+':'') + fmtSummaryNum(v)) + '</td>';
     }).join('');
-    const agtTxt = (r.agt===null||r.agt===0) ? '<td class="num null-cell">NULL</td>' : ('<td class="num">' + (r.agt>0?'+':'') + fmtSummaryNum(r.agt) + '</td>');
-    const rata2Txt = (r.rata2===null||r.rata2===0) ? '<td class="num null-cell">NULL</td>' : ('<td class="num">' + (r.rata2>0?'+':'') + fmtSummaryNum(Math.round(r.rata2)) + '</td>');
-    const pctTxt = (r.pct===null) ? '<td class="num null-cell">NULL</td>' : ('<td class="num">' + (r.pct>0?'+':'') + fmtSummaryPct(r.pct) + '</td>');
+    const agtTxt = (r.agt===null||r.agt===0) ? '<td class="num null-cell">NULL</td>' : ('<td class="num" style="' + growthCellStyle(r.agt) + '">' + (r.agt>0?'+':'') + fmtSummaryNum(r.agt) + '</td>');
+    const rata2Txt = (r.rata2===null||r.rata2===0) ? '<td class="num null-cell">NULL</td>' : ('<td class="num" style="' + growthCellStyle(r.rata2) + '">' + (r.rata2>0?'+':'') + fmtSummaryNum(Math.round(r.rata2)) + '</td>');
+    const pctTxt = (r.pct===null) ? '<td class="num null-cell">NULL</td>' : ('<td class="num" style="' + growthCellStyle(r.pct) + '">' + (r.pct>0?'+':'') + fmtSummaryPct(r.pct) + '</td>');
 
     return '<tr>' +
       '<td>' + (i+1) + '</td>' +
@@ -3256,7 +3262,7 @@ function renderWeeklyMatrixFoot(allWeeks, growthWeeks, paramRows){
     const rows = paramRows.filter(r => r.week === w && r.hasData);
     return rows.length ? rows.reduce((a,r)=>a+r.netGrowth,0) : null;
   });
-  const validGrowthTotals = growthTotals.filter(v=>v!==null);
+  const validGrowthTotals = growthTotals.filter(v=>v!==null && v!==0);
   const agt = validGrowthTotals.length ? validGrowthTotals.reduce((a,v)=>a+v,0) : null;
   const rata2 = (agt!==null && validGrowthTotals.length) ? agt/validGrowthTotals.length : null;
   const baselineTotal = realTotals[0];
@@ -3269,11 +3275,11 @@ function renderWeeklyMatrixFoot(allWeeks, growthWeeks, paramRows){
   const growthCellsHtml = growthTotals.map((v,ci) => {
     const border = ci===0 ? ' grp-border-l' : '';
     if(v===null||v===0) return '<td class="num' + border + '">NULL</td>';
-    return '<td class="num' + border + '">' + ((v>0?'+':'') + fmtSummaryNum(v)) + '</td>';
+    return '<td class="num' + border + '" style="' + growthCellStyle(v) + '">' + ((v>0?'+':'') + fmtSummaryNum(v)) + '</td>';
   }).join('');
-  const agtTxt = (agt===null||agt===0) ? '<td class="num">NULL</td>' : ('<td class="num">' + (agt>0?'+':'') + fmtSummaryNum(agt) + '</td>');
-  const rata2Txt = (rata2===null||rata2===0) ? '<td class="num">NULL</td>' : ('<td class="num">' + (rata2>0?'+':'') + fmtSummaryNum(Math.round(rata2)) + '</td>');
-  const pctTxt = (pct===null) ? '<td class="num">NULL</td>' : ('<td class="num">' + (pct>0?'+':'') + fmtSummaryPct(pct) + '</td>');
+  const agtTxt = (agt===null||agt===0) ? '<td class="num">NULL</td>' : ('<td class="num" style="' + growthCellStyle(agt) + '">' + (agt>0?'+':'') + fmtSummaryNum(agt) + '</td>');
+  const rata2Txt = (rata2===null||rata2===0) ? '<td class="num">NULL</td>' : ('<td class="num" style="' + growthCellStyle(rata2) + '">' + (rata2>0?'+':'') + fmtSummaryNum(Math.round(rata2)) + '</td>');
+  const pctTxt = (pct===null) ? '<td class="num">NULL</td>' : ('<td class="num" style="' + growthCellStyle(pct) + '">' + (pct>0?'+':'') + fmtSummaryPct(pct) + '</td>');
 
   tfoot.innerHTML = '<tr>' +
     '<td colspan="3">Jateng &amp; DIY</td>' +
