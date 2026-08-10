@@ -940,6 +940,7 @@
           <h2 style="margin:0;font-size:14px;font-weight:600;" id="weeklyMatrixTitle">Progress mingguan per unit kerja</h2>
           <div class="controls">
             <input type="text" id="weeklyMatrixSearch" placeholder="Cari unit kerja&hellip;">
+            <button id="weeklyDownloadBtn" class="download-btn" type="button">&#8681; Download Report TK Aktif</button>
           </div>
         </div>
         <div style="overflow-x:auto;">
@@ -3151,32 +3152,16 @@ function renderWeeklyTrendChart(weekTotals){
 }
 
 /* ================= TABEL MATRIKS PROGRESS MINGGUAN ================= */
-function renderWeeklyMatrixTable(param, paramRows){
+function computeWeeklyMatrixData(param){
+  const paramRows = weeklyRows.filter(r => r.parameter === param);
   const baselineLabel = weeklyBaselineDateLabel(paramRows);
   const growthWeeks = weeklyWeekList.filter(w => w !== weeklyWeekList[0]);
-
-  const thead = document.getElementById('weeklyMatrixHead');
-  thead.innerHTML =
-    '<tr>' +
-      '<th rowspan="2" style="vertical-align:bottom;">NO</th>' +
-      '<th rowspan="2" style="vertical-align:bottom;">KODE</th>' +
-      '<th rowspan="2" style="vertical-align:bottom;">UNIT KERJA</th>' +
-      '<th colspan="' + weeklyWeekList.length + '" class="grp-border-l" style="text-align:center;">' + escapeHtml(param) + '</th>' +
-      '<th colspan="' + (growthWeeks.length + 3) + '" class="grp-border-l" style="text-align:center;">NET GROWTH</th>' +
-    '</tr>' +
-    '<tr>' +
-      weeklyWeekList.map((w,i) => '<th class="num' + (i===0?' grp-border-l':'') + '">' + (w===weeklyWeekList[0] ? baselineLabel : w) + '</th>').join('') +
-      growthWeeks.map((w,i) => '<th class="num' + (i===0?' grp-border-l':'') + '">' + w + '</th>').join('') +
-      '<th class="num">AGT</th>' +
-      '<th class="num">RATA2</th>' +
-      '<th class="num">%</th>' +
-    '</tr>';
 
   const uniqueUnits = [];
   const seen = new Set();
   paramRows.forEach(r => { if(!seen.has(r.kantorCabang)){ seen.add(r.kantorCabang); uniqueUnits.push(r); } });
 
-  weeklyMatrixRows = uniqueUnits.map(u => {
+  const rows = uniqueUnits.map(u => {
     const byWeek = {};
     paramRows.filter(r => r.kantorCabang === u.kantorCabang).forEach(r => { byWeek[r.week] = r; });
 
@@ -3207,8 +3192,51 @@ function renderWeeklyMatrixTable(param, paramRows){
     };
   }).sort((a,b) => b.sortVal - a.sortVal);
 
+  const realTotals = weeklyWeekList.map(w => {
+    const wRows = paramRows.filter(r => r.week === w && r.hasData);
+    return wRows.length ? wRows.reduce((a,r)=>a+r.realisasi,0) : null;
+  });
+  const growthTotals = growthWeeks.map(w => {
+    const wRows = paramRows.filter(r => r.week === w && r.hasData);
+    return wRows.length ? wRows.reduce((a,r)=>a+r.netGrowth,0) : null;
+  });
+  const validGrowthTotals = growthTotals.filter(v=>v!==null && v!==0);
+  const footAgt = validGrowthTotals.length ? validGrowthTotals.reduce((a,v)=>a+v,0) : null;
+  const footRata2 = (footAgt!==null && validGrowthTotals.length) ? footAgt/validGrowthTotals.length : null;
+  const footBaselineTotal = realTotals[0];
+  const footPct = (footAgt!==null && footBaselineTotal) ? (footAgt/footBaselineTotal*100) : null;
+
+  return {
+    param, paramRows, baselineLabel, growthWeeks, rows,
+    foot: { realTotals, growthTotals, agt: footAgt, rata2: footRata2, pct: footPct }
+  };
+}
+
+function renderWeeklyMatrixTable(param, paramRows){
+  const data = computeWeeklyMatrixData(param);
+  const baselineLabel = data.baselineLabel;
+  const growthWeeks = data.growthWeeks;
+  weeklyMatrixRows = data.rows;
+
+  const thead = document.getElementById('weeklyMatrixHead');
+  thead.innerHTML =
+    '<tr>' +
+      '<th rowspan="2" style="vertical-align:bottom;">NO</th>' +
+      '<th rowspan="2" style="vertical-align:bottom;">KODE</th>' +
+      '<th rowspan="2" style="vertical-align:bottom;">UNIT KERJA</th>' +
+      '<th colspan="' + weeklyWeekList.length + '" class="grp-border-l" style="text-align:center;">' + escapeHtml(param) + '</th>' +
+      '<th colspan="' + (growthWeeks.length + 3) + '" class="grp-border-l" style="text-align:center;">NET GROWTH</th>' +
+    '</tr>' +
+    '<tr>' +
+      weeklyWeekList.map((w,i) => '<th class="num' + (i===0?' grp-border-l':'') + '">' + (w===weeklyWeekList[0] ? baselineLabel : w) + '</th>').join('') +
+      growthWeeks.map((w,i) => '<th class="num' + (i===0?' grp-border-l':'') + '">' + w + '</th>').join('') +
+      '<th class="num">AGT</th>' +
+      '<th class="num">RATA2</th>' +
+      '<th class="num">%</th>' +
+    '</tr>';
+
   renderWeeklyMatrixBody(weeklyMatrixRows);
-  renderWeeklyMatrixFoot(weeklyWeekList, growthWeeks, paramRows);
+  renderWeeklyMatrixFoot(weeklyWeekList, growthWeeks, data.foot);
 }
 
 function weeklyCellHtml(v, isPct){
@@ -3251,22 +3279,9 @@ function renderWeeklyMatrixBody(rows){
   }).join('');
 }
 
-function renderWeeklyMatrixFoot(allWeeks, growthWeeks, paramRows){
+function renderWeeklyMatrixFoot(allWeeks, growthWeeks, footData){
   const tfoot = document.getElementById('weeklyMatrixFoot');
-
-  const realTotals = allWeeks.map(w => {
-    const rows = paramRows.filter(r => r.week === w && r.hasData);
-    return rows.length ? rows.reduce((a,r)=>a+r.realisasi,0) : null;
-  });
-  const growthTotals = growthWeeks.map(w => {
-    const rows = paramRows.filter(r => r.week === w && r.hasData);
-    return rows.length ? rows.reduce((a,r)=>a+r.netGrowth,0) : null;
-  });
-  const validGrowthTotals = growthTotals.filter(v=>v!==null && v!==0);
-  const agt = validGrowthTotals.length ? validGrowthTotals.reduce((a,v)=>a+v,0) : null;
-  const rata2 = (agt!==null && validGrowthTotals.length) ? agt/validGrowthTotals.length : null;
-  const baselineTotal = realTotals[0];
-  const pct = (agt!==null && baselineTotal) ? (agt/baselineTotal*100) : null;
+  const { realTotals, growthTotals, agt, rata2, pct } = footData;
 
   const realCells = realTotals.map((v,ci) => {
     const border = ci===0 ? ' grp-border-l' : '';
@@ -3296,6 +3311,95 @@ document.getElementById('weeklyMatrixSearch').addEventListener('input', function
   renderWeeklyMatrixBody(rows);
 });
 
+/* ================= DOWNLOAD REPORT TK AKTIF (PDF, multi parameter) ================= */
+const WEEKLY_REPORT_PARAMS = [
+  'TK Aktif (Exsist)',
+  'TK Aktif (KPI)',
+  'TK Aktif PU + PMI',
+  'TK Aktif BPU (KPI)',
+  'TK Aktif Jakon'
+];
+
+function weeklyPdfCellText(v, isPct){
+  if(v === null || v === 0) return 'NULL';
+  const txt = isPct ? fmtSummaryPct(v) : fmtSummaryNum(v);
+  return (v>0?'+':'') + txt;
+}
+
+function downloadWeeklyReport(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+
+  WEEKLY_REPORT_PARAMS.forEach((param, idx) => {
+    if(idx > 0) doc.addPage();
+
+    const data = computeWeeklyMatrixData(param);
+    const growthWeeks = data.growthWeeks;
+
+    doc.setFontSize(13);
+    doc.setTextColor(11,42,74);
+    doc.text('Progress Mingguan per Unit Kerja', 30, 32);
+    doc.setFontSize(10);
+    doc.setTextColor(80,80,80);
+    doc.text('Parameter: ' + param, 30, 47);
+
+    const headRow1 = [
+      { content: 'NO', rowSpan: 2 },
+      { content: 'KODE', rowSpan: 2 },
+      { content: 'UNIT KERJA', rowSpan: 2 },
+      { content: param, colSpan: weeklyWeekList.length, styles: { halign: 'center' } },
+      { content: 'NET GROWTH', colSpan: growthWeeks.length + 3, styles: { halign: 'center' } }
+    ];
+    const headRow2 = [
+      ...weeklyWeekList.map(w => (w === weeklyWeekList[0]) ? data.baselineLabel : w),
+      ...growthWeeks,
+      'AGT','RATA2','%'
+    ];
+
+    const body = data.rows.map((r,i) => [
+      i+1,
+      r.kd,
+      r.kantorCabang,
+      ...r.realisasiCells.map(v => weeklyPdfCellText(v, false)),
+      ...r.growthCells.map(v => weeklyPdfCellText(v, false)),
+      weeklyPdfCellText(r.agt, false),
+      weeklyPdfCellText(r.rata2, false),
+      weeklyPdfCellText(r.pct, true)
+    ]);
+
+    const footRow = [
+      { content: 'Jateng & DIY', colSpan: 3 },
+      ...data.foot.realTotals.map(v => weeklyPdfCellText(v, false)),
+      ...data.foot.growthTotals.map(v => weeklyPdfCellText(v, false)),
+      weeklyPdfCellText(data.foot.agt, false),
+      weeklyPdfCellText(data.foot.rata2, false),
+      weeklyPdfCellText(data.foot.pct, true)
+    ];
+
+    doc.autoTable({
+      startY: 58,
+      head: [headRow1, headRow2],
+      body: body,
+      foot: [footRow],
+      styles: { fontSize: 6.2, cellPadding: 2.5, halign: 'right' },
+      headStyles: { fillColor: [11,87,208], textColor: [255,255,255], fontStyle: 'bold', halign: 'center' },
+      footStyles: { fillColor: [247,249,251], textColor: [11,42,74], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [250,251,252] },
+      columnStyles: { 0:{halign:'center'}, 1:{halign:'left'}, 2:{halign:'left'} },
+      margin: { left: 20, right: 20 },
+      didParseCell: function(dataCell){
+        if(dataCell.section === 'body' && typeof dataCell.cell.raw === 'string'){
+          if(dataCell.cell.raw === 'NULL'){ dataCell.cell.styles.textColor = [176,183,192]; dataCell.cell.styles.fontStyle = 'italic'; }
+          else if(dataCell.cell.raw[0] === '+'){ dataCell.cell.styles.textColor = [27,122,52]; }
+          else if(dataCell.cell.raw[0] === '-'){ dataCell.cell.styles.textColor = [192,57,43]; }
+        }
+      }
+    });
+  });
+
+  doc.save('progress_mingguan_tk_aktif_' + new Date().toISOString().slice(0,10) + '.pdf');
+}
+document.getElementById('weeklyDownloadBtn').addEventListener('click', downloadWeeklyReport);
 
 </script>
 
