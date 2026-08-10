@@ -1471,13 +1471,39 @@ function renderCategoryBreakdownChart(peers, isWilayah, meta, groupLabel){
     }
   });
 
-  const datasets = categories.map(cat => ({
-    label: cat,
-    data: sorted.map(nk => scoreByUnitCat[nk][cat]),
-    backgroundColor: catColors[cat],
-    borderRadius: 2,
-    maxBarThickness: 36
-  }));
+  const datasets = categories.map((cat, idx) => {
+    const ds = {
+      label: cat,
+      data: sorted.map(nk => scoreByUnitCat[nk][cat]),
+      backgroundColor: catColors[cat],
+      borderRadius: 2,
+      maxBarThickness: 36
+    };
+    if(idx === categories.length - 1){
+      ds.datalabels = {
+        labels: {
+          value: {
+            color: '#fff',
+            font: { size: 10, weight: '600' },
+            formatter: (v) => Math.abs(v) < 0.9 ? '' : v.toFixed(1)
+          },
+          total: {
+            anchor: 'end',
+            align: 'right',
+            offset: 4,
+            color: '#11284A',
+            font: { size: 11, weight: '700' },
+            formatter: (v, ctx) => {
+              const nk = sorted[ctx.dataIndex];
+              const total = categories.reduce((sum, c) => sum + scoreByUnitCat[nk][c], 0);
+              return total.toFixed(1);
+            }
+          }
+        }
+      };
+    }
+    return ds;
+  });
 
   const wrapper = document.getElementById('kanwilCatChart').parentElement;
   wrapper.style.height = Math.max(300, sorted.length * 26 + 40) + 'px';
@@ -1492,6 +1518,7 @@ function renderCategoryBreakdownChart(peers, isWilayah, meta, groupLabel){
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { right: 36 } },
       plugins: {
         legend: { position: 'bottom', labels: { font:{size:11}, color:'#11284A', boxWidth:10 } },
         datalabels: {
