@@ -1480,30 +1480,34 @@ function renderCategoryBreakdownChart(peers, isWilayah, meta, groupLabel){
       borderRadius: 2,
       maxBarThickness: 36
     };
-    if(idx === categories.length - 1){
-      ds.datalabels = {
-        labels: {
-          value: {
-            color: '#fff',
-            font: { size: 10, weight: '600' },
-            formatter: (v) => Math.abs(v) < 0.9 ? '' : v.toFixed(1)
-          },
-          total: {
-            anchor: 'end',
-            align: 'right',
-            offset: 4,
-            color: '#11284A',
-            font: { size: 11, weight: '700' },
-            formatter: (v, ctx) => {
-              const nk = sorted[ctx.dataIndex];
-              const total = categories.reduce((sum, c) => sum + scoreByUnitCat[nk][c], 0);
-              return total.toFixed(1);
-            }
-          }
-        }
-      };
-    }
+    ds.datalabels = {
+      color: '#fff',
+      font: { size: 10, weight: '600' },
+      formatter: (v) => Math.abs(v) < 0.9 ? '' : v.toFixed(2)
+    };
     return ds;
+  });
+
+  /* Dataset bayangan bernilai 0, hanya dipakai sebagai jangkar posisi label total
+     di ujung kanan bar -- tetap akurat walau salah satu kategori (mis. ADD/MIN)
+     bernilai negatif sehingga bukan lagi segmen paling kanan secara visual. */
+  datasets.push({
+    label: '_total_anchor',
+    data: sorted.map(() => 0),
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    datalabels: {
+      anchor: 'end',
+      align: 'right',
+      offset: 4,
+      color: '#11284A',
+      font: { size: 11, weight: '700' },
+      formatter: (v, ctx) => {
+        const nk = sorted[ctx.dataIndex];
+        const total = categories.reduce((sum, c) => sum + scoreByUnitCat[nk][c], 0);
+        return total.toFixed(2);
+      }
+    }
   });
 
   const wrapper = document.getElementById('kanwilCatChart').parentElement;
@@ -1521,7 +1525,8 @@ function renderCategoryBreakdownChart(peers, isWilayah, meta, groupLabel){
       maintainAspectRatio: false,
       layout: { padding: { right: 36 } },
       plugins: {
-        legend: { position: 'bottom', labels: { font:{size:11}, color:'#11284A', boxWidth:10 } },
+        legend: { position: 'bottom', labels: { font:{size:11}, color:'#11284A', boxWidth:10, filter: (item) => item.text !== '_total_anchor' } },
+        tooltip: { filter: (item) => item.dataset.label !== '_total_anchor' },
         datalabels: {
           color: '#fff',
           font: { size: 10, weight: '600' },
@@ -3324,6 +3329,11 @@ function weeklyPdfCellText(v, isPct){
   return (v>0?'+':'') + txt;
 }
 
+function weeklyPdfPlainCellText(v){
+  if(v === null || v === 0) return 'NULL';
+  return fmtSummaryNum(v);
+}
+
 function downloadWeeklyReport(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
@@ -3333,6 +3343,7 @@ function downloadWeeklyReport(){
 
     const data = computeWeeklyMatrixData(param);
     const growthWeeks = data.growthWeeks;
+    const dividerCol = 3 + weeklyWeekList.length;
 
     doc.setFontSize(13);
     doc.setTextColor(11,42,74);
@@ -3358,7 +3369,7 @@ function downloadWeeklyReport(){
       i+1,
       r.kd,
       r.kantorCabang,
-      ...r.realisasiCells.map(v => weeklyPdfCellText(v, false)),
+      ...r.realisasiCells.map(v => weeklyPdfPlainCellText(v)),
       ...r.growthCells.map(v => weeklyPdfCellText(v, false)),
       weeklyPdfCellText(r.agt, false),
       weeklyPdfCellText(r.rata2, false),
@@ -3367,7 +3378,7 @@ function downloadWeeklyReport(){
 
     const footRow = [
       { content: 'Jateng & DIY', colSpan: 3, styles: { halign: 'center' } },
-      ...data.foot.realTotals.map(v => weeklyPdfCellText(v, false)),
+      ...data.foot.realTotals.map(v => weeklyPdfPlainCellText(v)),
       ...data.foot.growthTotals.map(v => weeklyPdfCellText(v, false)),
       weeklyPdfCellText(data.foot.agt, false),
       weeklyPdfCellText(data.foot.rata2, false),
@@ -3386,10 +3397,16 @@ function downloadWeeklyReport(){
       columnStyles: { 0:{halign:'center'}, 1:{halign:'left'}, 2:{halign:'left'} },
       margin: { left: 20, right: 20 },
       didParseCell: function(dataCell){
+        if(dataCell.column.index === dividerCol){
+          dataCell.cell.styles.lineWidth = { top:0.1, right:0.1, bottom:0.1, left:1.2 };
+          dataCell.cell.styles.lineColor = [11,42,74];
+        }
         if(dataCell.section === 'body' && typeof dataCell.cell.raw === 'string'){
           if(dataCell.cell.raw === 'NULL'){ dataCell.cell.styles.textColor = [176,183,192]; dataCell.cell.styles.fontStyle = 'italic'; }
-          else if(dataCell.cell.raw[0] === '+'){ dataCell.cell.styles.textColor = [27,122,52]; }
-          else if(dataCell.cell.raw[0] === '-'){ dataCell.cell.styles.textColor = [192,57,43]; }
+          else if(dataCell.column.index >= dividerCol){
+            if(dataCell.cell.raw[0] === '+'){ dataCell.cell.styles.textColor = [27,122,52]; }
+            else if(dataCell.cell.raw[0] === '-'){ dataCell.cell.styles.textColor = [192,57,43]; }
+          }
         }
       }
     });
