@@ -3179,8 +3179,6 @@ function computeWeeklyMatrixData(param){
     const baselineVal = byWeek[weeklyWeekList[0]] ? byWeek[weeklyWeekList[0]].realisasi : 0;
     const pct = (agt!==null && baselineVal) ? (agt/baselineVal*100) : null;
 
-    const lastValid = realisasiCells.filter(v=>v!==null).slice(-1)[0];
-
     return {
       kd: u.kd,
       kantorCabang: u.kantorCabang,
@@ -3188,7 +3186,7 @@ function computeWeeklyMatrixData(param){
       realisasiCells,
       growthCells,
       agt, rata2, pct,
-      sortVal: lastValid !== undefined ? lastValid : -Infinity
+      sortVal: pct !== null ? pct : -Infinity
     };
   }).sort((a,b) => b.sortVal - a.sortVal);
 
@@ -3297,7 +3295,7 @@ function renderWeeklyMatrixFoot(allWeeks, growthWeeks, footData){
   const pctTxt = (pct===null) ? '<td class="num">NULL</td>' : ('<td class="num" style="' + growthCellStyle(pct) + '">' + (pct>0?'+':'') + fmtSummaryPct(pct) + '</td>');
 
   tfoot.innerHTML = '<tr>' +
-    '<td colspan="3">Jateng &amp; DIY</td>' +
+    '<td colspan="3" style="text-align:center;">Jateng &amp; DIY</td>' +
     realCells +
     growthCellsHtml +
     agtTxt + rata2Txt + pctTxt +
@@ -3368,7 +3366,7 @@ function downloadWeeklyReport(){
     ]);
 
     const footRow = [
-      { content: 'Jateng & DIY', colSpan: 3 },
+      { content: 'Jateng & DIY', colSpan: 3, styles: { halign: 'center' } },
       ...data.foot.realTotals.map(v => weeklyPdfCellText(v, false)),
       ...data.foot.growthTotals.map(v => weeklyPdfCellText(v, false)),
       weeklyPdfCellText(data.foot.agt, false),
