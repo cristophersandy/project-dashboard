@@ -382,15 +382,23 @@
       <span id="insightText">Menyusun ringkasan&hellip;</span>
     </div>
 
-    <div class="panel-row">
-      <div class="panel">
-        <h2 id="classRankTitle">Peringkat di kelasnya</h2>
-        <div class="sub" id="classRankSub">Posisi skor total unit terpilih dibandingkan unit sekelas</div>
-        <div style="max-height:480px;overflow-y:auto;">
-          <div style="position:relative;height:340px;">
-            <canvas id="classRankChart" role="img" aria-label="Grafik batang peringkat skor total unit kerja dibandingkan unit lain sekelasnya"></canvas>
+    <div class="panel-row" id="kanwilCatPanelRow">
+      <div class="panel" style="grid-column:1/-1;">
+        <h2 id="kanwilCatTitle">Skor per kategori &mdash; seluruh Kantor Wilayah</h2>
+        <div class="sub" id="kanwilCatSub">Kontribusi skor Outcome, Driver, Resources, dan Add/Min pada setiap Kanwil, diurutkan dari skor total tertinggi</div>
+        <div style="max-height:420px;overflow-y:auto;">
+          <div style="position:relative;height:440px;">
+            <canvas id="kanwilCatChart" role="img" aria-label="Grafik batang bertumpuk skor per kategori untuk setiap kantor wilayah"></canvas>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="panel-row">
+      <div class="panel">
+        <h2 id="classRankTitle">Growth skor bulanan per parameter</h2>
+        <div class="sub" id="classRankSub">Indikator dengan growth skor bulanan terbesar, seluruh unit kerja sekelas</div>
+        <div id="classRankList" style="overflow-y:auto;"></div>
       </div>
       <div class="panel">
         <h2 id="growthBulanUnitTitle">Growth skor bulanan</h2>
@@ -417,18 +425,6 @@
         <h2 id="growthParamTitle">Growth skor harian per parameter</h2>
         <div class="sub" id="growthParamSub">Indikator dengan growth skor harian terbesar, seluruh unit kerja sekelas</div>
         <div id="growthParamList" style="overflow-y:auto;"></div>
-      </div>
-    </div>
-
-    <div class="panel-row" id="kanwilCatPanelRow">
-      <div class="panel" style="grid-column:1/-1;">
-        <h2 id="kanwilCatTitle">Skor per kategori &mdash; seluruh Kantor Wilayah</h2>
-        <div class="sub" id="kanwilCatSub">Kontribusi skor Outcome, Driver, Resources, dan Add/Min pada setiap Kanwil, diurutkan dari skor total tertinggi</div>
-        <div style="max-height:420px;overflow-y:auto;">
-          <div style="position:relative;height:440px;">
-            <canvas id="kanwilCatChart" role="img" aria-label="Grafik batang bertumpuk skor per kategori untuk setiap kantor wilayah"></canvas>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -994,7 +990,6 @@ let growthBulanRealisasiChartInstance = null;
 let growthBulanPencapaianChartInstance = null;
 let donutChartInstance = null;
 let matrixChartInstance = null;
-let classRankChartInstance = null;
 let growthRankChartInstance = null;
 let growthBulanUnitChartInstance = null;
 let kanwilCatChartInstance = null;
@@ -1295,45 +1290,24 @@ function renderClassRankChart(){
     groupLabel = peers.length + ' kantor cabang kelas ' + (meta.kelas || '-') + ' se-Indonesia';
   }
 
-  document.getElementById('classRankTitle').textContent = isWilayah ? 'Peringkat antar Kantor Wilayah' : ('Peringkat di kelasnya (' + (meta.kelas||'-') + ')');
-  document.getElementById('classRankSub').innerHTML = 'Skor total ' + (currentUnit===WILAYAH_ROW_NAME?'Kanwil Jateng &amp; DIY':currentUnit) + ' dibandingkan ' + groupLabel;
+  document.getElementById('classRankTitle').textContent = 'Growth skor bulanan per parameter';
+  document.getElementById('classRankSub').textContent = isWilayah
+    ? 'Indikator dengan growth skor bulanan terbesar, seluruh Kantor Wilayah se-Indonesia'
+    : ('Indikator dengan growth skor bulanan terbesar, seluruh kantor cabang kelas ' + (meta.kelas||'-'));
 
-  const sortedPeers = peers.slice().sort((a,b) => (unitMetaMap[b].scoreTotal||0) - (unitMetaMap[a].scoreTotal||0));
-  const labels = sortedPeers;
-  const data = sortedPeers.map(nk => unitMetaMap[nk].scoreTotal || 0);
-  const colors = sortedPeers.map(nk => nk === currentUnit ? '#0B57D0' : '#B9C3D1');
+  const peerSet = new Set(peers);
+  const bulanRows = allRows.filter(r => peerSet.has(r.namaKantor) && r.scoreGrowthBulan !== 0);
+  const bulanSorted = bulanRows.slice().sort((a,b) => b.scoreGrowthBulan - a.scoreGrowthBulan);
 
-  const wrapper = document.getElementById('classRankChart').parentElement;
-  wrapper.style.height = Math.min(600, Math.max(300, sortedPeers.length * 20 + 40)) + 'px';
+  const classRankListEl = document.getElementById('classRankList');
+  classRankListEl.style.height = Math.min(600, Math.max(300, peers.length * 20 + 40)) + 'px';
 
-  const ctx = document.getElementById('classRankChart');
-  if(classRankChartInstance) classRankChartInstance.destroy();
-  classRankChartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, maxBarThickness: 16 }] },
-    plugins: [ChartDataLabels],
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => 'Skor total: ' + fmtScore(ctx.raw) } },
-        datalabels: {
-          anchor: 'center',
-          align: 'center',
-          clamp: true,
-          color: (ctx) => '#fff',
-          font: { size: 10, weight: '700' },
-          formatter: (v) => fmtScore(v)
-        }
-      },
-      scales: {
-        x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
-        y: { ticks: { color:'#11284A', font:{size: sortedPeers.length>25?9:11} }, grid: { display:false } }
-      }
-    }
-  });
+  classRankListEl.innerHTML = bulanSorted.map(r => `
+    <div class="mini-row">
+      <span class="mini-name" title="${escapeHtml(r.namaKantor)}">${escapeHtml(r.nama)} <span style="color:var(--muted);font-weight:400;">&mdash; ${escapeHtml(r.namaKantor)}</span></span>
+      <span class="mini-val ${r.scoreGrowthBulan>=0?'text-good':'text-bad'}">${(r.scoreGrowthBulan>=0?'+':'') + fmtScore(r.scoreGrowthBulan)}</span>
+    </div>
+  `).join('');
 
   renderCategoryBreakdownChart(peers, isWilayah, meta, groupLabel);
 
