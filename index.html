@@ -914,6 +914,7 @@
         <div class="kpi-card">
           <div class="kpi-label">% Pencapaian</div>
           <div class="kpi-val mono" id="weeklyTotalPct">-</div>
+          <div class="kpi-sub" id="weeklyTotalPctSub"></div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Growth Minggu Terakhir</div>
@@ -3097,6 +3098,7 @@ function renderWeeklyPage(){
   document.getElementById('weeklyTotalRealisasi').textContent = latest ? fmtSummaryNum(latest.realisasi) : '-';
   document.getElementById('weeklyLatestWeekSub').textContent = latest ? ('Data ' + weeklyLabel(latest.week)) : '';
   document.getElementById('weeklyTotalPct').textContent = (latest && latest.target) ? fmtSummaryPct(latest.realisasi/latest.target*100) : '-';
+  document.getElementById('weeklyTotalPctSub').textContent = (latest && latest.target) ? ('dari target (' + fmtSummaryNum(latest.target) + ')') : '';
 
   const lastGrowthWeek = withDataTotals.filter(w => w.week !== weeklyWeekList[0]).slice(-1)[0];
   document.getElementById('weeklyTotalNetGrowth').textContent = lastGrowthWeek ? ((lastGrowthWeek.netGrowth>=0?'+':'') + fmtSummaryNum(lastGrowthWeek.netGrowth)) : 'NULL';
