@@ -3207,8 +3207,8 @@ function renderWeeklyMatrixTable(param, paramRows){
       '<th colspan="' + (growthWeeks.length + 3) + '" class="grp-border-l" style="text-align:center;">NET GROWTH</th>' +
     '</tr>' +
     '<tr>' +
-      weeklyWeekList.map((w,i) => '<th class="num' + (i===0?' grp-border-l':'') + '">' + (w===weeklyWeekList[0] ? baselineLabel : w) + '</th>').join('') +
-      growthWeeks.map((w,i) => '<th class="num' + (i===0?' grp-border-l':'') + '">' + w + '</th>').join('') +
+      weeklyWeekList.map((w) => '<th class="num">' + (w===weeklyWeekList[0] ? baselineLabel : w) + '</th>').join('') +
+      growthWeeks.map((w) => '<th class="num">' + w + '</th>').join('') +
       '<th class="num">AGT</th>' +
       '<th class="num">RATA2</th>' +
       '<th class="num">%</th>' +
