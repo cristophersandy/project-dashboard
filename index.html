@@ -3238,9 +3238,10 @@ function renderWeeklyMatrixBody(rows){
       const border = ci===0 ? ' grp-border-l' : '';
       return '<td class="' + cls + border + '">' + ((v===null||v===0) ? 'NULL' : fmtSummaryNum(v)) + '</td>';
     }).join('');
-    const growthCellsHtml = r.growthCells.map((v) => {
-      if(v===null||v===0) return '<td class="num null-cell">NULL</td>';
-      return '<td class="num" style="' + growthCellStyle(v) + '">' + ((v>0?'+':'') + fmtSummaryNum(v)) + '</td>';
+    const growthCellsHtml = r.growthCells.map((v,ci) => {
+      const border = ci===0 ? ' grp-border-l' : '';
+      if(v===null||v===0) return '<td class="num null-cell' + border + '">NULL</td>';
+      return '<td class="num' + border + '" style="' + growthCellStyle(v) + '">' + ((v>0?'+':'') + fmtSummaryNum(v)) + '</td>';
     }).join('');
     const agtTxt = (r.agt===null||r.agt===0) ? '<td class="num null-cell">NULL</td>' : ('<td class="num" style="' + growthCellStyle(r.agt) + '">' + (r.agt>0?'+':'') + fmtSummaryNum(r.agt) + '</td>');
     const rata2Txt = (r.rata2===null||r.rata2===0) ? '<td class="num null-cell">NULL</td>' : ('<td class="num" style="' + growthCellStyle(r.rata2) + '">' + (r.rata2>0?'+':'') + fmtSummaryNum(Math.round(r.rata2)) + '</td>');
@@ -3265,9 +3266,10 @@ function renderWeeklyMatrixFoot(allWeeks, growthWeeks, footData){
     const border = ci===0 ? ' grp-border-l' : '';
     return '<td class="num' + border + '">' + ((v===null||v===0) ? 'NULL' : fmtSummaryNum(v)) + '</td>';
   }).join('');
-  const growthCellsHtml = growthTotals.map((v) => {
-    if(v===null||v===0) return '<td class="num">NULL</td>';
-    return '<td class="num" style="' + growthCellStyle(v) + '">' + ((v>0?'+':'') + fmtSummaryNum(v)) + '</td>';
+  const growthCellsHtml = growthTotals.map((v,ci) => {
+    const border = ci===0 ? ' grp-border-l' : '';
+    if(v===null||v===0) return '<td class="num' + border + '">NULL</td>';
+    return '<td class="num' + border + '" style="' + growthCellStyle(v) + '">' + ((v>0?'+':'') + fmtSummaryNum(v)) + '</td>';
   }).join('');
   const agtTxt = (agt===null||agt===0) ? '<td class="num">NULL</td>' : ('<td class="num" style="' + growthCellStyle(agt) + '">' + (agt>0?'+':'') + fmtSummaryNum(agt) + '</td>');
   const rata2Txt = (rata2===null||rata2===0) ? '<td class="num">NULL</td>' : ('<td class="num" style="' + growthCellStyle(rata2) + '">' + (rata2>0?'+':'') + fmtSummaryNum(Math.round(rata2)) + '</td>');
