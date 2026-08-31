@@ -407,6 +407,10 @@
       <div class="panel">
         <h2 id="classRankTitle">Growth skor bulanan per parameter</h2>
         <div class="sub" id="classRankSub">Indikator dengan growth skor bulanan terbesar, seluruh unit kerja sekelas</div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);font-weight:500;margin-bottom:10px;cursor:pointer;">
+          <input type="checkbox" id="classRankOnlySelected" style="cursor:pointer;">
+          Hanya tampilkan unit kerja yang dipilih
+        </label>
         <div id="classRankList" style="overflow-y:auto;"></div>
       </div>
     </div>
@@ -424,6 +428,10 @@
       <div class="panel">
         <h2 id="growthParamTitle">Growth skor harian per parameter</h2>
         <div class="sub" id="growthParamSub">Indikator dengan growth skor harian terbesar, seluruh unit kerja sekelas</div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);font-weight:500;margin-bottom:10px;cursor:pointer;">
+          <input type="checkbox" id="growthParamOnlySelected" style="cursor:pointer;">
+          Hanya tampilkan unit kerja yang dipilih
+        </label>
         <div id="growthParamList" style="overflow-y:auto;"></div>
       </div>
     </div>
@@ -991,6 +999,10 @@ let growthBulanPencapaianChartInstance = null;
 let donutChartInstance = null;
 let matrixChartInstance = null;
 let growthRankChartInstance = null;
+let classRankAllRows = [];
+let classRankPeerCount = 0;
+let growthParamAllRows = [];
+let growthParamPeerCount = 0;
 let growthBulanUnitChartInstance = null;
 let kanwilCatChartInstance = null;
 
@@ -1297,17 +1309,10 @@ function renderClassRankChart(){
 
   const peerSet = new Set(peers);
   const bulanRows = allRows.filter(r => peerSet.has(r.namaKantor) && r.scoreGrowthBulan !== 0);
-  const bulanSorted = bulanRows.slice().sort((a,b) => b.scoreGrowthBulan - a.scoreGrowthBulan);
+  classRankAllRows = bulanRows.slice().sort((a,b) => b.scoreGrowthBulan - a.scoreGrowthBulan);
+  classRankPeerCount = peers.length;
 
-  const classRankListEl = document.getElementById('classRankList');
-  classRankListEl.style.height = Math.min(600, Math.max(300, peers.length * 20 + 40)) + 'px';
-
-  classRankListEl.innerHTML = bulanSorted.map(r => `
-    <div class="mini-row">
-      <span class="mini-name" title="${escapeHtml(r.namaKantor)}">${escapeHtml(r.nama)} <span style="color:var(--muted);font-weight:400;">&mdash; ${escapeHtml(r.namaKantor)}</span></span>
-      <span class="mini-val ${r.scoreGrowthBulan>=0?'text-good':'text-bad'}">${(r.scoreGrowthBulan>=0?'+':'') + fmtScore(r.scoreGrowthBulan)}</span>
-    </div>
-  `).join('');
+  applyClassRankFilter();
 
   renderCategoryBreakdownChart(peers, isWilayah, meta, groupLabel);
 
@@ -1569,18 +1574,40 @@ function renderGrowthParamList(peers, isWilayah, meta){
 
   const peerSet = new Set(peers);
   const rows = allRows.filter(r => peerSet.has(r.namaKantor) && r.scoreGrowth !== 0);
-  const sorted = rows.slice().sort((a,b) => b.scoreGrowth - a.scoreGrowth);
+  growthParamAllRows = rows.slice().sort((a,b) => b.scoreGrowth - a.scoreGrowth);
+  growthParamPeerCount = peers.length;
 
-  const listEl = document.getElementById('growthParamList');
-  listEl.style.height = Math.min(600, Math.max(300, peers.length * 20 + 40)) + 'px';
+  applyGrowthParamFilter();
+}
 
-  listEl.innerHTML = sorted.map(r => `
+function renderMiniGrowthList(elId, rows, valueKey){
+  const el = document.getElementById(elId);
+  el.innerHTML = rows.map(r => `
     <div class="mini-row">
       <span class="mini-name" title="${escapeHtml(r.namaKantor)}">${escapeHtml(r.nama)} <span style="color:var(--muted);font-weight:400;">&mdash; ${escapeHtml(r.namaKantor)}</span></span>
-      <span class="mini-val ${r.scoreGrowth>=0?'text-good':'text-bad'}">${(r.scoreGrowth>=0?'+':'') + fmtScore(r.scoreGrowth)}</span>
+      <span class="mini-val ${r[valueKey]>=0?'text-good':'text-bad'}">${(r[valueKey]>=0?'+':'') + fmtScore(r[valueKey])}</span>
     </div>
   `).join('');
 }
+
+function applyClassRankFilter(){
+  const onlySelected = document.getElementById('classRankOnlySelected').checked;
+  const rows = onlySelected ? classRankAllRows.filter(r => r.namaKantor === currentUnit) : classRankAllRows;
+  const listEl = document.getElementById('classRankList');
+  listEl.style.height = Math.min(600, Math.max(300, classRankPeerCount * 20 + 40)) + 'px';
+  renderMiniGrowthList('classRankList', rows, 'scoreGrowthBulan');
+}
+
+function applyGrowthParamFilter(){
+  const onlySelected = document.getElementById('growthParamOnlySelected').checked;
+  const rows = onlySelected ? growthParamAllRows.filter(r => r.namaKantor === currentUnit) : growthParamAllRows;
+  const listEl = document.getElementById('growthParamList');
+  listEl.style.height = Math.min(600, Math.max(300, growthParamPeerCount * 20 + 40)) + 'px';
+  renderMiniGrowthList('growthParamList', rows, 'scoreGrowth');
+}
+
+document.getElementById('classRankOnlySelected').addEventListener('change', applyClassRankFilter);
+document.getElementById('growthParamOnlySelected').addEventListener('change', applyGrowthParamFilter);
 
 function renderInsight(rows, meta, weightedPct, growthDay){
   if(rows.length === 0){
