@@ -3189,6 +3189,8 @@ function computeWeeklyMatrixData(param){
 
     return {
       kd: u.kd,
+      kci: u.kci,
+      kciKcp: u.kciKcp,
       kantorCabang: u.kantorCabang,
       namaKci: u.kciKcp === 'KCI' ? u.kantorCabang : u.kci,
       realisasiCells,
@@ -3347,6 +3349,14 @@ function downloadWeeklyReport(){
     const data = computeWeeklyMatrixData(param);
     const growthWeeks = data.growthWeeks;
     const dividerCol = 3 + weeklyWeekList.length;
+
+    /* Urutkan khusus untuk PDF berdasarkan kode KCI (baris KCI induk dahulu, lalu KCP di bawahnya) */
+    data.rows = data.rows.slice().sort((a,b) => {
+      const c = (a.kci||'').localeCompare(b.kci||'', undefined, { numeric: true });
+      if(c !== 0) return c;
+      if(a.kciKcp !== b.kciKcp) return a.kciKcp === 'KCI' ? -1 : 1;
+      return b.sortVal - a.sortVal;
+    });
 
     doc.setFontSize(13);
     doc.setTextColor(11,42,74);
