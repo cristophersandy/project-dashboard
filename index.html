@@ -244,6 +244,14 @@
   #weeklyMatrixTable th, #weeklyMatrixTable td{white-space:nowrap;}
   #weeklyMatrixTable .grp-border-l{border-left:2px solid var(--line);}
   #weeklyMatrixTable .null-cell{color:#B0B7C0;font-style:italic;}
+  #komparasiTable{font-size:12px;}
+  #komparasiTable th, #komparasiTable td{white-space:nowrap;}
+  #komparasiTable .null-cell{color:#B0B7C0;font-style:italic;}
+  #komparasiTable .grp-border-l{border-left:2px solid var(--line);}
+  #komparasiTable .grp-realisasi{background:#9FB4BE;color:#0B2A4A;}
+  #komparasiTable .grp-harian{background:#F4C300;color:#0B2A4A;}
+  #komparasiTable .grp-bulanan{background:#74B843;color:#fff;}
+  #komparasiTable tfoot td{font-weight:700;border-top:2px solid var(--navy);background:#F7F9FB;}
   #weeklyMatrixTable tfoot td{font-weight:700;border-top:2px solid var(--navy);background:#F7F9FB;}
   .download-btn{
     background:var(--navy);
@@ -321,6 +329,7 @@
           <button class="toptab active" data-page="exec">Ringkasan Eksekutif</button>
           <button class="toptab" data-page="detail">Parameter</button>
           <button class="toptab" data-page="historical">Historical</button>
+          <button class="toptab" data-page="komparasi">Komparasi</button>
         </div>
         <div class="toplinks" id="summarySubNavHeader" style="visibility:hidden;">
           <button class="toptab active" data-summary-page="all">Unit Kerja</button>
@@ -740,6 +749,34 @@
     </div>
   </div>
 
+  <!-- ================= PAGE: KOMPARASI ================= -->
+  <div id="page-komparasi" class="page hidden">
+    <div class="table-head-row" style="margin-bottom:18px;flex-wrap:wrap;">
+      <div class="controls" style="align-items:center;">
+        <label style="font-size:13px;font-weight:600;color:var(--muted);">Unit Kerja A&nbsp;</label>
+        <select id="komparasiUnitA" style="min-width:220px;font-weight:600;"></select>
+        <label style="font-size:13px;font-weight:600;color:var(--muted);margin-left:8px;">Unit Kerja B&nbsp;</label>
+        <select id="komparasiUnitB" style="min-width:220px;font-weight:600;"></select>
+      </div>
+    </div>
+
+    <div class="table-panel">
+      <div class="table-head-row">
+        <h2 style="margin:0;font-size:14px;font-weight:600;" id="komparasiTitle">Komparasi Unit Kerja</h2>
+        <div class="controls">
+          <input type="text" id="komparasiSearch" placeholder="Cari indikator&hellip;">
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="komparasiTable">
+          <thead id="komparasiHead"></thead>
+          <tbody id="komparasiBody"></tbody>
+          <tfoot id="komparasiFoot"></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
   </div><!-- /#kpiPages -->
 
   <!-- ================= PAGE 4: SUMMARY ================= -->
@@ -1149,6 +1186,7 @@ function loadData(){
 
         unitList = Array.from(new Set(rows.map(r => (r.nama_kantor||'').trim()))).filter(Boolean);
         buildUnitSelect();
+        initKomparasiPage();
 
         document.getElementById('loadingState').classList.add('hidden');
         buildDetailPage();
@@ -1179,6 +1217,7 @@ function showPage(name){
   document.getElementById('page-exec').classList.toggle('hidden', name!=='exec');
   document.getElementById('page-detail').classList.toggle('hidden', name!=='detail');
   document.getElementById('page-historical').classList.toggle('hidden', name!=='historical');
+  document.getElementById('page-komparasi').classList.toggle('hidden', name!=='komparasi');
 }
 
 let summaryLoaded = false;
@@ -1241,6 +1280,182 @@ function buildUnitSelect(){
     buildExecPage();
   });
   buildExecPage();
+}
+
+/* ============== PAGE: KOMPARASI ============== */
+function populateUnitSelectGeneric(sel){
+  sel.innerHTML = '';
+  const kanwilGroup = document.createElement('optgroup');
+  kanwilGroup.label = 'Kantor Wilayah (Nasional)';
+  const kanwils = unitList.filter(nk => (unitMetaMap[nk]||{}).tipeKantor === 'Kantor Wilayah').sort((a,b)=>a.localeCompare(b));
+  kanwils.forEach(nk => {
+    const opt = document.createElement('option');
+    opt.value = nk;
+    opt.textContent = nk === WILAYAH_ROW_NAME ? (nk + ' (agregat wilayah)') : nk;
+    kanwilGroup.appendChild(opt);
+  });
+  sel.appendChild(kanwilGroup);
+
+  const kanwilNames = Array.from(new Set(kanwils)).sort((a,b)=>a.localeCompare(b));
+  kanwilNames.forEach(kanwilName => {
+    const branches = unitList.filter(nk => {
+      const m = unitMetaMap[nk] || {};
+      return m.tipeKantor !== 'Kantor Wilayah' && m.kanwilName === kanwilName;
+    }).sort((a,b)=>a.localeCompare(b));
+    if(branches.length === 0) return;
+    const grp = document.createElement('optgroup');
+    grp.label = kanwilName;
+    branches.forEach(nk => {
+      const opt = document.createElement('option');
+      opt.value = nk;
+      opt.textContent = nk;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  });
+}
+
+let komparasiAllRows = [];
+
+function initKomparasiPage(){
+  const selA = document.getElementById('komparasiUnitA');
+  const selB = document.getElementById('komparasiUnitB');
+  populateUnitSelectGeneric(selA);
+  populateUnitSelectGeneric(selB);
+
+  selA.value = WILAYAH_ROW_NAME;
+  const secondOption = selB.querySelector('optgroup option:nth-child(2)') || selB.options[1];
+  selB.value = secondOption ? secondOption.value : WILAYAH_ROW_NAME;
+
+  selA.addEventListener('change', renderKomparasiPage);
+  selB.addEventListener('change', renderKomparasiPage);
+  document.getElementById('komparasiSearch').addEventListener('input', function(){
+    const q = this.value.trim().toLowerCase();
+    const rows = q ? komparasiAllRows.filter(r => r.nama.toLowerCase().includes(q)) : komparasiAllRows;
+    renderKomparasiBody(rows);
+  });
+
+  renderKomparasiPage();
+}
+
+function komparasiCellNum(v, isPct){
+  if(v === null) return '<td class="num null-cell">NULL</td>';
+  const txt = isPct ? fmtScore(v) : fmtScore(v);
+  return '<td class="num">' + txt + '</td>';
+}
+
+function renderKomparasiPage(){
+  const unitA = document.getElementById('komparasiUnitA').value;
+  const unitB = document.getElementById('komparasiUnitB').value;
+  if(!unitA || !unitB) return;
+
+  document.getElementById('komparasiTitle').textContent = 'Komparasi \u2014 ' + unitA + ' vs ' + unitB;
+
+  const rowsA = allRows.filter(r => r.namaKantor === unitA);
+  const rowsB = allRows.filter(r => r.namaKantor === unitB);
+  const byNameA = {}; rowsA.forEach(r => byNameA[r.nama] = r);
+  const byNameB = {}; rowsB.forEach(r => byNameB[r.nama] = r);
+  const indikatorNames = Array.from(new Set([...rowsA.map(r=>r.nama), ...rowsB.map(r=>r.nama)]));
+
+  komparasiAllRows = indikatorNames.map(nama => {
+    const a = byNameA[nama], b = byNameB[nama];
+    const notApplicable = (!a || (a.target===0 && a.realisasi===0)) && (!b || (b.target===0 && b.realisasi===0));
+    return {
+      nama,
+      bobot: (a && a.bobot) || (b && b.bobot) || 0,
+      pctA: notApplicable ? null : (a ? a.pct : null),
+      pctB: notApplicable ? null : (b ? b.pct : null),
+      scoreA: notApplicable ? null : (a ? a.score : null),
+      scoreB: notApplicable ? null : (b ? b.score : null),
+      selisih: notApplicable ? null : ((a?a.score:0) - (b?b.score:0)),
+      hPctA: a ? a.pencapaianGrowthHarian : null,
+      hPctB: b ? b.pencapaianGrowthHarian : null,
+      hScoreA: a ? a.scoreGrowth : null,
+      hScoreB: b ? b.scoreGrowth : null,
+      bPctA: a ? a.pencapaianGrowthBulan : null,
+      bPctB: b ? b.pencapaianGrowthBulan : null,
+      bScoreA: a ? a.scoreGrowthBulan : null,
+      bScoreB: b ? b.scoreGrowthBulan : null
+    };
+  });
+
+  const thead = document.getElementById('komparasiHead');
+  thead.innerHTML =
+    '<tr>' +
+      '<th rowspan="2" style="vertical-align:bottom;">Nama</th>' +
+      '<th rowspan="2" class="num" style="vertical-align:bottom;">Bobot</th>' +
+      '<th colspan="5" class="grp-border-l grp-realisasi" style="text-align:center;">Realisasi</th>' +
+      '<th colspan="4" class="grp-border-l grp-harian" style="text-align:center;">Growth Harian</th>' +
+      '<th colspan="4" class="grp-border-l grp-bulanan" style="text-align:center;">Growth vs Bulan Kemarin</th>' +
+    '</tr>' +
+    '<tr>' +
+      '<th class="num grp-border-l">Pencapaian ' + escapeHtml(unitA) + '</th>' +
+      '<th class="num">Pencapaian ' + escapeHtml(unitB) + '</th>' +
+      '<th class="num">Score ' + escapeHtml(unitA) + '</th>' +
+      '<th class="num">Score ' + escapeHtml(unitB) + '</th>' +
+      '<th class="num">Selisih</th>' +
+      '<th class="num grp-border-l">Pencapaian ' + escapeHtml(unitA) + '</th>' +
+      '<th class="num">Pencapaian ' + escapeHtml(unitB) + '</th>' +
+      '<th class="num">Score ' + escapeHtml(unitA) + '</th>' +
+      '<th class="num">Score ' + escapeHtml(unitB) + '</th>' +
+      '<th class="num grp-border-l">Pencapaian ' + escapeHtml(unitA) + '</th>' +
+      '<th class="num">Pencapaian ' + escapeHtml(unitB) + '</th>' +
+      '<th class="num">Score ' + escapeHtml(unitA) + '</th>' +
+      '<th class="num">Score ' + escapeHtml(unitB) + '</th>' +
+    '</tr>';
+
+  renderKomparasiBody(komparasiAllRows);
+  renderKomparasiFoot(unitA, unitB);
+}
+
+function renderKomparasiBody(rows){
+  const tbody = document.getElementById('komparasiBody');
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${escapeHtml(r.nama)}</td>
+      <td class="num">${fmtScore(r.bobot)}</td>
+      ${komparasiCellNum(r.pctA)}
+      ${komparasiCellNum(r.pctB)}
+      ${komparasiCellNum(r.scoreA)}
+      ${komparasiCellNum(r.scoreB)}
+      ${r.selisih===null ? '<td class="num null-cell">NULL</td>' : `<td class="num">${fmtScore(r.selisih)}</td>`}
+      ${komparasiCellNum(r.hPctA)}
+      ${komparasiCellNum(r.hPctB)}
+      ${komparasiCellNum(r.hScoreA)}
+      ${komparasiCellNum(r.hScoreB)}
+      ${komparasiCellNum(r.bPctA)}
+      ${komparasiCellNum(r.bPctB)}
+      ${komparasiCellNum(r.bScoreA)}
+      ${komparasiCellNum(r.bScoreB)}
+    </tr>
+  `).join('');
+}
+
+function renderKomparasiFoot(unitA, unitB){
+  const tfoot = document.getElementById('komparasiFoot');
+  const metaA = unitMetaMap[unitA] || {scoreTotal:0, scoreTotalH1:0, scoreTotalB1:0};
+  const metaB = unitMetaMap[unitB] || {scoreTotal:0, scoreTotalH1:0, scoreTotalB1:0};
+
+  const scoreA = metaA.scoreTotal || 0;
+  const scoreB = metaB.scoreTotal || 0;
+  const hScoreA = scoreA - (metaA.scoreTotalH1||0);
+  const hScoreB = scoreB - (metaB.scoreTotalH1||0);
+  const bScoreA = scoreA - (metaA.scoreTotalB1||0);
+  const bScoreB = scoreB - (metaB.scoreTotalB1||0);
+
+  tfoot.innerHTML = '<tr>' +
+    '<td colspan="2">Skor Total</td>' +
+    '<td class="num"></td><td class="num"></td>' +
+    '<td class="num">' + fmtScore(scoreA) + '</td>' +
+    '<td class="num">' + fmtScore(scoreB) + '</td>' +
+    '<td class="num">' + fmtScore(scoreA-scoreB) + '</td>' +
+    '<td class="num"></td><td class="num"></td>' +
+    '<td class="num">' + fmtScore(hScoreA) + '</td>' +
+    '<td class="num">' + fmtScore(hScoreB) + '</td>' +
+    '<td class="num"></td><td class="num"></td>' +
+    '<td class="num">' + fmtScore(bScoreA) + '</td>' +
+    '<td class="num">' + fmtScore(bScoreB) + '</td>' +
+  '</tr>';
 }
 
 function getUnitRows(){
