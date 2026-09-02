@@ -252,6 +252,15 @@
   #komparasiTable .grp-harian{background:#F4C300;color:#0B2A4A;}
   #komparasiTable .grp-bulanan{background:#74B843;color:#fff;}
   #komparasiTable tfoot td{font-weight:700;border-top:2px solid var(--navy);background:#F7F9FB;}
+  #komparasiTable .sticky-col{
+    position:sticky;
+    left:0;
+    z-index:2;
+    background:var(--card);
+    box-shadow:2px 0 4px rgba(0,0,0,0.06);
+  }
+  #komparasiTable tbody tr:hover .sticky-col{background:#F7F9FB;}
+  #komparasiTable tfoot .sticky-col{background:#F7F9FB;}
   #weeklyMatrixTable tfoot td{font-weight:700;border-top:2px solid var(--navy);background:#F7F9FB;}
   .download-btn{
     background:var(--navy);
@@ -1384,7 +1393,7 @@ function renderKomparasiPage(){
   const thead = document.getElementById('komparasiHead');
   thead.innerHTML =
     '<tr>' +
-      '<th rowspan="2" style="vertical-align:bottom;">Nama</th>' +
+      '<th rowspan="2" class="sticky-col" style="vertical-align:bottom;">Nama</th>' +
       '<th rowspan="2" class="num" style="vertical-align:bottom;">Bobot</th>' +
       '<th colspan="5" class="grp-border-l grp-realisasi" style="text-align:center;">Realisasi</th>' +
       '<th colspan="4" class="grp-border-l grp-harian" style="text-align:center;">Growth Harian</th>' +
@@ -1414,7 +1423,7 @@ function renderKomparasiBody(rows){
   const tbody = document.getElementById('komparasiBody');
   tbody.innerHTML = rows.map(r => `
     <tr>
-      <td>${escapeHtml(r.nama)}</td>
+      <td class="sticky-col">${escapeHtml(r.nama)}</td>
       <td class="num">${fmtScore(r.bobot)}</td>
       ${komparasiCellNum(r.pctA)}
       ${komparasiCellNum(r.pctB)}
@@ -1446,7 +1455,7 @@ function renderKomparasiFoot(unitA, unitB){
   const bScoreB = scoreB - (metaB.scoreTotalB1||0);
 
   tfoot.innerHTML = '<tr>' +
-    '<td colspan="2">Skor Total</td>' +
+    '<td colspan="2" class="sticky-col">Skor Total</td>' +
     '<td class="num"></td><td class="num"></td>' +
     '<td class="num">' + fmtScore(scoreA) + '</td>' +
     '<td class="num">' + fmtScore(scoreB) + '</td>' +
