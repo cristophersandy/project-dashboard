@@ -1353,6 +1353,8 @@ function renderKomparasiPage(){
 
   const rowsA = allRows.filter(r => r.namaKantor === unitA);
   const rowsB = allRows.filter(r => r.namaKantor === unitB);
+  const kodeA = (rowsA[0] && rowsA[0].kodeKantor) ? rowsA[0].kodeKantor : unitA;
+  const kodeB = (rowsB[0] && rowsB[0].kodeKantor) ? rowsB[0].kodeKantor : unitB;
   const byNameA = {}; rowsA.forEach(r => byNameA[r.nama] = r);
   const byNameB = {}; rowsB.forEach(r => byNameB[r.nama] = r);
   const indikatorNames = Array.from(new Set([...rowsA.map(r=>r.nama), ...rowsB.map(r=>r.nama)]));
@@ -1389,19 +1391,19 @@ function renderKomparasiPage(){
       '<th colspan="4" class="grp-border-l grp-bulanan" style="text-align:center;">Growth vs Bulan Kemarin</th>' +
     '</tr>' +
     '<tr>' +
-      '<th class="num grp-border-l">Pencapaian ' + escapeHtml(unitA) + '</th>' +
-      '<th class="num">Pencapaian ' + escapeHtml(unitB) + '</th>' +
-      '<th class="num">Score ' + escapeHtml(unitA) + '</th>' +
-      '<th class="num">Score ' + escapeHtml(unitB) + '</th>' +
+      '<th class="num grp-border-l">Pencapaian ' + escapeHtml(kodeA) + '</th>' +
+      '<th class="num">Pencapaian ' + escapeHtml(kodeB) + '</th>' +
+      '<th class="num">Score ' + escapeHtml(kodeA) + '</th>' +
+      '<th class="num">Score ' + escapeHtml(kodeB) + '</th>' +
       '<th class="num">Selisih</th>' +
-      '<th class="num grp-border-l">Pencapaian ' + escapeHtml(unitA) + '</th>' +
-      '<th class="num">Pencapaian ' + escapeHtml(unitB) + '</th>' +
-      '<th class="num">Score ' + escapeHtml(unitA) + '</th>' +
-      '<th class="num">Score ' + escapeHtml(unitB) + '</th>' +
-      '<th class="num grp-border-l">Pencapaian ' + escapeHtml(unitA) + '</th>' +
-      '<th class="num">Pencapaian ' + escapeHtml(unitB) + '</th>' +
-      '<th class="num">Score ' + escapeHtml(unitA) + '</th>' +
-      '<th class="num">Score ' + escapeHtml(unitB) + '</th>' +
+      '<th class="num grp-border-l">Pencapaian ' + escapeHtml(kodeA) + '</th>' +
+      '<th class="num">Pencapaian ' + escapeHtml(kodeB) + '</th>' +
+      '<th class="num">Score ' + escapeHtml(kodeA) + '</th>' +
+      '<th class="num">Score ' + escapeHtml(kodeB) + '</th>' +
+      '<th class="num grp-border-l">Pencapaian ' + escapeHtml(kodeA) + '</th>' +
+      '<th class="num">Pencapaian ' + escapeHtml(kodeB) + '</th>' +
+      '<th class="num">Score ' + escapeHtml(kodeA) + '</th>' +
+      '<th class="num">Score ' + escapeHtml(kodeB) + '</th>' +
     '</tr>';
 
   renderKomparasiBody(komparasiAllRows);
