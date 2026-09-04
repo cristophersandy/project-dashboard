@@ -740,17 +740,20 @@
       </div>
 
       <div class="panel-row hidden" id="histIndikatorPanelRow">
-        <div class="panel">
+        <div class="panel" style="grid-column:1/-1;">
           <h2 id="histIndikatorTitle1">Tren pencapaian</h2>
           <div class="sub">Persentase pencapaian indikator terpilih dari waktu ke waktu</div>
-          <div style="position:relative;height:280px;">
+          <div style="position:relative;height:300px;">
             <canvas id="histIndikatorPctChart" role="img" aria-label="Grafik garis tren pencapaian indikator terpilih dari waktu ke waktu"></canvas>
           </div>
         </div>
-        <div class="panel">
+      </div>
+
+      <div class="panel-row hidden" id="histIndikatorPanelRow2">
+        <div class="panel" style="grid-column:1/-1;">
           <h2 id="histIndikatorTitle2">Tren realisasi</h2>
           <div class="sub" id="histIndikatorSub2">Realisasi indikator ini dari waktu ke waktu, per periode</div>
-          <div style="position:relative;height:280px;">
+          <div style="position:relative;height:300px;">
             <canvas id="histIndikatorRealisasiChart" role="img" aria-label="Grafik garis tren realisasi indikator terpilih dari waktu ke waktu"></canvas>
           </div>
         </div>
@@ -2627,6 +2630,7 @@ function renderHistPage(){
   }
 
   document.getElementById('histIndikatorPanelRow').classList.toggle('hidden', isAll);
+  document.getElementById('histIndikatorPanelRow2').classList.toggle('hidden', isAll);
   if(!isAll){
     renderHistIndikatorDetail(unitRows, dates);
   }
