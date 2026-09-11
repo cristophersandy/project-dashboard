@@ -698,6 +698,11 @@
 
       <div class="kpi-row">
         <div class="kpi-card">
+          <div class="kpi-lbl">Bobot</div>
+          <div class="kpi-val mono" id="histBobot">&mdash;</div>
+          <div class="kpi-sub" id="histBobotSub"></div>
+        </div>
+        <div class="kpi-card">
           <div class="kpi-lbl">Skor terbaru</div>
           <div class="kpi-val mono" id="histLatestScore">&mdash;</div>
           <div class="kpi-sub" id="histLatestDate"></div>
@@ -706,16 +711,6 @@
           <div class="kpi-lbl">Growth vs periode sebelumnya</div>
           <div class="kpi-val mono" id="histGrowth">&mdash;</div>
           <div class="kpi-sub" id="histGrowthSub"></div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-lbl">Skor tertinggi</div>
-          <div class="kpi-val mono" id="histMax">&mdash;</div>
-          <div class="kpi-sub" id="histMaxDate"></div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-lbl">Skor terendah</div>
-          <div class="kpi-val mono" id="histMin">&mdash;</div>
-          <div class="kpi-sub" id="histMinDate"></div>
         </div>
       </div>
 
@@ -2604,10 +2599,6 @@ function renderHistPage(){
   const latestScore = scoreByDate[latestIdx];
   const prevScore = latestIdx > 0 ? scoreByDate[latestIdx-1] : latestScore;
   const growth = latestScore - prevScore;
-  const maxScore = Math.max(...scoreByDate);
-  const minScore = Math.min(...scoreByDate);
-  const maxIdx = scoreByDate.indexOf(maxScore);
-  const minIdx = scoreByDate.indexOf(minScore);
 
   document.getElementById('histLatestScore').textContent = fmtScore(latestScore);
   document.getElementById('histLatestDate').textContent = dates[latestIdx];
@@ -2615,10 +2606,17 @@ function renderHistPage(){
   gEl.textContent = (growth>=0?'+':'') + fmtScore(growth);
   gEl.className = 'kpi-val mono ' + (growth>=0?'pos':'neg');
   document.getElementById('histGrowthSub').textContent = 'vs ' + (latestIdx>0?dates[latestIdx-1]:'-');
-  document.getElementById('histMax').textContent = fmtScore(maxScore);
-  document.getElementById('histMaxDate').textContent = dates[maxIdx];
-  document.getElementById('histMin').textContent = fmtScore(minScore);
-  document.getElementById('histMinDate').textContent = dates[minIdx];
+
+  const latestDate = dates[latestIdx];
+  if(isAll){
+    const totalBobot = unitRows.filter(r=>r.periode===latestDate).reduce((a,r)=>a+r.bobot,0);
+    document.getElementById('histBobot').textContent = fmtScore(totalBobot);
+    document.getElementById('histBobotSub').textContent = 'Total seluruh indikator';
+  } else {
+    const bobotRow = unitRows.find(rr => rr.periode === latestDate && rr.nama === currentHistIndikator);
+    document.getElementById('histBobot').textContent = bobotRow ? fmtScore(bobotRow.bobot) : '-';
+    document.getElementById('histBobotSub').textContent = currentHistIndikator;
+  }
 
   renderHistTrendChart(dates, scoreByDate);
 
