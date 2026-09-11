@@ -2426,7 +2426,25 @@ function parsePlainNum(s){
   if(s===undefined || s===null) return 0;
   s = String(s).trim();
   if(s === '' || s === 'NULL' || s === '#VALUE!' || s === '#N/A') return 0;
-  s = s.replace('%','').replace(/,/g,'');
+  s = s.replace('%','');
+
+  const hasComma = s.indexOf(',') !== -1;
+  const hasDot = s.indexOf('.') !== -1;
+
+  if(hasComma && hasDot){
+    /* Kedua simbol muncul: pemisah desimal adalah yang posisinya paling akhir */
+    if(s.lastIndexOf(',') > s.lastIndexOf('.')){
+      s = s.replace(/\./g,'').replace(',', '.');
+    } else {
+      s = s.replace(/,/g,'');
+    }
+  } else if(hasComma){
+    /* Hanya koma: anggap desimal jika diikuti maks 2 digit (mis. "16,00"), selain itu ribuan */
+    const parts = s.split(',');
+    s = (parts.length === 2 && parts[1].length <= 2) ? s.replace(',', '.') : s.replace(/,/g,'');
+  }
+  /* Hanya titik, atau tanpa simbol: biarkan apa adanya (titik = desimal standar) */
+
   const n = parseFloat(s);
   return isNaN(n) ? 0 : n;
 }
@@ -2719,11 +2737,12 @@ function renderHistRealisasiChart(dates, realisasiByDate){
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => ctx.raw===null ? 'Tidak ada data' : ('Realisasi: ' + ctx.raw.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2})) } },
         datalabels: {
           align: 'top',
           color: '#11284A',
           font: { size: 11, weight: '700' },
-          formatter: (v) => v===null ? '' : fmtBigDec(v)
+          formatter: (v) => v===null ? '' : v.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2})
         }
       },
       scales: {
