@@ -2696,6 +2696,7 @@ function renderHistPctChart(dates, pctByDate){
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { top: 20, right: 24, left: 4 } },
       plugins: {
         legend: { display: false },
         datalabels: {
@@ -2735,6 +2736,7 @@ function renderHistRealisasiChart(dates, realisasiByDate){
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { top: 20, right: 24, left: 4 } },
       plugins: {
         legend: { display: false },
         tooltip: { callbacks: { label: (ctx) => ctx.raw===null ? 'Tidak ada data' : ('Realisasi: ' + ctx.raw.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2})) } },
