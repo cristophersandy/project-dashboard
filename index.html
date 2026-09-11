@@ -2775,8 +2775,10 @@ function renderHistTrendChart(dates, scoreByDate){
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { top: 20 } },
       plugins: {
         legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => 'Skor total: ' + fmtScore(ctx.raw) } },
         datalabels: {
           align: 'top',
           color: '#11284A',
