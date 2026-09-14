@@ -1352,6 +1352,15 @@ function komparasiCellNum(v, isPct){
   return '<td class="num">' + txt + '</td>';
 }
 
+function komparasiPctCell(v, other){
+  if(v === null) return '<td class="num null-cell">NULL</td>';
+  let style = '';
+  if(other !== null && v !== other){
+    style = v > other ? 'background:#EAF7E9;color:#1B7A34;' : 'background:#FDEBEA;color:#C0392B;';
+  }
+  return '<td class="num" style="' + style + '">' + fmtScore(v) + '</td>';
+}
+
 function renderKomparasiPage(){
   const unitA = document.getElementById('komparasiUnitA').value;
   const unitB = document.getElementById('komparasiUnitB').value;
@@ -1424,17 +1433,17 @@ function renderKomparasiBody(rows){
     <tr>
       <td class="sticky-col">${escapeHtml(r.nama)}</td>
       <td class="num">${fmtScore(r.bobot)}</td>
-      ${komparasiCellNum(r.pctA)}
-      ${komparasiCellNum(r.pctB)}
+      ${komparasiPctCell(r.pctA, r.pctB)}
+      ${komparasiPctCell(r.pctB, r.pctA)}
       ${komparasiCellNum(r.scoreA)}
       ${komparasiCellNum(r.scoreB)}
       ${r.selisih===null ? '<td class="num null-cell">NULL</td>' : `<td class="num">${fmtScore(r.selisih)}</td>`}
-      ${komparasiCellNum(r.hPctA)}
-      ${komparasiCellNum(r.hPctB)}
+      ${komparasiPctCell(r.hPctA, r.hPctB)}
+      ${komparasiPctCell(r.hPctB, r.hPctA)}
       ${komparasiCellNum(r.hScoreA)}
       ${komparasiCellNum(r.hScoreB)}
-      ${komparasiCellNum(r.bPctA)}
-      ${komparasiCellNum(r.bPctB)}
+      ${komparasiPctCell(r.bPctA, r.bPctB)}
+      ${komparasiPctCell(r.bPctB, r.bPctA)}
       ${komparasiCellNum(r.bScoreA)}
       ${komparasiCellNum(r.bScoreB)}
     </tr>
