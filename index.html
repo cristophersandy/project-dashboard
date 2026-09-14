@@ -242,8 +242,9 @@
   #search{width:220px;}
   #weeklyMatrixTable{font-size:11.5px;}
   #weeklyMatrixTable th, #weeklyMatrixTable td{white-space:nowrap;}
-  #weeklyMatrixTable .grp-border-l{border-left:2px solid var(--line);}
   #weeklyMatrixTable .null-cell{color:#B0B7C0;font-style:italic;}
+  #weeklyMatrixTable thead .grp-param{background:#0B57D0;color:#fff;}
+  #weeklyMatrixTable thead .grp-growth{background:#0B2A4A;color:#fff;}
   #komparasiTable{font-size:12px;}
   #komparasiTable th, #komparasiTable td{white-space:nowrap;}
   #komparasiTable .null-cell{color:#B0B7C0;font-style:italic;}
@@ -3483,15 +3484,15 @@ function renderWeeklyMatrixTable(param, paramRows){
       '<th rowspan="2" style="vertical-align:bottom;">NO</th>' +
       '<th rowspan="2" style="vertical-align:bottom;">KODE</th>' +
       '<th rowspan="2" style="vertical-align:bottom;">UNIT KERJA</th>' +
-      '<th colspan="' + weeklyWeekList.length + '" class="grp-border-l" style="text-align:center;">' + escapeHtml(param) + '</th>' +
-      '<th colspan="' + (growthWeeks.length + 3) + '" class="grp-border-l" style="text-align:center;">NET GROWTH</th>' +
+      '<th colspan="' + weeklyWeekList.length + '" class="grp-param" style="text-align:center;">' + escapeHtml(param.toUpperCase()) + '</th>' +
+      '<th colspan="' + (growthWeeks.length + 3) + '" class="grp-growth" style="text-align:center;">NET GROWTH</th>' +
     '</tr>' +
     '<tr>' +
-      weeklyWeekList.map((w) => '<th class="num">' + (w===weeklyWeekList[0] ? baselineLabel : w) + '</th>').join('') +
-      growthWeeks.map((w) => '<th class="num">' + w + '</th>').join('') +
-      '<th class="num">AGT</th>' +
-      '<th class="num">RATA2</th>' +
-      '<th class="num">%</th>' +
+      weeklyWeekList.map((w) => '<th class="num grp-param">' + (w===weeklyWeekList[0] ? baselineLabel : w) + '</th>').join('') +
+      growthWeeks.map((w) => '<th class="num grp-growth">' + w + '</th>').join('') +
+      '<th class="num grp-growth">AGT</th>' +
+      '<th class="num grp-growth">RATA2</th>' +
+      '<th class="num grp-growth">%</th>' +
     '</tr>';
 
   renderWeeklyMatrixBody(weeklyMatrixRows);
@@ -3513,15 +3514,13 @@ function growthCellStyle(v){
 function renderWeeklyMatrixBody(rows){
   const tbody = document.getElementById('weeklyMatrixBody');
   tbody.innerHTML = rows.map((r,i) => {
-    const realCells = r.realisasiCells.map((v,ci) => {
+    const realCells = r.realisasiCells.map((v) => {
       const cls = (v===null||v===0) ? 'num null-cell' : 'num';
-      const border = ci===0 ? ' grp-border-l' : '';
-      return '<td class="' + cls + border + '">' + ((v===null||v===0) ? 'NULL' : fmtSummaryNum(v)) + '</td>';
+      return '<td class="' + cls + '">' + ((v===null||v===0) ? 'NULL' : fmtSummaryNum(v)) + '</td>';
     }).join('');
-    const growthCellsHtml = r.growthCells.map((v,ci) => {
-      const border = ci===0 ? ' grp-border-l' : '';
-      if(v===null||v===0) return '<td class="num null-cell' + border + '">NULL</td>';
-      return '<td class="num' + border + '" style="' + growthCellStyle(v) + '">' + ((v>0?'+':'') + fmtSummaryNum(v)) + '</td>';
+    const growthCellsHtml = r.growthCells.map((v) => {
+      if(v===null||v===0) return '<td class="num null-cell">NULL</td>';
+      return '<td class="num" style="' + growthCellStyle(v) + '">' + ((v>0?'+':'') + fmtSummaryNum(v)) + '</td>';
     }).join('');
     const agtTxt = (r.agt===null||r.agt===0) ? '<td class="num null-cell">NULL</td>' : ('<td class="num" style="' + growthCellStyle(r.agt) + '">' + (r.agt>0?'+':'') + fmtSummaryNum(r.agt) + '</td>');
     const rata2Txt = (r.rata2===null||r.rata2===0) ? '<td class="num null-cell">NULL</td>' : ('<td class="num" style="' + growthCellStyle(r.rata2) + '">' + (r.rata2>0?'+':'') + fmtSummaryNum(Math.round(r.rata2)) + '</td>');
@@ -3542,14 +3541,12 @@ function renderWeeklyMatrixFoot(allWeeks, growthWeeks, footData){
   const tfoot = document.getElementById('weeklyMatrixFoot');
   const { realTotals, growthTotals, agt, rata2, pct } = footData;
 
-  const realCells = realTotals.map((v,ci) => {
-    const border = ci===0 ? ' grp-border-l' : '';
-    return '<td class="num' + border + '">' + ((v===null||v===0) ? 'NULL' : fmtSummaryNum(v)) + '</td>';
+  const realCells = realTotals.map((v) => {
+    return '<td class="num">' + ((v===null||v===0) ? 'NULL' : fmtSummaryNum(v)) + '</td>';
   }).join('');
-  const growthCellsHtml = growthTotals.map((v,ci) => {
-    const border = ci===0 ? ' grp-border-l' : '';
-    if(v===null||v===0) return '<td class="num' + border + '">NULL</td>';
-    return '<td class="num' + border + '" style="' + growthCellStyle(v) + '">' + ((v>0?'+':'') + fmtSummaryNum(v)) + '</td>';
+  const growthCellsHtml = growthTotals.map((v) => {
+    if(v===null||v===0) return '<td class="num">NULL</td>';
+    return '<td class="num" style="' + growthCellStyle(v) + '">' + ((v>0?'+':'') + fmtSummaryNum(v)) + '</td>';
   }).join('');
   const agtTxt = (agt===null||agt===0) ? '<td class="num">NULL</td>' : ('<td class="num" style="' + growthCellStyle(agt) + '">' + (agt>0?'+':'') + fmtSummaryNum(agt) + '</td>');
   const rata2Txt = (rata2===null||rata2===0) ? '<td class="num">NULL</td>' : ('<td class="num" style="' + growthCellStyle(rata2) + '">' + (rata2>0?'+':'') + fmtSummaryNum(Math.round(rata2)) + '</td>');
@@ -3620,7 +3617,7 @@ function downloadWeeklyReport(){
       { content: 'NO', rowSpan: 2 },
       { content: 'KODE', rowSpan: 2 },
       { content: 'UNIT KERJA', rowSpan: 2 },
-      { content: param, colSpan: weeklyWeekList.length, styles: { halign: 'center' } },
+      { content: param.toUpperCase(), colSpan: weeklyWeekList.length, styles: { halign: 'center' } },
       { content: 'NET GROWTH', colSpan: growthWeeks.length + 3, styles: { halign: 'center' } }
     ];
     const headRow2 = [
@@ -3655,15 +3652,21 @@ function downloadWeeklyReport(){
       body: body,
       foot: [footRow],
       styles: { fontSize: 6.2, cellPadding: 2.5, halign: 'right' },
-      headStyles: { fillColor: [11,87,208], textColor: [255,255,255], fontStyle: 'bold', halign: 'center' },
+      headStyles: { textColor: [255,255,255], fontStyle: 'bold', halign: 'center' },
       footStyles: { fillColor: [247,249,251], textColor: [11,42,74], fontStyle: 'bold' },
       alternateRowStyles: { fillColor: [250,251,252] },
       columnStyles: { 0:{halign:'center'}, 1:{halign:'left'}, 2:{halign:'left'} },
       margin: { left: 20, right: 20 },
       didParseCell: function(dataCell){
-        if(dataCell.column.index === dividerCol && dataCell.section === 'head'){
-          dataCell.cell.styles.lineWidth = { top:0.1, right:0.1, bottom:0.1, left:1.2 };
-          dataCell.cell.styles.lineColor = [11,42,74];
+        if(dataCell.section === 'head'){
+          if(dataCell.column.index < 3){
+            dataCell.cell.styles.fillColor = [255,255,255];
+            dataCell.cell.styles.textColor = [11,42,74];
+          } else if(dataCell.column.index < dividerCol){
+            dataCell.cell.styles.fillColor = [11,87,208];
+          } else {
+            dataCell.cell.styles.fillColor = [11,42,74];
+          }
         }
         if(dataCell.section === 'body' && typeof dataCell.cell.raw === 'string'){
           if(dataCell.cell.raw === 'NULL'){ dataCell.cell.styles.textColor = [176,183,192]; dataCell.cell.styles.fontStyle = 'italic'; }
