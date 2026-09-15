@@ -2341,7 +2341,7 @@ function renderDetailTable(){
     const tr = document.createElement('tr');
     const gap1Disp = r.gap1 === 0 ? '-' : fmtScore(r.gap1);
     const vs1Disp = r.vs1 === 0 ? '-' : fmtBig(r.vs1);
-    const realGrowthDisp = r.realisasiGrowth === 0 ? '-' : (r.realisasiGrowth>0?'+':'') + fmtBig(r.realisasiGrowth);
+    const realGrowthDisp = r.realisasiGrowth === 0 ? '-' : (r.realisasiGrowth>0?'+':'') + r.realisasiGrowth.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2});
     const scoreGrowthDisp = r.scoreGrowth === 0 ? '-' : (r.scoreGrowth>0?'+':'') + fmtScore(r.scoreGrowth);
     const deltaRankDisp = r.deltaRankParameter === 0 ? '-' : (r.deltaRankParameter>0?'+':'') + Math.round(r.deltaRankParameter);
     tr.innerHTML = `
@@ -2350,7 +2350,7 @@ function renderDetailTable(){
       <td><span class="type-tag">${r.kelas}</span></td>
       <td>${r.namaKantor}</td>
       <td class="num">${fmtBig(r.target)}</td>
-      <td class="num">${fmtBig(r.realisasi)}</td>
+      <td class="num">${r.realisasi.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
       <td class="num"><span class="badge ${st}">${fmtPct(r.pct)}</span></td>
       <td class="num">${(r.gap>=0?'+':'')+fmtBig(r.gap)}</td>
       <td class="num">${fmtScore(r.score)}</td>
@@ -2385,7 +2385,7 @@ function downloadDetailReport(){
   const body = filtered.map(r => {
     const gap1Disp = r.gap1 === 0 ? '-' : fmtScore(r.gap1);
     const vs1Disp = r.vs1 === 0 ? '-' : fmtBig(r.vs1);
-    const realGrowthDisp = r.realisasiGrowth === 0 ? '-' : (r.realisasiGrowth>0?'+':'') + fmtBig(r.realisasiGrowth);
+    const realGrowthDisp = r.realisasiGrowth === 0 ? '-' : (r.realisasiGrowth>0?'+':'') + r.realisasiGrowth.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2});
     const scoreGrowthDisp = r.scoreGrowth === 0 ? '-' : (r.scoreGrowth>0?'+':'') + fmtScore(r.scoreGrowth);
     const deltaRankDisp = r.deltaRankParameter === 0 ? '-' : (r.deltaRankParameter>0?'+':'') + Math.round(r.deltaRankParameter);
     return [
@@ -2394,7 +2394,7 @@ function downloadDetailReport(){
       r.kelas,
       r.namaKantor,
       fmtBig(r.target),
-      fmtBig(r.realisasi),
+      r.realisasi.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2}),
       fmtPct(r.pct),
       (r.gap>=0?'+':'')+fmtBig(r.gap),
       fmtScore(r.score),
