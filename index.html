@@ -245,7 +245,7 @@
   #weeklyMatrixTable .null-cell{color:#B0B7C0;font-style:italic;}
   #weeklyMatrixTable thead .grp-param{background:#0B57D0;color:#fff;}
   #weeklyMatrixTable thead .grp-growth{background:#0B2A4A;color:#fff;}
-  #weeklyMatrixTable thead .grp-id{background:#0B2A4A;color:#fff;}
+  #weeklyMatrixTable thead .grp-id{background:#8A94A3;color:#fff;text-align:center;}
   #komparasiTable{font-size:12px;}
   #komparasiTable th, #komparasiTable td{white-space:nowrap;}
   #komparasiTable .null-cell{color:#B0B7C0;font-style:italic;}
@@ -3670,7 +3670,8 @@ function downloadWeeklyReport(){
       didParseCell: function(dataCell){
         if(dataCell.section === 'head'){
           if(dataCell.column.index < 3){
-            dataCell.cell.styles.fillColor = [11,42,74];
+            dataCell.cell.styles.fillColor = [138,148,163];
+            dataCell.cell.styles.halign = 'center';
           } else if(dataCell.column.index < dividerCol){
             dataCell.cell.styles.fillColor = [11,87,208];
           } else {
