@@ -3339,6 +3339,17 @@ function weeklyBaselineDateLabel(rows){
   return w0 ? fmtTglSingkat(w0.tglProses) : 'Baseline';
 }
 
+/* Label kolom total growth = singkatan bulan dari minggu terbaru yang sudah ada datanya (mis. SEP) */
+function weeklyMonthLabel(rows){
+  const bulan = ['JAN','FEB','MAR','APR','MEI','JUN','JUL','AGT','SEP','OKT','NOV','DES'];
+  const withData = rows.filter(r => r.hasData && r.tglProses && r.week !== weeklyWeekList[0]);
+  if(withData.length === 0) return 'TOTAL';
+  withData.sort((a,b) => weeklyWeekList.indexOf(a.week) - weeklyWeekList.indexOf(b.week));
+  const parts = withData[withData.length-1].tglProses.split('-');
+  const m = parseInt(parts[1],10) - 1;
+  return bulan[m] || 'TOTAL';
+}
+
 function renderWeeklyPage(){
   const param = currentWeeklyParam();
   const paramRows = weeklyRows.filter(r => r.parameter === param);
@@ -3427,6 +3438,7 @@ function renderWeeklyTrendChart(weekTotals){
 function computeWeeklyMatrixData(param){
   const paramRows = weeklyRows.filter(r => r.parameter === param);
   const baselineLabel = weeklyBaselineDateLabel(paramRows);
+  const agtLabel = weeklyMonthLabel(paramRows);
   const growthWeeks = weeklyWeekList.filter(w => w !== weeklyWeekList[0]);
 
   const uniqueUnits = [];
@@ -3479,7 +3491,7 @@ function computeWeeklyMatrixData(param){
   const footPct = (footAgt!==null && footBaselineTotal) ? (footAgt/footBaselineTotal*100) : null;
 
   return {
-    param, paramRows, baselineLabel, growthWeeks, rows,
+    param, paramRows, baselineLabel, agtLabel, growthWeeks, rows,
     foot: { realTotals, growthTotals, agt: footAgt, rata2: footRata2, pct: footPct }
   };
 }
@@ -3502,7 +3514,7 @@ function renderWeeklyMatrixTable(param, paramRows){
     '<tr>' +
       weeklyWeekList.map((w) => '<th class="num grp-param">' + (w===weeklyWeekList[0] ? baselineLabel : w) + '</th>').join('') +
       growthWeeks.map((w) => '<th class="num grp-growth">' + w + '</th>').join('') +
-      '<th class="num grp-growth">AGT</th>' +
+      '<th class="num grp-growth">' + data.agtLabel + '</th>' +
       '<th class="num grp-growth">RATA2</th>' +
       '<th class="num grp-growth">%</th>' +
     '</tr>';
@@ -3635,7 +3647,7 @@ function downloadWeeklyReport(){
     const headRow2 = [
       ...weeklyWeekList.map(w => (w === weeklyWeekList[0]) ? data.baselineLabel : w),
       ...growthWeeks,
-      'AGT','RATA2','%'
+      data.agtLabel,'RATA2','%'
     ];
 
     const body = data.rows.map((r,i) => [
