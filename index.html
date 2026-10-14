@@ -170,6 +170,66 @@
   .kpi-val.pos{color:var(--teal);}
   .kpi-val.neg{color:var(--red);}
 
+  .winner-section{margin-bottom:24px;}
+  .winner-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+  .winner-head h2{font-size:16px;margin:0;font-weight:700;display:flex;align-items:center;gap:8px;color:var(--ink);}
+  .winner-head .sub{font-size:12px;color:var(--muted);margin:2px 0 0 0;}
+  .winner-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;}
+  @media (max-width:1100px){.winner-grid{grid-template-columns:repeat(3,1fr);}}
+  @media (max-width:640px){.winner-grid{grid-template-columns:repeat(2,1fr);}}
+  .winner-card{
+    position:relative;
+    border-radius:14px;
+    padding:18px 14px 16px;
+    text-align:center;
+    background:linear-gradient(160deg,#FFFDF5 0%,#FFF3D6 55%,#FFE3A0 100%);
+    border:1px solid #EFCD7E;
+    box-shadow:0 4px 14px rgba(196,145,15,0.16);
+    overflow:hidden;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .winner-card:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(196,145,15,0.26);}
+  .winner-card::before{
+    content:"";
+    position:absolute; top:-34px; right:-28px;
+    width:92px; height:92px;
+    background:radial-gradient(circle, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0) 70%);
+    pointer-events:none;
+  }
+  .winner-card.empty{
+    background:#F9FAFB;
+    border:1px dashed var(--line);
+    box-shadow:none;
+    cursor:default;
+  }
+  .winner-card.empty:hover{transform:none;box-shadow:none;}
+  .winner-trophy{font-size:26px;line-height:1;margin-bottom:4px;}
+  .winner-jab{
+    display:inline-block;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:0.04em;
+    color:#8A5A00;
+    background:rgba(255,255,255,0.7);
+    border:1px solid rgba(154,106,0,0.25);
+    padding:2px 10px;
+    border-radius:20px;
+    margin-bottom:9px;
+    position:relative;
+  }
+  .winner-name{position:relative;font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.25;min-height:34px;display:flex;align-items:center;justify-content:center;}
+  .winner-cab{position:relative;font-size:11px;color:var(--muted);margin-top:2px;}
+  .winner-score{
+    position:relative;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:21px;
+    font-weight:700;
+    color:#8A5A00;
+    margin-top:9px;
+  }
+  .winner-score-lbl{position:relative;font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:1px;}
+
   .panel-row{
     display:grid;
     grid-template-columns:1fr 1fr;
@@ -1038,26 +1098,60 @@
         </div>
       </div>
 
-      <div class="kpi-row">
-        <div class="kpi-card">
-          <div class="kpi-lbl">Jumlah pegawai</div>
-          <div class="kpi-val mono" id="iprojCount">&mdash;</div>
-          <div class="kpi-sub" id="iprojCountSub"></div>
+      <div class="winner-section">
+        <div class="winner-head">
+          <h2>&#127942; Juara I-PROJECT per Jabatan</h2>
+          <div class="sub">Pegawai dengan skor total tertinggi pada jabatannya &mdash; klik kartu untuk lihat rincian</div>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-lbl">Skor rata-rata</div>
-          <div class="kpi-val mono" id="iprojAvg">&mdash;</div>
-          <div class="kpi-sub">dari total nilai seluruh parameter</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-lbl">Skor tertinggi</div>
-          <div class="kpi-val mono" id="iprojMax">&mdash;</div>
-          <div class="kpi-sub" id="iprojMaxSub"></div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-lbl">Skor terendah</div>
-          <div class="kpi-val mono" id="iprojMin">&mdash;</div>
-          <div class="kpi-sub" id="iprojMinSub"></div>
+        <div class="winner-grid" id="iprojWinnerGrid">
+          <div class="winner-card" data-wjab="AR">
+            <div class="winner-trophy">&#127942;</div>
+            <div class="winner-jab">AR</div>
+            <div class="winner-name" data-field="name">&mdash;</div>
+            <div class="winner-cab" data-field="cab"></div>
+            <div class="winner-score" data-field="score">&mdash;</div>
+            <div class="winner-score-lbl">Skor Total</div>
+          </div>
+          <div class="winner-card" data-wjab="ARK">
+            <div class="winner-trophy">&#127942;</div>
+            <div class="winner-jab">ARK</div>
+            <div class="winner-name" data-field="name">&mdash;</div>
+            <div class="winner-cab" data-field="cab"></div>
+            <div class="winner-score" data-field="score">&mdash;</div>
+            <div class="winner-score-lbl">Skor Total</div>
+          </div>
+          <div class="winner-card" data-wjab="ARP">
+            <div class="winner-trophy">&#127942;</div>
+            <div class="winner-jab">ARP</div>
+            <div class="winner-name" data-field="name">&mdash;</div>
+            <div class="winner-cab" data-field="cab"></div>
+            <div class="winner-score" data-field="score">&mdash;</div>
+            <div class="winner-score-lbl">Skor Total</div>
+          </div>
+          <div class="winner-card" data-wjab="WRK">
+            <div class="winner-trophy">&#127942;</div>
+            <div class="winner-jab">WASRIK</div>
+            <div class="winner-name" data-field="name">&mdash;</div>
+            <div class="winner-cab" data-field="cab"></div>
+            <div class="winner-score" data-field="score">&mdash;</div>
+            <div class="winner-score-lbl">Skor Total</div>
+          </div>
+          <div class="winner-card" data-wjab="PAP">
+            <div class="winner-trophy">&#127942;</div>
+            <div class="winner-jab">PAP</div>
+            <div class="winner-name" data-field="name">&mdash;</div>
+            <div class="winner-cab" data-field="cab"></div>
+            <div class="winner-score" data-field="score">&mdash;</div>
+            <div class="winner-score-lbl">Skor Total</div>
+          </div>
+          <div class="winner-card" data-wjab="PAPK">
+            <div class="winner-trophy">&#127942;</div>
+            <div class="winner-jab">PAPK</div>
+            <div class="winner-name" data-field="name">&mdash;</div>
+            <div class="winner-cab" data-field="cab"></div>
+            <div class="winner-score" data-field="score">&mdash;</div>
+            <div class="winner-score-lbl">Skor Total</div>
+          </div>
         </div>
       </div>
 
@@ -3972,9 +4066,36 @@ function initIProject(){
     renderIProjectDetail();
   });
 
+  renderIProjWinners();
   renderIProjectBoard();
   renderIProjectCabang();
   renderIProjectDetail();
+}
+
+function renderIProjWinners(){
+  document.querySelectorAll('#iprojWinnerGrid .winner-card').forEach(card => {
+    const jab = card.getAttribute('data-wjab');
+    const contenders = iprojEmployees.filter(e => e.jab === jab);
+    const nameEl = card.querySelector('[data-field="name"]');
+    const cabEl = card.querySelector('[data-field="cab"]');
+    const scoreEl = card.querySelector('[data-field="score"]');
+
+    if(!contenders.length){
+      card.classList.add('empty');
+      nameEl.textContent = 'Belum ada data';
+      cabEl.textContent = '';
+      scoreEl.textContent = '—';
+      card.onclick = null;
+      return;
+    }
+
+    const winner = contenders.reduce((best, e) => e.skor > best.skor ? e : best, contenders[0]);
+    card.classList.remove('empty');
+    nameEl.textContent = winner.nama;
+    cabEl.textContent = winner.cabNama;
+    scoreEl.textContent = fmtScore(winner.skor);
+    card.onclick = () => iprojShowDetailFor(winner.keps);
+  });
 }
 
 function buildIProjCabSelect(){
@@ -4066,26 +4187,6 @@ function renderIProjectBoard(){
   if(jab) filtered = filtered.filter(e => e.jab === jab);
   if(q) filtered = filtered.filter(e => e.nama.toLowerCase().includes(q));
   filtered.sort((a,b) => b.skor - a.skor);
-
-  document.getElementById('iprojCount').textContent = filtered.length;
-  document.getElementById('iprojCountSub').textContent = cab || jab ? 'sesuai filter terpilih' : 'seluruh pegawai I-PROJECT';
-
-  if(filtered.length){
-    const avg = filtered.reduce((s,e) => s + e.skor, 0) / filtered.length;
-    document.getElementById('iprojAvg').textContent = fmtScore(avg);
-    const best = filtered[0];
-    const worst = filtered[filtered.length-1];
-    document.getElementById('iprojMax').textContent = fmtScore(best.skor);
-    document.getElementById('iprojMaxSub').textContent = best.nama;
-    document.getElementById('iprojMin').textContent = fmtScore(worst.skor);
-    document.getElementById('iprojMinSub').textContent = worst.nama;
-  }else{
-    document.getElementById('iprojAvg').textContent = '—';
-    document.getElementById('iprojMax').textContent = '—';
-    document.getElementById('iprojMaxSub').textContent = '';
-    document.getElementById('iprojMin').textContent = '—';
-    document.getElementById('iprojMinSub').textContent = '';
-  }
 
   const body = document.getElementById('iprojBoardBody');
   body.innerHTML = '';
