@@ -228,6 +228,28 @@
     color:#8A5A00;
     margin-top:9px;
   }
+
+  .top5-section{margin-bottom:24px;}
+  .top5-head{margin-bottom:14px;}
+  .top5-head h2{font-size:16px;margin:0;font-weight:700;color:var(--ink);}
+  .top5-head .sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .top5-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  @media (max-width:1100px){.top5-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:640px){.top5-grid{grid-template-columns:1fr;}}
+  .top5-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 14px 8px;}
+  .top5-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .top5-jab{font-size:12px;font-weight:700;letter-spacing:0.04em;color:#8A5A00;background:var(--amber-bg);border:1px solid #EFCD7E;padding:2px 10px;border-radius:20px;}
+  .top5-n{font-size:11px;color:var(--muted);}
+  .top5-row{display:flex;align-items:center;gap:10px;padding:7px 6px;border-top:1px solid var(--line);border-radius:6px;cursor:pointer;transition:background .12s;}
+  .top5-row:hover{background:var(--blue-bg);}
+  .top5-rank{flex:0 0 26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;background:#EEF1F5;color:var(--muted);}
+  .top5-row.r1 .top5-rank{background:linear-gradient(135deg,#FFE28A,#E8B100);color:#5C3C00;}
+  .top5-row.r2 .top5-rank{background:linear-gradient(135deg,#F2F4F7,#B8C0CC);color:#3A4352;}
+  .top5-row.r3 .top5-rank{background:linear-gradient(135deg,#F6C9A0,#CD7F32);color:#4A2A08;}
+  .top5-info{flex:1;min-width:0;}
+  .top5-name{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .top5-cab{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .top5-score{font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:700;color:var(--ink);}
   .winner-score-lbl{position:relative;font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:1px;}
 
   .panel-row{
@@ -1153,6 +1175,15 @@
             <div class="winner-score-lbl">Skor Total</div>
           </div>
         </div>
+      </div>
+
+
+      <div class="top5-section">
+        <div class="top5-head">
+          <h2>&#127941; Top 5 per Jabatan</h2>
+          <div class="sub">Lima pegawai dengan skor total tertinggi pada setiap jabatan &mdash; klik baris untuk lihat rincian</div>
+        </div>
+        <div class="top5-grid" id="iprojTop5Grid"></div>
       </div>
 
       <div class="table-panel">
@@ -4067,9 +4098,34 @@ function initIProject(){
   });
 
   renderIProjWinners();
+  renderIProjTop5();
   renderIProjectBoard();
   renderIProjectCabang();
   renderIProjectDetail();
+}
+
+
+function renderIProjTop5(){
+  const cfg = [['AR','AR'],['ARK','ARK'],['ARP','ARP'],['WRK','WASRIK'],['PAP','PAP'],['PAPK','PAPK']];
+  const grid = document.getElementById('iprojTop5Grid');
+  grid.innerHTML = '';
+  cfg.forEach(([code,label]) => {
+    const list = iprojEmployees.filter(e => e.jab === code).sort((a,b) => b.skor - a.skor).slice(0,5);
+    const total = iprojEmployees.filter(e => e.jab === code).length;
+    const card = document.createElement('div');
+    card.className = 'top5-card';
+    card.innerHTML = '<div class="top5-card-head"><span class="top5-jab">'+label+'</span><span class="top5-n">'+total+' pegawai</span></div>';
+    list.forEach((e,i) => {
+      const row = document.createElement('div');
+      row.className = 'top5-row' + (i<3 ? ' r'+(i+1) : '');
+      row.innerHTML = '<div class="top5-rank">'+(i+1)+'</div><div class="top5-info"><div class="top5-name"></div><div class="top5-cab"></div></div><div class="top5-score">'+fmtScore(e.skor)+'</div>';
+      row.querySelector('.top5-name').textContent = e.nama;
+      row.querySelector('.top5-cab').textContent = e.cabNama;
+      row.onclick = () => iprojShowDetailFor(e.keps);
+      card.appendChild(row);
+    });
+    grid.appendChild(card);
+  });
 }
 
 function renderIProjWinners(){
