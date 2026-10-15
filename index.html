@@ -196,14 +196,14 @@
   tr.jab-PAPK td:first-child{box-shadow:inset 4px 0 0 #C2185B;}
   tr.jab-PAPK:hover td{filter:brightness(0.97);}
   tr.jab-PAPK .jab-badge{background:#fff;color:#C2185B;border:1px solid #C2185B55;}
-  tr.jab-KKEP td{background:#EEF0F5;}
-  tr.jab-KKEP td:first-child{box-shadow:inset 4px 0 0 #455A8A;}
+  tr.jab-KKEP td{background:#E8EAF6;}
+  tr.jab-KKEP td:first-child{box-shadow:inset 4px 0 0 #3949AB;}
   tr.jab-KKEP:hover td{filter:brightness(0.97);}
-  tr.jab-KKEP .jab-badge{background:#fff;color:#455A8A;border:1px solid #455A8A55;}
-  tr.jab-KKPS td{background:#FFF9DB;}
-  tr.jab-KKPS td:first-child{box-shadow:inset 4px 0 0 #9A7B00;}
+  tr.jab-KKEP .jab-badge{background:#fff;color:#3949AB;border:1px solid #3949AB55;}
+  tr.jab-KKPS td{background:#E8EAF6;}
+  tr.jab-KKPS td:first-child{box-shadow:inset 4px 0 0 #3949AB;}
   tr.jab-KKPS:hover td{filter:brightness(0.97);}
-  tr.jab-KKPS .jab-badge{background:#fff;color:#9A7B00;border:1px solid #9A7B0055;}
+  tr.jab-KKPS .jab-badge{background:#fff;color:#3949AB;border:1px solid #3949AB55;}
   tr.jab-KKSI td{background:#E8EAF6;}
   tr.jab-KKSI td:first-child{box-shadow:inset 4px 0 0 #3949AB;}
   tr.jab-KKSI:hover td{filter:brightness(0.97);}
@@ -472,6 +472,7 @@
         <div class="toplinks" id="iprojectSubNavHeader" style="visibility:hidden;">
           <button class="toptab active" data-iproject-page="board">Papan Pegawai</button>
           <button class="toptab" data-iproject-page="cabang">Peringkat Cabang</button>
+          <button class="toptab" data-iproject-page="param">Rincian Parameter</button>
           <button class="toptab" data-iproject-page="detail">Rincian Pegawai</button>
         </div>
       </div>
@@ -1306,6 +1307,60 @@
               </tr>
             </thead>
             <tbody id="iprojCabangBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---- Sub: Rincian Parameter ---- -->
+    <div id="iprojectSubParam" class="hidden">
+      <div class="table-head-row" style="margin-bottom:16px;align-items:flex-start;">
+        <div class="controls" style="align-items:flex-start;flex-wrap:wrap;">
+          <div>
+            <div class="section-title" style="margin-bottom:2px;">Parameter</div>
+            <select id="iprojParamSelect" style="min-width:320px;font-weight:600;"></select>
+          </div>
+          <div>
+            <div class="section-title" style="margin-bottom:2px;">Urutkan berdasarkan</div>
+            <select id="iprojParamSort" style="min-width:160px;">
+              <option value="nilai">Nilai</option>
+              <option value="pct">% Capaian</option>
+              <option value="real">Realisasi</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div class="section-title" style="margin:0;">Kantor cabang (bisa pilih lebih dari satu)</div>
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;">
+            <input type="checkbox" id="iprojParamCabAll" checked> Pilih semua
+          </label>
+        </div>
+        <div id="iprojParamCabBoxes" style="display:flex;gap:8px 16px;flex-wrap:wrap;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#F9FAFB;"></div>
+      </div>
+
+      <div class="table-panel">
+        <div class="table-head-row">
+          <h2 style="margin:0;font-size:14px;font-weight:600;" id="iprojParamTitle">Ranking parameter</h2>
+          <div class="sub" style="margin:0;" id="iprojParamSub"></div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th class="num">Rank</th>
+                <th>Nama</th>
+                <th>Kantor Cabang</th>
+                <th>Jabatan</th>
+                <th class="num">Target</th>
+                <th class="num">Realisasi</th>
+                <th class="num">% Capaian</th>
+                <th class="num">Nilai</th>
+              </tr>
+            </thead>
+            <tbody id="iprojParamBody"></tbody>
           </table>
         </div>
       </div>
@@ -4131,6 +4186,7 @@ function initIProject(){
     renderIProjectDetail();
   });
 
+  buildIProjParam();
   renderIProjWinners();
   renderIProjTop5();
   renderIProjectBoard();
@@ -4159,6 +4215,79 @@ function renderIProjTop5(){
       card.appendChild(row);
     });
     grid.appendChild(card);
+  });
+}
+
+
+function buildIProjParam(){
+  const sel = document.getElementById('iprojParamSelect');
+  const pars = Array.from(new Set(IPROJECT_DATA.map(r => r.par))).sort((a,b) => a.localeCompare(b));
+  sel.innerHTML = '';
+  pars.forEach(pn => { const o = document.createElement('option'); o.value = pn; o.textContent = pn; sel.appendChild(o); });
+  const box = document.getElementById('iprojParamCabBoxes');
+  box.innerHTML = '';
+  const cabs = Array.from(new Set(iprojEmployees.map(e => e.cab))).sort((a,b) => iprojCabName(a).localeCompare(iprojCabName(b)));
+  cabs.forEach(c => {
+    const lbl = document.createElement('label');
+    lbl.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;';
+    lbl.innerHTML = '<input type="checkbox" class="iprojParamCabCk" checked value="'+c+'"> <span></span>';
+    lbl.querySelector('span').textContent = iprojCabName(c);
+    box.appendChild(lbl);
+  });
+  sel.addEventListener('change', renderIProjParam);
+  document.getElementById('iprojParamSort').addEventListener('change', renderIProjParam);
+  document.getElementById('iprojParamCabAll').addEventListener('change', ev => {
+    document.querySelectorAll('.iprojParamCabCk').forEach(ck => ck.checked = ev.target.checked);
+    renderIProjParam();
+  });
+  box.addEventListener('change', () => {
+    const cks = Array.from(document.querySelectorAll('.iprojParamCabCk'));
+    document.getElementById('iprojParamCabAll').checked = cks.every(c => c.checked);
+    renderIProjParam();
+  });
+  renderIProjParam();
+}
+
+function renderIProjParam(){
+  const par = document.getElementById('iprojParamSelect').value;
+  const sortKey = document.getElementById('iprojParamSort').value;
+  const cabs = new Set(Array.from(document.querySelectorAll('.iprojParamCabCk')).filter(c => c.checked).map(c => c.value));
+  const empMap = {};
+  iprojEmployees.forEach(e => empMap[e.keps] = e);
+
+  let rows = IPROJECT_DATA.filter(r => r.par === par && cabs.has(r.cab)).map(r => {
+    const e = empMap[r.keps];
+    return { keps: r.keps, nama: r.nama, cabNama: e.cabNama, jab: e.jab, tgt: r.tgt, real: r.real, nilai: r.nilai, pct: r.tgt > 0 ? r.real / r.tgt * 100 : null };
+  });
+  const val = (r,k) => k === 'pct' ? (r.pct === null ? -Infinity : r.pct) : r[k];
+  const tie = { nilai:['pct','real'], pct:['nilai','real'], real:['nilai','pct'] }[sortKey];
+  rows.sort((a,b) => (val(b,sortKey)-val(a,sortKey)) || (val(b,tie[0])-val(a,tie[0])) || (val(b,tie[1])-val(a,tie[1])) || 0);
+
+  document.getElementById('iprojParamTitle').textContent = 'Ranking: ' + par;
+  document.getElementById('iprojParamSub').textContent = rows.length + ' pegawai dari ' + cabs.size + ' kantor cabang';
+
+  const body = document.getElementById('iprojParamBody');
+  body.innerHTML = '';
+  if(!rows.length){
+    body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px;">Tidak ada data untuk filter terpilih</td></tr>';
+    return;
+  }
+  rows.forEach((r,i) => {
+    const tr = document.createElement('tr');
+    tr.className = 'jab-' + r.jab;
+    tr.style.cursor = 'pointer';
+    tr.innerHTML = `
+      <td class="num">${i+1}</td>
+      <td></td>
+      <td>${r.cabNama}</td>
+      <td><span class="badge jab-badge">${r.jab === 'WRK' ? 'WASRIK' : r.jab}</span></td>
+      <td class="num">${fmtBigDec(r.tgt)}</td>
+      <td class="num">${fmtBigDec(r.real)}</td>
+      <td class="num">${r.pct===null ? '-' : `<span class="badge ${statusClass(r.pct)}">${fmtPct(r.pct)}</span>`}</td>
+      <td class="num">${fmtScore(r.nilai)}</td>`;
+    tr.children[1].textContent = r.nama;
+    tr.addEventListener('click', () => iprojShowDetailFor(r.keps));
+    body.appendChild(tr);
   });
 }
 
@@ -4417,6 +4546,7 @@ function showIProjectSubPage(name){
   document.querySelectorAll('#iprojectSubNavHeader .toptab').forEach(b => b.classList.toggle('active', b.getAttribute('data-iproject-page')===name));
   document.getElementById('iprojectSubBoard').classList.toggle('hidden', name!=='board');
   document.getElementById('iprojectSubCabang').classList.toggle('hidden', name!=='cabang');
+  document.getElementById('iprojectSubParam').classList.toggle('hidden', name!=='param');
   document.getElementById('iprojectSubDetail').classList.toggle('hidden', name!=='detail');
 }
 
