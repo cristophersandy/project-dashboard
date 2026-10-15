@@ -371,6 +371,12 @@
     background:#F9FAFB;
   }
   #search{width:220px;}
+  .pager{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-top:14px;font-size:12px;color:var(--muted);}
+  .pager-btns{display:flex;gap:4px;flex-wrap:wrap;}
+  .pager button{border:1px solid var(--line);background:#F9FAFB;color:var(--ink);border-radius:6px;padding:5px 10px;font-size:12px;font-family:inherit;cursor:pointer;min-width:32px;}
+  .pager button:hover:not(:disabled){border-color:var(--navy);color:var(--navy);}
+  .pager button.active{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:600;}
+  .pager button:disabled{opacity:.45;cursor:default;}
   #weeklyMatrixTable{font-size:11.5px;}
   #weeklyMatrixTable th, #weeklyMatrixTable td{white-space:nowrap;}
   #weeklyMatrixTable .null-cell{color:#B0B7C0;font-style:italic;}
@@ -1252,6 +1258,7 @@
             <tbody id="iprojBoardBody"></tbody>
           </table>
         </div>
+        <div class="pager" id="iprojBoardPager"></div>
       </div>
     </div>
 
@@ -4188,8 +4195,8 @@ function initIProject(){
   buildIProjCabangJabSelect();
   buildIProjDetailSelect();
 
-  document.getElementById('iprojCabSelect').addEventListener('change', renderIProjectBoard);
-  document.getElementById('iprojJabSelect').addEventListener('change', renderIProjectBoard);
+  document.getElementById('iprojCabSelect').addEventListener('change', () => { iprojBoardPage = 1; renderIProjectBoard(); });
+  document.getElementById('iprojJabSelect').addEventListener('change', () => { iprojBoardPage = 1; renderIProjectBoard(); });
   document.getElementById('iprojCabangJabSelect').addEventListener('change', renderIProjectCabang);
   document.getElementById('iprojDetailSelect').addEventListener('change', () => {
     iprojSelectedKeps = document.getElementById('iprojDetailSelect').value;
@@ -4417,6 +4424,9 @@ function iprojShowDetailFor(keps){
   renderIProjectDetail();
 }
 
+const IPROJ_BOARD_PAGE_SIZE = 50;
+let iprojBoardPage = 1;
+
 function renderIProjectBoard(){
   const cab = document.getElementById('iprojCabSelect').value;
   const jab = document.getElementById('iprojJabSelect').value;
@@ -4426,9 +4436,16 @@ function renderIProjectBoard(){
   if(jab) filtered = filtered.filter(e => e.jab === jab);
   filtered.sort((a,b) => b.skor - a.skor);
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / IPROJ_BOARD_PAGE_SIZE));
+  if(iprojBoardPage > totalPages) iprojBoardPage = totalPages;
+  if(iprojBoardPage < 1) iprojBoardPage = 1;
+  const offset = (iprojBoardPage - 1) * IPROJ_BOARD_PAGE_SIZE;
+  const pageRows = filtered.slice(offset, offset + IPROJ_BOARD_PAGE_SIZE);
+
   const body = document.getElementById('iprojBoardBody');
   body.innerHTML = '';
-  filtered.forEach((e, i) => {
+  pageRows.forEach((e, idx) => {
+    const i = offset + idx;
     const tr = document.createElement('tr');
     tr.style.cursor = 'pointer';
     tr.className = 'jab-' + e.jab;
@@ -4443,6 +4460,43 @@ function renderIProjectBoard(){
     tr.addEventListener('click', () => iprojShowDetailFor(e.keps));
     body.appendChild(tr);
   });
+
+  renderIProjBoardPager(filtered.length, totalPages, offset, pageRows.length);
+}
+
+function renderIProjBoardPager(total, totalPages, offset, shown){
+  const pager = document.getElementById('iprojBoardPager');
+  if(!pager) return;
+  pager.innerHTML = '';
+  if(total === 0){ pager.textContent = 'Tidak ada data pegawai.'; return; }
+
+  const info = document.createElement('div');
+  info.textContent = `Menampilkan ${offset+1}–${offset+shown} dari ${total} pegawai`;
+  pager.appendChild(info);
+  if(totalPages <= 1) return;
+
+  const btns = document.createElement('div');
+  btns.className = 'pager-btns';
+  const go = p => { iprojBoardPage = p; renderIProjectBoard(); document.getElementById('iprojBoardBody').closest('.table-panel, #iprojectSubBoard').scrollIntoView({behavior:'smooth', block:'start'}); };
+  const mk = (label, page, opts = {}) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    if(opts.active) b.className = 'active';
+    if(opts.disabled) b.disabled = true;
+    else if(!opts.active) b.addEventListener('click', () => go(page));
+    btns.appendChild(b);
+  };
+
+  mk('‹ Sebelumnya', iprojBoardPage - 1, {disabled: iprojBoardPage === 1});
+  const pages = [];
+  for(let p = 1; p <= totalPages; p++){
+    if(p === 1 || p === totalPages || Math.abs(p - iprojBoardPage) <= 2) pages.push(p);
+    else if(pages[pages.length-1] !== '…') pages.push('…');
+  }
+  pages.forEach(p => p === '…' ? mk('…', 0, {disabled:true}) : mk(String(p), p, {active: p === iprojBoardPage}));
+  mk('Berikutnya ›', iprojBoardPage + 1, {disabled: iprojBoardPage === totalPages});
+  pager.appendChild(btns);
 }
 
 function renderIProjectCabang(){
