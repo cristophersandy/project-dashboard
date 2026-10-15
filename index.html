@@ -170,6 +170,45 @@
   .kpi-val.pos{color:var(--teal);}
   .kpi-val.neg{color:var(--red);}
 
+
+  /* warna per kelompok jabatan */
+  tr.jab-AR td{background:#E3EEFB;}
+  tr.jab-AR td:first-child{box-shadow:inset 4px 0 0 #1565C0;}
+  tr.jab-AR:hover td{filter:brightness(0.97);}
+  tr.jab-AR .jab-badge{background:#fff;color:#1565C0;border:1px solid #1565C055;}
+  tr.jab-ARK td{background:#E6F4EA;}
+  tr.jab-ARK td:first-child{box-shadow:inset 4px 0 0 #2E7D32;}
+  tr.jab-ARK:hover td{filter:brightness(0.97);}
+  tr.jab-ARK .jab-badge{background:#fff;color:#2E7D32;border:1px solid #2E7D3255;}
+  tr.jab-ARP td{background:#F3E8FD;}
+  tr.jab-ARP td:first-child{box-shadow:inset 4px 0 0 #7B3FA0;}
+  tr.jab-ARP:hover td{filter:brightness(0.97);}
+  tr.jab-ARP .jab-badge{background:#fff;color:#7B3FA0;border:1px solid #7B3FA055;}
+  tr.jab-WRK td{background:#FFF3E0;}
+  tr.jab-WRK td:first-child{box-shadow:inset 4px 0 0 #E65100;}
+  tr.jab-WRK:hover td{filter:brightness(0.97);}
+  tr.jab-WRK .jab-badge{background:#fff;color:#E65100;border:1px solid #E6510055;}
+  tr.jab-PAP td{background:#E0F5F5;}
+  tr.jab-PAP td:first-child{box-shadow:inset 4px 0 0 #00796B;}
+  tr.jab-PAP:hover td{filter:brightness(0.97);}
+  tr.jab-PAP .jab-badge{background:#fff;color:#00796B;border:1px solid #00796B55;}
+  tr.jab-PAPK td{background:#FDE8EF;}
+  tr.jab-PAPK td:first-child{box-shadow:inset 4px 0 0 #C2185B;}
+  tr.jab-PAPK:hover td{filter:brightness(0.97);}
+  tr.jab-PAPK .jab-badge{background:#fff;color:#C2185B;border:1px solid #C2185B55;}
+  tr.jab-KKEP td{background:#EEF0F5;}
+  tr.jab-KKEP td:first-child{box-shadow:inset 4px 0 0 #455A8A;}
+  tr.jab-KKEP:hover td{filter:brightness(0.97);}
+  tr.jab-KKEP .jab-badge{background:#fff;color:#455A8A;border:1px solid #455A8A55;}
+  tr.jab-KKPS td{background:#FFF9DB;}
+  tr.jab-KKPS td:first-child{box-shadow:inset 4px 0 0 #9A7B00;}
+  tr.jab-KKPS:hover td{filter:brightness(0.97);}
+  tr.jab-KKPS .jab-badge{background:#fff;color:#9A7B00;border:1px solid #9A7B0055;}
+  tr.jab-KKSI td{background:#E8EAF6;}
+  tr.jab-KKSI td:first-child{box-shadow:inset 4px 0 0 #3949AB;}
+  tr.jab-KKSI:hover td{filter:brightness(0.97);}
+  tr.jab-KKSI .jab-badge{background:#fff;color:#3949AB;border:1px solid #3949AB55;}
+
   .winner-section{margin-bottom:24px;}
   .winner-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
   .winner-head h2{font-size:16px;margin:0;font-weight:700;display:flex;align-items:center;gap:8px;color:var(--ink);}
@@ -1096,30 +1135,9 @@
 
   <!-- ================= I-PROJECT ================= -->
   <div id="page-iproject" class="page hidden">
-    <p class="updated" id="iprojectUpdated" style="margin-bottom:14px;"></p>
 
     <!-- ---- Sub: Papan Pegawai ---- -->
     <div id="iprojectSubBoard">
-      <div class="table-head-row" style="margin-bottom:16px;flex-wrap:wrap;">
-        <div class="controls" style="flex-wrap:wrap;">
-          <div>
-            <div class="section-title" style="margin-bottom:2px;">Kantor Cabang</div>
-            <select id="iprojCabSelect" style="min-width:220px;"></select>
-          </div>
-          <div>
-            <div class="section-title" style="margin-bottom:2px;">Jabatan</div>
-            <select id="iprojJabSelect" style="min-width:160px;"></select>
-          </div>
-          <div>
-            <div class="section-title" style="margin-bottom:2px;">Cari pegawai</div>
-            <input type="text" id="iprojSearch" placeholder="Nama pegawai&hellip;">
-          </div>
-        </div>
-        <div style="font-size:12px;color:var(--muted);text-align:right;max-width:320px;">
-          Skor antar jabatan tidak sebanding langsung &mdash; gunakan filter Jabatan untuk perbandingan yang adil.
-        </div>
-      </div>
-
       <div class="winner-section">
         <div class="winner-head">
           <h2>&#127942; Juara I-PROJECT per Jabatan</h2>
@@ -1184,6 +1202,23 @@
           <div class="sub">Lima pegawai dengan skor total tertinggi pada setiap jabatan &mdash; klik baris untuk lihat rincian</div>
         </div>
         <div class="top5-grid" id="iprojTop5Grid"></div>
+      </div>
+
+      <p class="updated" id="iprojectUpdated" style="margin-bottom:14px;"></p>
+      <div class="table-head-row" style="margin-bottom:16px;flex-wrap:wrap;">
+        <div class="controls" style="flex-wrap:wrap;">
+          <div>
+            <div class="section-title" style="margin-bottom:2px;">Kantor Cabang</div>
+            <select id="iprojCabSelect" style="min-width:220px;"></select>
+          </div>
+          <div>
+            <div class="section-title" style="margin-bottom:2px;">Jabatan</div>
+            <select id="iprojJabSelect" style="min-width:160px;"></select>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);text-align:right;max-width:320px;">
+          Skor antar jabatan tidak sebanding langsung &mdash; gunakan filter Jabatan untuk perbandingan yang adil.
+        </div>
       </div>
 
       <div class="table-panel">
@@ -4090,7 +4125,6 @@ function initIProject(){
 
   document.getElementById('iprojCabSelect').addEventListener('change', renderIProjectBoard);
   document.getElementById('iprojJabSelect').addEventListener('change', renderIProjectBoard);
-  document.getElementById('iprojSearch').addEventListener('input', renderIProjectBoard);
   document.getElementById('iprojCabangJabSelect').addEventListener('change', renderIProjectCabang);
   document.getElementById('iprojDetailSelect').addEventListener('change', () => {
     iprojSelectedKeps = document.getElementById('iprojDetailSelect').value;
@@ -4236,12 +4270,10 @@ function iprojShowDetailFor(keps){
 function renderIProjectBoard(){
   const cab = document.getElementById('iprojCabSelect').value;
   const jab = document.getElementById('iprojJabSelect').value;
-  const q = document.getElementById('iprojSearch').value.trim().toLowerCase();
 
   let filtered = iprojEmployees.slice();
   if(cab) filtered = filtered.filter(e => e.cab === cab);
   if(jab) filtered = filtered.filter(e => e.jab === jab);
-  if(q) filtered = filtered.filter(e => e.nama.toLowerCase().includes(q));
   filtered.sort((a,b) => b.skor - a.skor);
 
   const body = document.getElementById('iprojBoardBody');
@@ -4249,11 +4281,12 @@ function renderIProjectBoard(){
   filtered.forEach((e, i) => {
     const tr = document.createElement('tr');
     tr.style.cursor = 'pointer';
+    tr.className = 'jab-' + e.jab;
     tr.innerHTML = `
       <td class="num">${i+1}</td>
       <td>${e.nama}</td>
       <td>${e.cabNama}</td>
-      <td><span class="badge warn">${e.jab}</span></td>
+      <td><span class="badge jab-badge">${e.jab === 'WRK' ? 'WASRIK' : e.jab}</span></td>
       <td class="num">${e.jmlPar}</td>
       <td class="num">${fmtScore(e.skor)}</td>
     `;
