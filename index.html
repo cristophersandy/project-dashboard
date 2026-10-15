@@ -209,6 +209,16 @@
   tr.jab-KKSI:hover td{filter:brightness(0.97);}
   tr.jab-KKSI .jab-badge{background:#fff;color:#3949AB;border:1px solid #3949AB55;}
 
+
+  .msel{position:relative;min-width:260px;}
+  .msel-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;text-align:left;}
+  .msel-btn:hover{border-color:#B8C2CF;}
+  .msel-caret{color:var(--muted);font-size:12px;}
+  .msel-panel{position:absolute;z-index:50;top:calc(100% + 4px);left:0;min-width:100%;max-height:320px;overflow-y:auto;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(17,40,74,0.14);padding:6px;}
+  .msel-panel label{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;}
+  .msel-panel label:hover{background:var(--blue-bg);}
+  .msel-all{font-weight:700;border-bottom:1px solid var(--line);border-radius:0 !important;margin-bottom:4px;}
+
   .winner-section{margin-bottom:24px;}
   .winner-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
   .winner-head h2{font-size:16px;margin:0;font-weight:700;display:flex;align-items:center;gap:8px;color:var(--ink);}
@@ -1328,17 +1338,17 @@
               <option value="real">Realisasi</option>
             </select>
           </div>
+          <div>
+            <div class="section-title" style="margin-bottom:2px;">Kantor cabang</div>
+            <div class="msel" id="iprojCabMsel">
+              <button type="button" class="msel-btn" id="iprojCabMselBtn"><span id="iprojCabMselLbl">Semua kantor cabang</span><span class="msel-caret">&#9662;</span></button>
+              <div class="msel-panel hidden" id="iprojCabMselPanel">
+                <label class="msel-all"><input type="checkbox" id="iprojParamCabAll" checked> Pilih semua</label>
+                <div id="iprojParamCabBoxes"></div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div style="margin-bottom:16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-          <div class="section-title" style="margin:0;">Kantor cabang (bisa pilih lebih dari satu)</div>
-          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;">
-            <input type="checkbox" id="iprojParamCabAll" checked> Pilih semua
-          </label>
-        </div>
-        <div id="iprojParamCabBoxes" style="display:flex;gap:8px 16px;flex-wrap:wrap;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#F9FAFB;"></div>
       </div>
 
       <div class="table-panel">
@@ -4229,7 +4239,6 @@ function buildIProjParam(){
   const cabs = Array.from(new Set(iprojEmployees.map(e => e.cab))).sort((a,b) => iprojCabName(a).localeCompare(iprojCabName(b)));
   cabs.forEach(c => {
     const lbl = document.createElement('label');
-    lbl.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;';
     lbl.innerHTML = '<input type="checkbox" class="iprojParamCabCk" checked value="'+c+'"> <span></span>';
     lbl.querySelector('span').textContent = iprojCabName(c);
     box.appendChild(lbl);
@@ -4245,6 +4254,11 @@ function buildIProjParam(){
     document.getElementById('iprojParamCabAll').checked = cks.every(c => c.checked);
     renderIProjParam();
   });
+  const mBtn = document.getElementById('iprojCabMselBtn');
+  const mPanel = document.getElementById('iprojCabMselPanel');
+  mBtn.addEventListener('click', ev => { ev.stopPropagation(); mPanel.classList.toggle('hidden'); });
+  mPanel.addEventListener('click', ev => ev.stopPropagation());
+  document.addEventListener('click', () => mPanel.classList.add('hidden'));
   renderIProjParam();
 }
 
@@ -4263,6 +4277,13 @@ function renderIProjParam(){
   const tie = { nilai:['pct','real'], pct:['nilai','real'], real:['nilai','pct'] }[sortKey];
   rows.sort((a,b) => (val(b,sortKey)-val(a,sortKey)) || (val(b,tie[0])-val(a,tie[0])) || (val(b,tie[1])-val(a,tie[1])) || 0);
 
+  const allCks = document.querySelectorAll('.iprojParamCabCk');
+  let lblTxt;
+  if(cabs.size === allCks.length) lblTxt = 'Semua kantor cabang';
+  else if(cabs.size === 0) lblTxt = 'Tidak ada cabang dipilih';
+  else if(cabs.size <= 2) lblTxt = Array.from(cabs).map(iprojCabName).join(', ');
+  else lblTxt = cabs.size + ' kantor cabang dipilih';
+  document.getElementById('iprojCabMselLbl').textContent = lblTxt;
   document.getElementById('iprojParamTitle').textContent = 'Ranking: ' + par;
   document.getElementById('iprojParamSub').textContent = rows.length + ' pegawai dari ' + cabs.size + ' kantor cabang';
 
