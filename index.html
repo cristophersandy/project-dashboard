@@ -1294,14 +1294,14 @@
         </div>
         <div style="overflow-x:auto;">
           <table>
-            <thead>
+            <thead id="iprojBoardHead">
               <tr>
-                <th class="num" data-key="rank">Rank</th>
-                <th data-key="nama">Nama</th>
-                <th data-key="cabNama">Kantor Cabang</th>
-                <th data-key="jab">Jabatan</th>
-                <th class="num" data-key="jmlPar">Jml Parameter</th>
-                <th class="num" data-key="skor">Skor Total</th>
+                <th class="num" style="cursor:default;">Rank</th>
+                <th data-skey="nama" title="Klik untuk mengurutkan">Nama</th>
+                <th data-skey="cabNama" title="Klik untuk mengurutkan">Kantor Cabang</th>
+                <th data-skey="jab" title="Klik untuk mengurutkan">Jabatan</th>
+                <th class="num" data-skey="jmlPar" title="Klik untuk mengurutkan">Jml Parameter</th>
+                <th class="num" data-skey="skor" title="Klik untuk mengurutkan">Skor Total</th>
               </tr>
             </thead>
             <tbody id="iprojBoardBody"></tbody>
@@ -1364,12 +1364,12 @@
         </div>
         <div style="overflow-x:auto;">
           <table>
-            <thead>
+            <thead id="iprojCabangHead">
               <tr>
-                <th class="num">Rank</th>
-                <th>Kantor Cabang</th>
-                <th class="num">Jumlah Pegawai</th>
-                <th class="num">Skor Relatif Rata-rata</th>
+                <th class="num" style="cursor:default;">Rank</th>
+                <th data-skey="cabNama" title="Klik untuk mengurutkan">Kantor Cabang</th>
+                <th class="num" data-skey="n" title="Klik untuk mengurutkan">Jumlah Pegawai</th>
+                <th class="num" data-skey="avg" title="Klik untuk mengurutkan" id="iprojCabangAvgTh">Skor Relatif Rata-rata</th>
               </tr>
             </thead>
             <tbody id="iprojCabangBody"></tbody>
@@ -4297,6 +4297,8 @@ function initIProject(){
   document.getElementById('iprojCabSelect').addEventListener('change', () => { iprojBoardPage = 1; renderIProjectBoard(); });
   document.getElementById('iprojJabSelect').addEventListener('change', () => { iprojBoardPage = 1; renderIProjectBoard(); });
   document.getElementById('iprojCabangJabSelect').addEventListener('change', renderIProjectCabang);
+  iprojBindHead('iprojBoardHead', iprojBoardSort, () => { iprojBoardPage = 1; renderIProjectBoard(); });
+  iprojBindHead('iprojCabangHead', iprojCabangSort, renderIProjectCabang);
   document.getElementById('iprojDetailSelect').addEventListener('change', () => {
     iprojSelectedKeps = document.getElementById('iprojDetailSelect').value;
     renderIProjectDetail();
@@ -4563,6 +4565,44 @@ function iprojShowDetailFor(keps){
   renderIProjectDetail();
 }
 
+/* ---- Helper: urutkan tabel dengan klik judul kolom ---- */
+const IPROJ_TEXT_KEYS = ['nama','cabNama','jab'];
+function iprojSortRows(rows, st){
+  const k = st.key, d = st.dir;
+  const base = new Map(rows.map((r,i) => [r, i]));
+  return rows.sort((a,b) => {
+    if(IPROJ_TEXT_KEYS.includes(k)){
+      const c = String(a[k]||'').localeCompare(String(b[k]||''), 'id', {sensitivity:'base'}) * d;
+      if(c) return c;
+    }else{
+      const va = a[k], vb = b[k];
+      if((va === null || va === undefined) && vb !== null && vb !== undefined) return 1;
+      if((vb === null || vb === undefined) && va !== null && va !== undefined) return -1;
+      if(va != null && vb != null && va !== vb) return (va - vb) * d;
+    }
+    return base.get(a) - base.get(b);
+  });
+}
+function iprojMarkHead(theadId, st){
+  document.querySelectorAll('#' + theadId + ' th[data-skey]').forEach(th => {
+    const on = th.getAttribute('data-skey') === st.key;
+    th.classList.toggle('s-asc', on && st.dir === 1);
+    th.classList.toggle('s-desc', on && st.dir === -1);
+  });
+}
+function iprojBindHead(theadId, st, onChange){
+  document.querySelectorAll('#' + theadId + ' th[data-skey]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.getAttribute('data-skey');
+      if(st.key === key) st.dir = -st.dir;
+      else { st.key = key; st.dir = IPROJ_TEXT_KEYS.includes(key) ? 1 : -1; }
+      onChange();
+    });
+  });
+}
+const iprojBoardSort = { key: 'skor', dir: -1 };
+const iprojCabangSort = { key: 'avg', dir: -1 };
+
 const IPROJ_BOARD_PAGE_SIZE = 50;
 let iprojBoardPage = 1;
 
@@ -4574,6 +4614,8 @@ function renderIProjectBoard(){
   if(cab) filtered = filtered.filter(e => e.cab === cab);
   if(jab) filtered = filtered.filter(e => e.jab === jab);
   filtered.sort((a,b) => b.skor - a.skor);
+  iprojSortRows(filtered, iprojBoardSort);
+  iprojMarkHead('iprojBoardHead', iprojBoardSort);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / IPROJ_BOARD_PAGE_SIZE));
   if(iprojBoardPage > totalPages) iprojBoardPage = totalPages;
@@ -4712,7 +4754,9 @@ function renderIProjectCabang(){
 
   const body = document.getElementById('iprojCabangBody');
   body.innerHTML = '';
-  cabRows.forEach((c, i) => {
+  document.getElementById('iprojCabangAvgTh').textContent = jab ? 'Skor Rata-rata' : 'Skor Relatif Rata-rata';
+  iprojMarkHead('iprojCabangHead', iprojCabangSort);
+  iprojSortRows(cabRows.slice(), iprojCabangSort).forEach((c, i) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="num">${i+1}</td>
