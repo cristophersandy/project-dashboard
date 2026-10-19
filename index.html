@@ -456,6 +456,48 @@
     .panel-row.triple{grid-template-columns:1fr;}
     .board-name{width:120px;}
   }
+  /* ---- I-PROJECT: Komparasi Pegawai ---- */
+  .cmp-controls{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+  .cmp-controls select{min-width:300px;max-width:100%;font-weight:600;}
+  .cmp-swap{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:8px;padding:8px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+  .cmp-swap:hover{border-color:var(--navy);}
+  .cmp-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+  .cmp-dot.a{background:#0B57D0;}
+  .cmp-dot.b{background:#E65100;}
+  .cmp-note{background:var(--amber-bg);border:1px solid #EFCD7E;color:#8A5A00;border-radius:8px;padding:10px 14px;font-size:12.5px;margin-bottom:16px;}
+  .cmp-cards{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch;margin-bottom:24px;}
+  .cmp-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;border-top:4px solid #0B57D0;min-width:0;}
+  .cmp-card.b{border-top-color:#E65100;}
+  .cmp-card-name{font-size:16px;font-weight:700;line-height:1.25;margin:2px 0 2px;}
+  .cmp-card-cab{font-size:12px;color:var(--muted);}
+  .cmp-card-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 14px;margin-top:14px;}
+  .cmp-stat-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;}
+  .cmp-stat-val{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;margin-top:2px;}
+  .cmp-card.win{box-shadow:0 0 0 2px #2E7D3233;}
+  .cmp-win-tag{display:inline-block;font-size:10.5px;font-weight:700;color:var(--teal);background:var(--teal-bg);border-radius:20px;padding:2px 9px;margin-left:6px;vertical-align:middle;}
+  .cmp-vs{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:150px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;}
+  .cmp-vs-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;}
+  .cmp-vs-val{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;}
+  .cmp-vs-sub{font-size:12px;color:var(--muted);}
+  .cmp-tally{display:flex;gap:6px;justify-content:center;font-size:12px;font-weight:600;flex-wrap:wrap;}
+  #iprojCmpTable th, #iprojCmpTable td{white-space:nowrap;}
+  #iprojCmpTable thead tr.grp th{text-align:center;color:#fff;cursor:default;border-bottom:none;}
+  #iprojCmpTable thead tr.grp th.ga{background:#0B57D0;}
+  #iprojCmpTable thead tr.grp th.gb{background:#E65100;}
+  #iprojCmpTable thead tr.grp th.gx{background:#11284A;}
+  #iprojCmpTable thead tr.grp th.g0{background:transparent;}
+  #iprojCmpTable .bl{border-left:2px solid var(--line);}
+  #iprojCmpTable td.win-a{background:#E3EEFB;font-weight:700;}
+  #iprojCmpTable td.win-b{background:#FFF3E0;font-weight:700;}
+  #iprojCmpTable .na{color:#B0B7C0;font-style:italic;}
+  #iprojCmpTable tfoot td{font-weight:700;border-top:2px solid var(--navy);background:#F7F9FB;padding:9px 8px;}
+  .cmp-link-btn{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:8px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+  .cmp-link-btn:hover{border-color:var(--navy);}
+  @media (max-width:900px){
+    .cmp-cards{grid-template-columns:1fr;}
+    .cmp-controls select{min-width:0;width:100%;}
+    .cmp-controls > div{flex:1 1 100%;}
+  }
 </style>
 </head>
 <body>
@@ -490,6 +532,7 @@
           <button class="toptab" data-iproject-page="cabang">Peringkat Cabang</button>
           <button class="toptab" data-iproject-page="param">Rincian Parameter</button>
           <button class="toptab" data-iproject-page="detail">Rincian Pegawai</button>
+          <button class="toptab" data-iproject-page="komparasi">Komparasi</button>
         </div>
       </div>
     </div>
@@ -1390,6 +1433,7 @@
           <div class="section-title" style="margin-bottom:2px;">Pilih pegawai</div>
           <select id="iprojDetailSelect" style="min-width:340px;font-weight:600;"></select>
         </div>
+        <button type="button" class="cmp-link-btn" id="iprojDetailCompareBtn">&#8644; Bandingkan dengan pegawai lain</button>
       </div>
 
       <div class="kpi-row">
@@ -1428,6 +1472,55 @@
               </tr>
             </thead>
             <tbody id="iprojDetailBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- ---- Sub: Komparasi Pegawai ---- -->
+    <div id="iprojectSubKomparasi" class="hidden">
+      <div class="cmp-controls">
+        <div>
+          <div class="section-title" style="margin-bottom:2px;"><span class="cmp-dot a"></span>Pegawai A</div>
+          <select id="iprojCmpA"></select>
+        </div>
+        <button type="button" class="cmp-swap" id="iprojCmpSwap" title="Tukar posisi pegawai A dan B">&#8644; Tukar</button>
+        <div>
+          <div class="section-title" style="margin-bottom:2px;"><span class="cmp-dot b"></span>Pegawai B</div>
+          <select id="iprojCmpB"></select>
+        </div>
+        <label style="font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-bottom:9px;cursor:pointer;">
+          <input type="checkbox" id="iprojCmpSameJab" checked> Pilihan Pegawai B hanya jabatan yang sama dengan A
+        </label>
+      </div>
+
+      <div class="cmp-note hidden" id="iprojCmpNote"></div>
+
+      <div class="cmp-cards">
+        <div class="cmp-card a" id="iprojCmpCardA"></div>
+        <div class="cmp-vs" id="iprojCmpVs"></div>
+        <div class="cmp-card b" id="iprojCmpCardB"></div>
+      </div>
+
+      <div class="panel-row">
+        <div class="panel" style="grid-column:1/-1;">
+          <h2>Nilai per parameter</h2>
+          <div class="sub">Perbandingan kontribusi nilai setiap parameter &mdash; <span class="cmp-dot a"></span>Pegawai A &nbsp; <span class="cmp-dot b"></span>Pegawai B</div>
+          <div style="position:relative;height:380px;" id="iprojCmpChartWrap">
+            <canvas id="iprojCmpChart" role="img" aria-label="Grafik batang perbandingan nilai per parameter dua pegawai"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-panel">
+        <div class="table-head-row">
+          <h2 style="margin:0;font-size:14px;font-weight:600;">Rincian Komparasi Parameter</h2>
+          <div class="sub" style="margin:0;font-size:12px;color:var(--muted);">Sel berwarna menandai nilai yang lebih tinggi &mdash; diurutkan dari selisih nilai terbesar</div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="iprojCmpTable">
+            <thead id="iprojCmpHead"></thead>
+            <tbody id="iprojCmpBody"></tbody>
+            <tfoot id="iprojCmpFoot"></tfoot>
           </table>
         </div>
       </div>
@@ -4209,6 +4302,7 @@ function initIProject(){
   renderIProjectBoard();
   renderIProjectCabang();
   renderIProjectDetail();
+  initIProjKomparasi();
 }
 
 
@@ -4613,6 +4707,235 @@ function renderIProjectDetail(){
   });
 }
 
+/* ---- Sub: Komparasi Pegawai ---- */
+let iprojCmpChartInstance = null;
+const IPROJ_CMP_COLOR_A = '#0B57D0';
+const IPROJ_CMP_COLOR_B = '#E65100';
+
+function iprojJabLabel(j){ return j === 'WRK' ? 'WASRIK' : j; }
+
+function iprojFillEmpSelect(sel, list, keep){
+  const prev = keep || sel.value;
+  sel.innerHTML = '';
+  const byCab = {};
+  list.slice().sort((a,b) => a.nama.localeCompare(b.nama)).forEach(e => { (byCab[e.cabNama] = byCab[e.cabNama] || []).push(e); });
+  Object.keys(byCab).sort().forEach(cabNama => {
+    const grp = document.createElement('optgroup');
+    grp.label = cabNama;
+    byCab[cabNama].forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e.keps;
+      opt.textContent = e.nama + ' (' + iprojJabLabel(e.jab) + ')';
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  });
+  if(prev && list.some(e => e.keps === prev)) sel.value = prev;
+}
+
+function iprojCmpRebuildB(){
+  const selA = document.getElementById('iprojCmpA');
+  const selB = document.getElementById('iprojCmpB');
+  const empA = iprojEmployees.find(e => e.keps === selA.value);
+  const sameJab = document.getElementById('iprojCmpSameJab').checked;
+  let list = iprojEmployees.filter(e => e.keps !== selA.value);
+  if(sameJab && empA) list = list.filter(e => e.jab === empA.jab);
+  const prevB = selB.value;
+  iprojFillEmpSelect(selB, list, prevB);
+  if(!list.some(e => e.keps === prevB) && list.length){
+    // default: pegawai lain dengan skor tertinggi pada daftar
+    const best = list.slice().sort((a,b) => b.skor - a.skor)[0];
+    selB.value = best.keps;
+  }
+}
+
+function initIProjKomparasi(){
+  const selA = document.getElementById('iprojCmpA');
+  const selB = document.getElementById('iprojCmpB');
+  iprojFillEmpSelect(selA, iprojEmployees);
+  // default A: juara jabatan AR (atau skor tertinggi keseluruhan)
+  const pool = iprojEmployees.filter(e => e.jab === 'AR');
+  const seed = (pool.length ? pool : iprojEmployees).slice().sort((a,b) => b.skor - a.skor)[0];
+  if(seed) selA.value = seed.keps;
+  iprojCmpRebuildB();
+
+  selA.addEventListener('change', () => { iprojCmpRebuildB(); renderIProjKomparasi(); });
+  selB.addEventListener('change', renderIProjKomparasi);
+  document.getElementById('iprojCmpSameJab').addEventListener('change', () => { iprojCmpRebuildB(); renderIProjKomparasi(); });
+  document.getElementById('iprojCmpSwap').addEventListener('click', () => {
+    const a = selA.value, b = selB.value;
+    if(!a || !b) return;
+    selA.value = b;
+    const empB = iprojEmployees.find(e => e.keps === a);
+    const empNewA = iprojEmployees.find(e => e.keps === b);
+    if(empB && empNewA && empB.jab !== empNewA.jab) document.getElementById('iprojCmpSameJab').checked = false;
+    iprojCmpRebuildB();
+    selB.value = a;
+    renderIProjKomparasi();
+  });
+  document.getElementById('iprojDetailCompareBtn').addEventListener('click', () => {
+    if(iprojSelectedKeps){ selA.value = iprojSelectedKeps; iprojCmpRebuildB(); }
+    showIProjectSubPage('komparasi');
+  });
+}
+
+function iprojRankInJab(emp){
+  const peers = iprojEmployees.filter(e => e.jab === emp.jab).sort((a,b) => b.skor - a.skor);
+  return { rank: peers.findIndex(e => e.keps === emp.keps) + 1, total: peers.length };
+}
+
+function iprojCmpCard(el, emp, other, side){
+  if(!emp){ el.innerHTML = '<div class="cmp-card-cab">Pilih pegawai</div>'; return; }
+  const r = iprojRankInJab(emp);
+  const win = other && emp.skor > other.skor;
+  el.classList.toggle('win', !!win);
+  el.innerHTML = `
+    <div class="cmp-stat-lbl"><span class="cmp-dot ${side}"></span>Pegawai ${side.toUpperCase()}${win ? '<span class="cmp-win-tag">&#9650; Skor lebih tinggi</span>' : ''}</div>
+    <div class="cmp-card-name"></div>
+    <div class="cmp-card-cab"></div>
+    <div class="cmp-card-stats">
+      <div><div class="cmp-stat-lbl">Skor Total</div><div class="cmp-stat-val">${fmtScore(emp.skor)}</div></div>
+      <div><div class="cmp-stat-lbl">Peringkat di Jabatan</div><div class="cmp-stat-val">${r.rank}<span style="font-size:12px;color:var(--muted);"> / ${r.total}</span></div></div>
+      <div><div class="cmp-stat-lbl">Skor Relatif</div><div class="cmp-stat-val">${fmtScore(emp.skorRel)}<span style="font-size:12px;color:var(--muted);"> / 100</span></div></div>
+      <div><div class="cmp-stat-lbl">Jml Parameter</div><div class="cmp-stat-val">${emp.jmlPar}</div></div>
+    </div>`;
+  el.querySelector('.cmp-card-name').textContent = emp.nama;
+  el.querySelector('.cmp-card-cab').textContent = emp.cabNama + ' · ' + iprojJabLabel(emp.jab);
+}
+
+function renderIProjKomparasi(){
+  const kA = document.getElementById('iprojCmpA').value;
+  const kB = document.getElementById('iprojCmpB').value;
+  const A = iprojEmployees.find(e => e.keps === kA);
+  const B = iprojEmployees.find(e => e.keps === kB);
+
+  const note = document.getElementById('iprojCmpNote');
+  if(A && B && A.jab !== B.jab){
+    note.classList.remove('hidden');
+    note.textContent = 'Jabatan berbeda (' + iprojJabLabel(A.jab) + ' vs ' + iprojJabLabel(B.jab) + ') — parameter dan bobot berbeda, sehingga skor total tidak sebanding langsung. Gunakan Skor Relatif untuk gambaran yang lebih adil.';
+  }else note.classList.add('hidden');
+
+  iprojCmpCard(document.getElementById('iprojCmpCardA'), A, B, 'a');
+  iprojCmpCard(document.getElementById('iprojCmpCardB'), B, A, 'b');
+
+  // gabungan parameter
+  const mapA = {}, mapB = {};
+  (iprojRowsByEmp[kA] || []).forEach(r => mapA[r.par] = r);
+  (iprojRowsByEmp[kB] || []).forEach(r => mapB[r.par] = r);
+  const pars = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)]));
+  const pctOf = r => (r && r.tgt > 0) ? r.real / r.tgt * 100 : null;
+  let rows = pars.map(par => {
+    const a = mapA[par] || null, b = mapB[par] || null;
+    const nA = a ? a.nilai : null, nB = b ? b.nilai : null;
+    return { par, a, b, nA, nB, pA: pctOf(a), pB: pctOf(b), diff: (nA !== null && nB !== null) ? nA - nB : null };
+  });
+  rows.sort((x,y) => {
+    const both = r => (r.a && r.b) ? 0 : 1;
+    if(both(x) !== both(y)) return both(x) - both(y);
+    const dx = x.diff === null ? -1 : Math.abs(x.diff), dy = y.diff === null ? -1 : Math.abs(y.diff);
+    return (dy - dx) || (Math.max(y.nA||0, y.nB||0) - Math.max(x.nA||0, x.nB||0));
+  });
+
+  // ringkasan VS
+  let winA = 0, winB = 0, tie = 0;
+  rows.forEach(r => { if(r.diff === null) return; if(r.diff > 0.0001) winA++; else if(r.diff < -0.0001) winB++; else tie++; });
+  const vs = document.getElementById('iprojCmpVs');
+  if(A && B){
+    const d = A.skor - B.skor;
+    const col = d > 0 ? IPROJ_CMP_COLOR_A : (d < 0 ? IPROJ_CMP_COLOR_B : 'var(--muted)');
+    vs.innerHTML = `
+      <div class="cmp-vs-lbl">Selisih Skor (A &minus; B)</div>
+      <div class="cmp-vs-val" style="color:${col};">${d > 0 ? '+' : ''}${fmtScore(d)}</div>
+      <div class="cmp-vs-sub">${d === 0 ? 'Skor sama' : (d > 0 ? 'A unggul' : 'B unggul')}</div>
+      <div class="cmp-vs-lbl" style="margin-top:6px;">Parameter unggul</div>
+      <div class="cmp-tally">
+        <span style="color:${IPROJ_CMP_COLOR_A};">A: ${winA}</span>
+        <span style="color:var(--muted);">Seri: ${tie}</span>
+        <span style="color:${IPROJ_CMP_COLOR_B};">B: ${winB}</span>
+      </div>`;
+  }else vs.innerHTML = '<div class="cmp-vs-lbl">VS</div>';
+
+  // grafik
+  const wrap = document.getElementById('iprojCmpChartWrap');
+  wrap.style.height = Math.max(240, rows.length * 44 + 50) + 'px';
+  if(iprojCmpChartInstance) iprojCmpChartInstance.destroy();
+  iprojCmpChartInstance = new Chart(document.getElementById('iprojCmpChart'), {
+    type: 'bar',
+    data: {
+      labels: rows.map(r => r.par),
+      datasets: [
+        { label: A ? A.nama : 'Pegawai A', data: rows.map(r => r.nA), backgroundColor: IPROJ_CMP_COLOR_A, borderRadius: 3, maxBarThickness: 14 },
+        { label: B ? B.nama : 'Pegawai B', data: rows.map(r => r.nB), backgroundColor: IPROJ_CMP_COLOR_B, borderRadius: 3, maxBarThickness: 14 }
+      ]
+    },
+    plugins: [ChartDataLabels],
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top', align: 'end', labels: { boxWidth: 10, boxHeight: 10, font: { size: 11 } } },
+        tooltip: { callbacks: { label: c => c.dataset.label + ': ' + (c.raw === null ? 'tidak ada parameter' : fmtScore(c.raw)) } },
+        datalabels: { anchor: 'end', align: 'end', clamp: true, color: '#11284A', font: { size: 10, weight: '700' }, formatter: v => v === null ? '' : fmtScore(v) }
+      },
+      scales: {
+        x: { beginAtZero: true, grace: '12%', ticks: { color: '#6B7280', font: { size: 11 } }, grid: { color: '#E5E9ED' } },
+        y: { ticks: { color: '#11284A', font: { size: 11 }, callback: function(v){ const l = this.getLabelForValue(v); return (window.innerWidth < 640 && l.length > 22) ? l.slice(0,21) + '\u2026' : l; } }, grid: { display: false } }
+      }
+    }
+  });
+
+  // tabel
+  const nmA = A ? A.nama : 'Pegawai A', nmB = B ? B.nama : 'Pegawai B';
+  const head = document.getElementById('iprojCmpHead');
+  head.innerHTML = `
+    <tr class="grp">
+      <th class="g0"></th>
+      <th class="ga bl" colspan="4"></th>
+      <th class="gb bl" colspan="4"></th>
+      <th class="gx bl">Selisih</th>
+    </tr>
+    <tr>
+      <th>Parameter</th>
+      <th class="num bl">Target</th><th class="num">Realisasi</th><th class="num">% Capaian</th><th class="num">Nilai</th>
+      <th class="num bl">Target</th><th class="num">Realisasi</th><th class="num">% Capaian</th><th class="num">Nilai</th>
+      <th class="num bl">Nilai A &minus; B</th>
+    </tr>`;
+  head.querySelector('th.ga').textContent = 'A — ' + nmA;
+  head.querySelector('th.gb').textContent = 'B — ' + nmB;
+
+  const na = '<span class="na">—</span>';
+  const pctCell = p => p === null ? '-' : `<span class="badge ${statusClass(p)}">${fmtPct(p)}</span>`;
+  const side = (r, p, cls, isWin) => r
+    ? `<td class="num ${cls}">${fmtBigDec(r.tgt)}</td><td class="num">${fmtBigDec(r.real)}</td><td class="num">${pctCell(p)}</td><td class="num ${isWin}">${fmtScore(r.nilai)}</td>`
+    : `<td class="num ${cls}" colspan="4" style="text-align:center;">${na} <span class="na" style="font-size:11px;">tidak ada parameter ini</span></td>`;
+  const body = document.getElementById('iprojCmpBody');
+  body.innerHTML = '';
+  if(!rows.length){
+    body.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px;">Pilih dua pegawai untuk dibandingkan</td></tr>';
+  }
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    const wA = r.diff !== null && r.diff > 0.0001 ? 'win-a' : '';
+    const wB = r.diff !== null && r.diff < -0.0001 ? 'win-b' : '';
+    const dTxt = r.diff === null ? na : `<span style="color:${r.diff > 0 ? IPROJ_CMP_COLOR_A : (r.diff < 0 ? IPROJ_CMP_COLOR_B : 'var(--muted)')};font-weight:700;">${r.diff > 0 ? '+' : ''}${fmtScore(r.diff)}</span>`;
+    tr.innerHTML = `<td></td>${side(r.a, r.pA, 'bl', wA)}${side(r.b, r.pB, 'bl', wB)}<td class="num bl">${dTxt}</td>`;
+    tr.children[0].textContent = r.par;
+    body.appendChild(tr);
+  });
+
+  const foot = document.getElementById('iprojCmpFoot');
+  if(A && B){
+    const d = A.skor - B.skor;
+    foot.innerHTML = `<tr>
+      <td>Skor Total</td>
+      <td class="bl" colspan="3"></td><td class="num ${d > 0 ? 'win-a' : ''}">${fmtScore(A.skor)}</td>
+      <td class="bl" colspan="3"></td><td class="num ${d < 0 ? 'win-b' : ''}">${fmtScore(B.skor)}</td>
+      <td class="num bl" style="color:${d > 0 ? IPROJ_CMP_COLOR_A : (d < 0 ? IPROJ_CMP_COLOR_B : 'var(--muted)')};">${d > 0 ? '+' : ''}${fmtScore(d)}</td>
+    </tr>`;
+  }else foot.innerHTML = '';
+}
+
 /* ---- Sub-nav: Papan Pegawai <-> Peringkat Cabang <-> Rincian Pegawai ---- */
 document.querySelectorAll('#iprojectSubNavHeader .toptab').forEach(btn => {
   btn.addEventListener('click', () => showIProjectSubPage(btn.getAttribute('data-iproject-page')));
@@ -4623,6 +4946,8 @@ function showIProjectSubPage(name){
   document.getElementById('iprojectSubCabang').classList.toggle('hidden', name!=='cabang');
   document.getElementById('iprojectSubParam').classList.toggle('hidden', name!=='param');
   document.getElementById('iprojectSubDetail').classList.toggle('hidden', name!=='detail');
+  document.getElementById('iprojectSubKomparasi').classList.toggle('hidden', name!=='komparasi');
+  if(name === 'komparasi' && iprojEmployees.length) renderIProjKomparasi();
 }
 
 </script>
