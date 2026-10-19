@@ -1671,9 +1671,9 @@ function loadData(){
         jatengRows = allRows.filter(r => r.kodeWilayah === TARGET_WILAYAH_CODE);
         wilayahRows = allRows.filter(r => r.namaKantor === WILAYAH_ROW_NAME);
 
-        const tglSet = new Set(allRows.map(r=>r.tglProses).filter(Boolean));
-        const tgl = tglSet.size ? Array.from(tglSet)[0] : '';
-        document.getElementById('updatedText').textContent = tgl ? ('Data per ' + tgl) : 'Data termuat';
+        kpiDataDate = maxTgl(allRows.map(r=>r.tglProses));
+        kpiDataLoaded = true;
+        updateHeaderDate();
 
         const anyWRow = rows.find(r => (r.nama_kantor||'').trim() === WILAYAH_ROW_NAME);
         if(anyWRow){
@@ -1758,6 +1758,7 @@ function showPage(name){
   document.getElementById('page-detail').classList.toggle('hidden', name!=='detail');
   document.getElementById('page-historical').classList.toggle('hidden', name!=='historical');
   document.getElementById('page-komparasi').classList.toggle('hidden', name!=='komparasi');
+  updateHeaderDate();
 }
 
 let summaryLoaded = false;
@@ -1786,6 +1787,56 @@ function showMain(name){
     iprojectLoaded = true;
     initIProject();
   }
+  updateHeaderDate();
+}
+
+/* ============== TANGGAL DATA DI HEADER ==============
+   Tanggal di bawah judul mengikuti sumber data halaman yang sedang dibuka:
+   KPI (Ringkasan/Parameter/Komparasi) -> sheet KPI, Historical -> sheet histori,
+   Summary Unit Kerja/Parameter -> sheet summary, Weekly -> sheet weekly,
+   I-PROJECT -> snapshot I-PROJECT. */
+let kpiDataDate = '';
+let kpiDataLoaded = false;
+function tglKey(t){
+  t = String(t||'').trim();
+  let m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return m[1] + m[2].padStart(2,'0') + m[3].padStart(2,'0') + t.slice(m[0].length);
+  m = t.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);
+  if(m) return m[3] + m[2].padStart(2,'0') + m[1].padStart(2,'0') + t.slice(m[0].length);
+  return t;
+}
+function maxTgl(list){
+  let best = '', bestKey = '';
+  (list||[]).forEach(t => { t = String(t||'').trim(); if(!t) return; const k = tglKey(t); if(k > bestKey){ bestKey = k; best = t; } });
+  return best;
+}
+function updateHeaderDate(){
+  const el = document.getElementById('updatedText');
+  if(!el) return;
+  const main = (document.querySelector('.maintab.active')||{}).getAttribute ? document.querySelector('.maintab.active').getAttribute('data-main') : 'kpi';
+  const loading = 'Memuat data\u2026';
+  let txt = loading;
+  if(main === 'kpi'){
+    const page = (document.querySelector('.toptab[data-page].active')||document.createElement('b')).getAttribute('data-page');
+    if(page === 'historical'){
+      const t = maxTgl(histRows.map(r => r.tglProses));
+      txt = histRows.length ? (t ? 'Data per ' + t : 'Data termuat') : loading;
+    }else{
+      txt = kpiDataLoaded ? (kpiDataDate ? 'Data per ' + kpiDataDate : 'Data termuat') : loading;
+    }
+  }else if(main === 'summary'){
+    const sub = (document.querySelector('#summarySubNavHeader .toptab.active')||document.createElement('b')).getAttribute('data-summary-page');
+    if(sub === 'weekly'){
+      const t = maxTgl(weeklyRows.filter(r => r.hasData).map(r => r.tglProses));
+      txt = weeklyLoaded ? (t ? 'Data per ' + t : 'Data termuat') : loading;
+    }else{
+      const t = maxTgl(summaryRows.map(r => r.tglProses));
+      txt = summaryLoaded ? (t ? 'Data per ' + t : 'Data termuat') : loading;
+    }
+  }else if(main === 'iproject'){
+    txt = IPROJECT_UPDATED ? ('Data per ' + IPROJECT_UPDATED + ' WIB') : 'Data termuat';
+  }
+  el.textContent = txt;
 }
 
 /* ============== PAGE 1: EXEC SUMMARY ============== */
@@ -2957,7 +3008,7 @@ function downloadDetailReport(){
   doc.setFontSize(10);
   doc.setTextColor(80,80,80);
   doc.text('Parameter: ' + (currentIndikator||'-'), 30, 52);
-  doc.text('Data per ' + (document.getElementById('updatedText').textContent||'-').replace('Data per ',''), 30, 65);
+  doc.text('Data per ' + (kpiDataDate||'-'), 30, 65);
 
   doc.autoTable({
     startY: 80,
@@ -3032,6 +3083,7 @@ function loadHistData(){
         }));
 
         buildHistUnitSelect();
+        updateHeaderDate();
 
         document.getElementById('histLoadingState').classList.add('hidden');
         document.getElementById('histContent').classList.remove('hidden');
@@ -3452,6 +3504,7 @@ function loadSummaryData(){
         summaryLoaded = true;
         renderSummaryAllPage();
         renderSummaryPage();
+        updateHeaderDate();
 
         document.getElementById('summaryLoadingState').classList.add('hidden');
         document.getElementById('summaryContent').classList.remove('hidden');
@@ -3534,6 +3587,7 @@ function showSummarySubPage(name){
   if(name === 'weekly' && !weeklyLoaded){
     loadWeeklyData();
   }
+  updateHeaderDate();
 }
 
 function fmtSummaryNum(v){
@@ -3833,6 +3887,7 @@ function loadWeeklyData(){
         buildWeeklyFilters();
         weeklyLoaded = true;
         renderWeeklyPage();
+        updateHeaderDate();
 
         document.getElementById('summaryLoadingState').classList.add('hidden');
         document.getElementById('summaryContent').classList.remove('hidden');
@@ -5036,6 +5091,7 @@ function showIProjectSubPage(name){
   document.getElementById('iprojectSubParam').classList.toggle('hidden', name!=='param');
   document.getElementById('iprojectSubDetail').classList.toggle('hidden', name!=='detail');
   document.getElementById('iprojectSubKomparasi').classList.toggle('hidden', name!=='komparasi');
+  updateHeaderDate();
   if(name === 'komparasi' && iprojEmployees.length) renderIProjKomparasi();
 }
 
