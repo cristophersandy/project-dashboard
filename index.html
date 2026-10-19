@@ -498,6 +498,12 @@
     .cmp-controls select{min-width:0;width:100%;}
     .cmp-controls > div{flex:1 1 100%;}
   }
+  /* header tabel yang bisa diurutkan */
+  th[data-skey]{position:relative;}
+  th[data-skey]::after{content:'\2195';margin-left:4px;font-size:10px;opacity:.35;}
+  th[data-skey].s-asc::after{content:'\25B2';opacity:1;color:var(--navy);}
+  th[data-skey].s-desc::after{content:'\25BC';opacity:1;color:var(--navy);}
+  th[data-skey].s-asc, th[data-skey].s-desc{color:var(--navy);}
 </style>
 </head>
 <body>
@@ -1408,16 +1414,16 @@
         </div>
         <div style="overflow-x:auto;">
           <table>
-            <thead>
+            <thead id="iprojParamHead">
               <tr>
-                <th class="num">Rank</th>
-                <th>Nama</th>
-                <th>Kantor Cabang</th>
-                <th>Jabatan</th>
-                <th class="num">Target</th>
-                <th class="num">Realisasi</th>
-                <th class="num">% Capaian</th>
-                <th class="num">Nilai</th>
+                <th class="num" style="cursor:default;">Rank</th>
+                <th data-skey="nama" title="Klik untuk mengurutkan">Nama</th>
+                <th data-skey="cabNama" title="Klik untuk mengurutkan">Kantor Cabang</th>
+                <th data-skey="jab" title="Klik untuk mengurutkan">Jabatan</th>
+                <th class="num" data-skey="tgt" title="Klik untuk mengurutkan">Target</th>
+                <th class="num" data-skey="real" title="Klik untuk mengurutkan">Realisasi</th>
+                <th class="num" data-skey="pct" title="Klik untuk mengurutkan">% Capaian</th>
+                <th class="num" data-skey="nilai" title="Klik untuk mengurutkan">Nilai</th>
               </tr>
             </thead>
             <tbody id="iprojParamBody"></tbody>
@@ -4345,7 +4351,19 @@ function buildIProjParam(){
     box.appendChild(lbl);
   });
   sel.addEventListener('change', renderIProjParam);
-  document.getElementById('iprojParamSort').addEventListener('change', renderIProjParam);
+  document.getElementById('iprojParamSort').addEventListener('change', () => { iprojParamHdrSort = null; renderIProjParam(); });
+  document.querySelectorAll('#iprojParamHead th[data-skey]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.getAttribute('data-skey');
+      const isText = IPROJ_PARAM_TEXT_KEYS.includes(key);
+      const cur = iprojParamHdrSort || { key: document.getElementById('iprojParamSort').value, dir: -1 };
+      iprojParamHdrSort = (cur.key === key) ? { key, dir: -cur.dir } : { key, dir: isText ? 1 : -1 };
+      // selaraskan dropdown "Urutkan berdasarkan" bila kolomnya tersedia di sana
+      const dd = document.getElementById('iprojParamSort');
+      if(Array.from(dd.options).some(o => o.value === key)) dd.value = key;
+      renderIProjParam();
+    });
+  });
   document.getElementById('iprojParamCabAll').addEventListener('change', ev => {
     document.querySelectorAll('.iprojParamCabCk').forEach(ck => ck.checked = ev.target.checked);
     renderIProjParam();
@@ -4363,6 +4381,9 @@ function buildIProjParam(){
   renderIProjParam();
 }
 
+const IPROJ_PARAM_TEXT_KEYS = ['nama','cabNama','jab'];
+let iprojParamHdrSort = null; // {key, dir} dari klik judul kolom; null = ikut dropdown
+
 function renderIProjParam(){
   const par = document.getElementById('iprojParamSelect').value;
   const sortKey = document.getElementById('iprojParamSort').value;
@@ -4377,6 +4398,30 @@ function renderIProjParam(){
   const val = (r,k) => k === 'pct' ? (r.pct === null ? -Infinity : r.pct) : r[k];
   const tie = { nilai:['pct','real'], pct:['nilai','real'], real:['nilai','pct'] }[sortKey];
   rows.sort((a,b) => (val(b,sortKey)-val(a,sortKey)) || (val(b,tie[0])-val(a,tie[0])) || (val(b,tie[1])-val(a,tie[1])) || 0);
+
+  // urutan dari klik judul kolom (menimpa urutan dropdown; urutan dropdown jadi pemecah seri)
+  const hs = iprojParamHdrSort || { key: sortKey, dir: -1 };
+  if(iprojParamHdrSort){
+    const k = hs.key, d = hs.dir;
+    const base = new Map(rows.map((r,i) => [r, i]));
+    rows.sort((a,b) => {
+      if(IPROJ_PARAM_TEXT_KEYS.includes(k)){
+        const c = String(a[k]||'').localeCompare(String(b[k]||''), 'id', {sensitivity:'base'}) * d;
+        if(c) return c;
+      }else{
+        const va = k === 'pct' ? a.pct : a[k], vb = k === 'pct' ? b.pct : b[k];
+        if(va === null && vb !== null) return 1;   // tanpa target selalu di bawah
+        if(vb === null && va !== null) return -1;
+        if(va !== null && vb !== null && va !== vb) return (va - vb) * d;
+      }
+      return base.get(a) - base.get(b);
+    });
+  }
+  document.querySelectorAll('#iprojParamHead th[data-skey]').forEach(th => {
+    const on = th.getAttribute('data-skey') === hs.key;
+    th.classList.toggle('s-asc', on && hs.dir === 1);
+    th.classList.toggle('s-desc', on && hs.dir === -1);
+  });
 
   const allCks = document.querySelectorAll('.iprojParamCabCk');
   let lblTxt;
