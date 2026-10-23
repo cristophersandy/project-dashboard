@@ -611,7 +611,7 @@
       <div class="panel">
         <h2 id="growthBulanUnitTitle">Growth skor bulanan</h2>
         <div class="sub" id="growthBulanUnitSub">Pertumbuhan skor total dibanding bulan sebelumnya, unit dengan kelas yang sama dengan unit terpilih</div>
-        <div style="max-height:480px;overflow-y:auto;">
+        <div id="growthBulanUnitScroll" style="height:480px;overflow-y:auto;">
           <div style="position:relative;height:340px;">
             <canvas id="growthBulanUnitChart" role="img" aria-label="Grafik batang growth score bulanan antar unit kerja sekelas"></canvas>
           </div>
@@ -632,7 +632,7 @@
       <div class="panel">
         <h2 id="growthRankTitle">Peringkat growth</h2>
         <div class="sub" id="growthRankSub">Posisi growth skor unit terpilih dibandingkan unit sekelas</div>
-        <div style="max-height:480px;overflow-y:auto;">
+        <div id="growthRankScroll" style="height:480px;overflow-y:auto;">
           <div style="position:relative;height:340px;">
             <canvas id="growthRankChart" role="img" aria-label="Grafik batang peringkat growth skor unit kerja dibandingkan unit lain sekelasnya"></canvas>
           </div>
@@ -2103,7 +2103,8 @@ function buildExecPage(){
   document.getElementById('execRankSub').innerHTML = rankSubH1 + rankSubB1;
 
   document.getElementById('execScore').textContent = fmtScore(meta.scoreTotal);
-  document.getElementById('execScoreSub').textContent = 'H-1: ' + fmtScore(meta.scoreTotalH1);
+  document.getElementById('execScoreSub').innerHTML = 'H-1: ' + fmtScore(meta.scoreTotalH1) +
+    '<br>Bulan lalu: ' + (meta.scoreTotalB1 != null ? fmtScore(meta.scoreTotalB1) : '-');
 
   const growthDay = meta.scoreTotal - meta.scoreTotalH1;
   const gEl = document.getElementById('execGrowthDay');
@@ -2187,7 +2188,11 @@ function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
   });
 
   const wrapper = document.getElementById('growthRankChart').parentElement;
-  wrapper.style.height = Math.min(600, Math.max(300, sortedPeers.length * 20 + 40)) + 'px';
+  // Tinggi chart: 22px per unit agar semua label muat (area scroll yang menampung)
+  wrapper.style.height = Math.max(300, sortedPeers.length * 22 + 40) + 'px';
+  // Area scroll disamakan dengan panel kanan (list + baris checkbox) agar tidak ada ruang kosong
+  document.getElementById('growthRankScroll').style.height =
+    (Math.min(600, Math.max(300, sortedPeers.length * 20 + 40)) + 32) + 'px';
 
   const ctx = document.getElementById('growthRankChart');
   if(growthRankChartInstance) growthRankChartInstance.destroy();
@@ -2213,7 +2218,7 @@ function renderGrowthRankChart(peers, isWilayah, meta, groupLabel){
       },
       scales: {
         x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
-        y: { ticks: { color:'#11284A', font:{size: sortedPeers.length>25?9:11} }, grid: { display:false } }
+        y: { ticks: { color:'#11284A', font:{size:10}, autoSkip:false }, grid: { display:false } }
       }
     }
   });
@@ -2244,7 +2249,11 @@ function renderGrowthBulanPeerPanels(peers, isWilayah, meta){
   });
 
   const wrapper = document.getElementById('growthBulanUnitChart').parentElement;
-  wrapper.style.height = Math.min(600, Math.max(300, sortedPeers.length * 20 + 40)) + 'px';
+  // Tinggi chart: 22px per unit agar semua label muat (area scroll yang menampung)
+  wrapper.style.height = Math.max(300, sortedPeers.length * 22 + 40) + 'px';
+  // Area scroll disamakan dengan panel kanan (list + baris checkbox) agar tidak ada ruang kosong
+  document.getElementById('growthBulanUnitScroll').style.height =
+    (Math.min(600, Math.max(300, sortedPeers.length * 20 + 40)) + 32) + 'px';
 
   const ctx = document.getElementById('growthBulanUnitChart');
   if(growthBulanUnitChartInstance) growthBulanUnitChartInstance.destroy();
@@ -2270,7 +2279,7 @@ function renderGrowthBulanPeerPanels(peers, isWilayah, meta){
       },
       scales: {
         x: { ticks: { color:'#6B7280', font:{size:11} }, grid: { color:'#E5E9ED' } },
-        y: { ticks: { color:'#11284A', font:{size: sortedPeers.length>25?9:11} }, grid: { display:false } }
+        y: { ticks: { color:'#11284A', font:{size:10}, autoSkip:false }, grid: { display:false } }
       }
     }
   });
