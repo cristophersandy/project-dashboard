@@ -167,6 +167,7 @@
   .kpi-lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:500;}
   .kpi-val{font-size:26px;font-weight:600;margin-top:6px;letter-spacing:-0.01em;}
   .kpi-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+  .kpi-row.six{grid-template-columns:repeat(3,1fr);}
   .kpi-val.pos{color:var(--teal);}
   .kpi-val.neg{color:var(--red);}
 
@@ -450,7 +451,7 @@
   .state-msg{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;}
 
   @media (max-width:1000px){
-    .kpi-row{grid-template-columns:repeat(2,1fr);}
+    .kpi-row, .kpi-row.six{grid-template-columns:repeat(2,1fr);}
     .panel-row{grid-template-columns:1fr;}
     .panel-row.thirds{grid-template-columns:1fr 1fr;}
     .panel-row.triple{grid-template-columns:1fr;}
@@ -1449,7 +1450,7 @@
         <button type="button" class="cmp-link-btn" id="iprojDetailCompareBtn">&#8644; Bandingkan dengan pegawai lain</button>
       </div>
 
-      <div class="kpi-row">
+      <div class="kpi-row six">
         <div class="kpi-card">
           <div class="kpi-lbl">Kantor Cabang</div>
           <div class="kpi-val mono" id="iprojDetCab" style="font-size:16px;">&mdash;</div>
@@ -1465,6 +1466,16 @@
         <div class="kpi-card">
           <div class="kpi-lbl">Skor Total</div>
           <div class="kpi-val mono" id="iprojDetTotal">&mdash;</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-lbl">Rank Wilayah</div>
+          <div class="kpi-val mono" id="iprojDetRankWil">&mdash;</div>
+          <div class="kpi-sub" id="iprojDetRankWilSub"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-lbl">Rank Cabang</div>
+          <div class="kpi-val mono" id="iprojDetRankCab">&mdash;</div>
+          <div class="kpi-sub" id="iprojDetRankCabSub"></div>
         </div>
       </div>
 
@@ -4397,7 +4408,8 @@ function initIProject(){
   iprojEmployees = Object.keys(iprojRowsByEmp).map(keps => {
     const rows = iprojRowsByEmp[keps];
     const first = rows[0];
-    const skor = rows.reduce((s,r) => s + (r.nilai||0), 0);
+    // dibulatkan 2 desimal agar skor yang tampil sama dianggap seri saat ranking
+    const skor = Math.round(rows.reduce((s,r) => s + (r.nilai||0), 0) * 100) / 100;
     return {
       keps: keps,
       nama: first.nama,
@@ -4450,9 +4462,10 @@ function renderIProjTop5(){
     card.className = 'top5-card';
     card.innerHTML = '<div class="top5-card-head"><span class="top5-jab">'+label+'</span><span class="top5-n">'+total+' pegawai</span></div>';
     list.forEach((e,i) => {
+      const rk = list.findIndex(x => x.skor === e.skor) + 1;   // skor sama = rank sama
       const row = document.createElement('div');
-      row.className = 'top5-row' + (i<3 ? ' r'+(i+1) : '');
-      row.innerHTML = '<div class="top5-rank">'+(i+1)+'</div><div class="top5-info"><div class="top5-name"></div><div class="top5-cab"></div></div><div class="top5-score">'+fmtScore(e.skor)+'</div>';
+      row.className = 'top5-row' + (rk<=3 ? ' r'+rk : '');
+      row.innerHTML = '<div class="top5-rank">'+rk+'</div><div class="top5-info"><div class="top5-name"></div><div class="top5-cab"></div></div><div class="top5-score">'+fmtScore(e.skor)+'</div>';
       row.querySelector('.top5-name').textContent = e.nama;
       row.querySelector('.top5-cab').textContent = e.cabNama;
       row.onclick = () => iprojShowDetailFor(e.keps);
@@ -4739,6 +4752,9 @@ function renderIProjectBoard(){
   if(cab) filtered = filtered.filter(e => e.cab === cab);
   if(jab) filtered = filtered.filter(e => e.jab === jab);
   filtered.sort((a,b) => b.skor - a.skor);
+  // rank berdasar skor (skor sama = rank sama), tidak berubah saat kolom lain diurutkan
+  const rankBySkor = new Map();
+  filtered.forEach((e, i) => { if(!rankBySkor.has(e.skor)) rankBySkor.set(e.skor, i + 1); });
   iprojSortRows(filtered, iprojBoardSort);
   iprojMarkHead('iprojBoardHead', iprojBoardSort);
 
@@ -4756,7 +4772,7 @@ function renderIProjectBoard(){
     tr.style.cursor = 'pointer';
     tr.className = 'jab-' + e.jab;
     tr.innerHTML = `
-      <td class="num">${i+1}</td>
+      <td class="num">${rankBySkor.get(e.skor)}</td>
       <td>${e.nama}</td>
       <td>${e.cabNama}</td>
       <td><span class="badge jab-badge">${e.jab === 'WRK' ? 'WASRIK' : e.jab}</span></td>
@@ -4903,6 +4919,18 @@ function renderIProjectDetail(){
   document.getElementById('iprojDetCount').textContent = emp ? emp.jmlPar : '—';
   document.getElementById('iprojDetTotal').textContent = emp ? fmtScore(emp.skor) : '—';
 
+  // rank di antara pegawai dengan jabatan sama: se-wilayah dan se-cabang (skor sama = rank sama)
+  const rankOf = peers => emp ? { rank: peers.filter(e => e.skor > emp.skor).length + 1, total: peers.length } : null;
+  const rWil = emp ? rankOf(iprojEmployees.filter(e => e.jab === emp.jab)) : null;
+  const rCab = emp ? rankOf(iprojEmployees.filter(e => e.jab === emp.jab && e.cab === emp.cab)) : null;
+  const setRank = (id, r, scope) => {
+    const el = document.getElementById(id);
+    el.innerHTML = r ? `${r.rank}<span style="font-size:14px;color:var(--muted);"> / ${r.total}</span>` : '—';
+    document.getElementById(id + 'Sub').textContent = emp ? (iprojJabLabel(emp.jab) + ' se-' + scope) : '';
+  };
+  setRank('iprojDetRankWil', rWil, 'wilayah');
+  setRank('iprojDetRankCab', rCab, 'cabang');
+
   const sorted = rows.slice().sort((a,b) => b.nilai - a.nilai);
   const body = document.getElementById('iprojDetailBody');
   body.innerHTML = '';
@@ -4995,7 +5023,7 @@ function initIProjKomparasi(){
 
 function iprojRankInJab(emp){
   const peers = iprojEmployees.filter(e => e.jab === emp.jab).sort((a,b) => b.skor - a.skor);
-  return { rank: peers.findIndex(e => e.keps === emp.keps) + 1, total: peers.length };
+  return { rank: peers.filter(e => e.skor > emp.skor).length + 1, total: peers.length };   // skor sama = rank sama
 }
 
 function iprojCmpCard(el, emp, other, side){
