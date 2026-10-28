@@ -168,6 +168,7 @@
   .kpi-val{font-size:26px;font-weight:600;margin-top:6px;letter-spacing:-0.01em;}
   .kpi-sub{font-size:12px;color:var(--muted);margin-top:4px;}
   .kpi-row.six{grid-template-columns:repeat(3,1fr);}
+  .kpi-row.three{grid-template-columns:repeat(3,1fr);}
   .kpi-val.pos{color:var(--teal);}
   .kpi-val.neg{color:var(--red);}
 
@@ -391,6 +392,23 @@
   #komparasiTable .grp-realisasi{background:#9FB4BE;color:#0B2A4A;}
   #komparasiTable .grp-harian{background:#F4C300;color:#0B2A4A;}
   #komparasiTable .grp-bulanan{background:#74B843;color:#fff;}
+  #komparasiTable thead tr.kgrp th{text-align:center;cursor:default;border-bottom:none;}
+  #komparasiTable td.win-a{background:#E3EEFB;font-weight:700;}
+  #komparasiTable td.win-b{background:#FFF3E0;font-weight:700;}
+  #komparasiTable .sel-a{color:#0B57D0;font-weight:700;}
+  #komparasiTable .sel-b{color:#E65100;font-weight:700;}
+  .kcmp-chart-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+  .kcmp-toggles{display:flex;gap:8px;flex-wrap:wrap;}
+  .kcmp-seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff;}
+  .kcmp-seg button{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:600;color:var(--muted);padding:7px 12px;cursor:pointer;}
+  .kcmp-seg button + button{border-left:1px solid var(--line);}
+  .kcmp-seg button.active{background:var(--navy);color:#fff;}
+  .kcmp-vs{min-width:230px;}
+  .kcmp-dim{width:100%;display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:baseline;text-align:left;font-size:12px;border-top:1px solid var(--line);padding-top:6px;}
+  .kcmp-dim .lbl{color:var(--muted);}
+  .kcmp-dim .val{font-family:'IBM Plex Mono',monospace;font-weight:700;text-align:right;}
+  .kcmp-bar{grid-column:1/-1;display:flex;height:6px;border-radius:4px;overflow:hidden;background:#E5E9ED;}
+  .kcmp-bar span{display:block;height:100%;}
   #komparasiTable tfoot td{font-weight:700;border-top:2px solid var(--navy);background:#F7F9FB;}
   #komparasiTable .sticky-col{
     position:sticky;
@@ -451,7 +469,7 @@
   .state-msg{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;}
 
   @media (max-width:1000px){
-    .kpi-row, .kpi-row.six{grid-template-columns:repeat(2,1fr);}
+    .kpi-row, .kpi-row.six, .kpi-row.three{grid-template-columns:repeat(2,1fr);}
     .panel-row{grid-template-columns:1fr;}
     .panel-row.thirds{grid-template-columns:1fr 1fr;}
     .panel-row.triple{grid-template-columns:1fr;}
@@ -954,18 +972,57 @@
 
   <!-- ================= PAGE: KOMPARASI ================= -->
   <div id="page-komparasi" class="page hidden">
-    <div class="table-head-row" style="margin-bottom:18px;flex-wrap:wrap;">
-      <div class="controls" style="align-items:center;">
-        <label style="font-size:13px;font-weight:600;color:var(--muted);">Unit Kerja A&nbsp;</label>
-        <select id="komparasiUnitA" style="min-width:220px;font-weight:600;"></select>
-        <label style="font-size:13px;font-weight:600;color:var(--muted);margin-left:8px;">Unit Kerja B&nbsp;</label>
-        <select id="komparasiUnitB" style="min-width:220px;font-weight:600;"></select>
+    <div class="cmp-controls">
+      <div>
+        <div class="section-title" style="margin-bottom:2px;"><span class="cmp-dot a"></span>Unit Kerja A</div>
+        <select id="komparasiUnitA"></select>
+      </div>
+      <button type="button" class="cmp-swap" id="komparasiSwap" title="Tukar posisi unit A dan B">&#8644; Tukar</button>
+      <div>
+        <div class="section-title" style="margin-bottom:2px;"><span class="cmp-dot b"></span>Unit Kerja B</div>
+        <select id="komparasiUnitB"></select>
+      </div>
+    </div>
+
+    <div class="cmp-note hidden" id="komparasiNote"></div>
+
+    <div class="cmp-cards">
+      <div class="cmp-card a" id="komparasiCardA"></div>
+      <div class="cmp-vs kcmp-vs" id="komparasiVs"></div>
+      <div class="cmp-card b" id="komparasiCardB"></div>
+    </div>
+
+    <div class="panel-row">
+      <div class="panel" style="grid-column:1/-1;">
+        <div class="kcmp-chart-head">
+          <div>
+            <h2 id="komparasiChartTitle">Perbandingan per indikator</h2>
+            <div class="sub" id="komparasiChartSub" style="margin-bottom:0;"></div>
+          </div>
+          <div class="kcmp-toggles">
+            <div class="kcmp-seg" id="komparasiDimSeg">
+              <button type="button" data-dim="real" class="active">Realisasi</button>
+              <button type="button" data-dim="harian">Growth Harian</button>
+              <button type="button" data-dim="bulanan">Growth Bulanan</button>
+            </div>
+            <div class="kcmp-seg" id="komparasiMetSeg">
+              <button type="button" data-met="score" class="active">Score</button>
+              <button type="button" data-met="pct">Pencapaian</button>
+            </div>
+          </div>
+        </div>
+        <div style="position:relative;height:380px;margin-top:14px;" id="komparasiChartWrap">
+          <canvas id="komparasiChart" role="img" aria-label="Grafik batang perbandingan indikator KPI dua unit kerja"></canvas>
+        </div>
       </div>
     </div>
 
     <div class="table-panel">
       <div class="table-head-row">
-        <h2 style="margin:0;font-size:14px;font-weight:600;" id="komparasiTitle">Komparasi Unit Kerja</h2>
+        <div>
+          <h2 style="margin:0;font-size:14px;font-weight:600;" id="komparasiTitle">Rincian Komparasi Indikator</h2>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">Sel berwarna menandai nilai yang lebih tinggi &mdash; <span class="cmp-dot a"></span>A &nbsp;<span class="cmp-dot b"></span>B</div>
+        </div>
         <div class="controls">
           <input type="text" id="komparasiSearch" placeholder="Cari indikator&hellip;">
         </div>
@@ -1331,7 +1388,7 @@
         </div>
       </div>
 
-      <div class="kpi-row">
+      <div class="kpi-row three">
         <div class="kpi-card">
           <div class="kpi-lbl">Jumlah cabang</div>
           <div class="kpi-val mono" id="iprojCabangCount">&mdash;</div>
@@ -1346,11 +1403,6 @@
           <div class="kpi-lbl">Cabang terbaik</div>
           <div class="kpi-val mono" id="iprojCabangBest">&mdash;</div>
           <div class="kpi-sub" id="iprojCabangBestSub"></div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-lbl">Cabang perlu perhatian</div>
-          <div class="kpi-val mono" id="iprojCabangWorst">&mdash;</div>
-          <div class="kpi-sub" id="iprojCabangWorstSub"></div>
         </div>
       </div>
 
@@ -1778,6 +1830,7 @@ function showPage(name){
   document.getElementById('page-detail').classList.toggle('hidden', name!=='detail');
   document.getElementById('page-historical').classList.toggle('hidden', name!=='historical');
   document.getElementById('page-komparasi').classList.toggle('hidden', name!=='komparasi');
+  if(name === 'komparasi' && komparasiAllRows.length) renderKomparasiChart();
   updateHeaderDate();
 }
 
@@ -1936,49 +1989,145 @@ function populateUnitSelectGeneric(sel){
 }
 
 let komparasiAllRows = [];
+let komparasiChartInstance = null;
+let komparasiDim = 'real';
+let komparasiMet = 'score';
+let komparasiInited = false;
+const KCMP_A = '#0B57D0', KCMP_B = '#E65100';
+const KCMP_DIMS = {
+  real:    { label: 'Realisasi',               pct: 'pctA',  pctB: 'pctB',  sc: 'scoreA',  scB: 'scoreB',  growth: false },
+  harian:  { label: 'Growth Harian',           pct: 'hPctA', pctB: 'hPctB', sc: 'hScoreA', scB: 'hScoreB', growth: true },
+  bulanan: { label: 'Growth vs Bulan Kemarin', pct: 'bPctA', pctB: 'bPctB', sc: 'bScoreA', scB: 'bScoreB', growth: true }
+};
 
 function initKomparasiPage(){
   const selA = document.getElementById('komparasiUnitA');
   const selB = document.getElementById('komparasiUnitB');
+  const prevA = selA.value, prevB = selB.value;
   populateUnitSelectGeneric(selA);
   populateUnitSelectGeneric(selB);
 
-  selA.value = WILAYAH_ROW_NAME;
-  const secondOption = selB.querySelector('optgroup option:nth-child(2)') || selB.options[1];
-  selB.value = secondOption ? secondOption.value : WILAYAH_ROW_NAME;
+  if(prevA && unitMetaMap[prevA]) selA.value = prevA; else selA.value = WILAYAH_ROW_NAME;
+  if(prevB && unitMetaMap[prevB]) selB.value = prevB;
+  else{
+    const secondOption = selB.querySelector('optgroup option:nth-child(2)') || selB.options[1];
+    selB.value = secondOption ? secondOption.value : WILAYAH_ROW_NAME;
+  }
 
-  selA.addEventListener('change', renderKomparasiPage);
-  selB.addEventListener('change', renderKomparasiPage);
-  document.getElementById('komparasiSearch').addEventListener('input', function(){
-    const q = this.value.trim().toLowerCase();
-    const rows = q ? komparasiAllRows.filter(r => r.nama.toLowerCase().includes(q)) : komparasiAllRows;
-    renderKomparasiBody(rows);
-  });
+  if(!komparasiInited){
+    komparasiInited = true;
+    selA.addEventListener('change', renderKomparasiPage);
+    selB.addEventListener('change', renderKomparasiPage);
+    document.getElementById('komparasiSwap').addEventListener('click', () => {
+      const a = selA.value; selA.value = selB.value; selB.value = a;
+      renderKomparasiPage();
+    });
+    document.getElementById('komparasiSearch').addEventListener('input', function(){
+      const q = this.value.trim().toLowerCase();
+      const rows = q ? komparasiAllRows.filter(r => r.nama.toLowerCase().includes(q)) : komparasiAllRows;
+      renderKomparasiBody(rows);
+    });
+    document.querySelectorAll('#komparasiDimSeg button').forEach(btn => btn.addEventListener('click', () => {
+      komparasiDim = btn.getAttribute('data-dim');
+      document.querySelectorAll('#komparasiDimSeg button').forEach(b => b.classList.toggle('active', b === btn));
+      renderKomparasiChart();
+    }));
+    document.querySelectorAll('#komparasiMetSeg button').forEach(btn => btn.addEventListener('click', () => {
+      komparasiMet = btn.getAttribute('data-met');
+      document.querySelectorAll('#komparasiMetSeg button').forEach(b => b.classList.toggle('active', b === btn));
+      renderKomparasiChart();
+    }));
+  }
 
   renderKomparasiPage();
 }
 
-function komparasiCellNum(v, isPct){
-  if(v === null) return '<td class="num null-cell">NULL</td>';
-  const txt = isPct ? fmtScore(v) : fmtScore(v);
-  return '<td class="num">' + txt + '</td>';
+/* Pemenang per indikator: utamakan score; jika score sama, pakai pencapaian
+   (bobot negatif = indikator pengurang, pencapaian lebih rendah lebih baik). */
+function komparasiWinner(sA, sB, pA, pB, bobot){
+  const EPS = 0.0001;
+  if(sA !== null && sB !== null && Math.abs(sA - sB) > EPS) return sA > sB ? 'a' : 'b';
+  if(pA !== null && pB !== null && Math.abs(pA - pB) > EPS){
+    const aBetter = bobot < 0 ? pA < pB : pA > pB;
+    return aBetter ? 'a' : 'b';
+  }
+  return '';
 }
 
-function komparasiPctCell(v, other){
-  if(v === null) return '<td class="num null-cell">NULL</td>';
-  let style = '';
-  if(other !== null && v !== other){
-    style = v > other ? 'background:#EAF7E9;color:#1B7A34;' : 'background:#FDEBEA;color:#C0392B;';
-  }
-  return '<td class="num" style="' + style + '">' + fmtScore(v) + '</td>';
+function kcmpSigned(v, fmt){
+  if(v === null || v === undefined) return '—';
+  return (v > 0 ? '+' : '') + fmt(v);
+}
+
+function kcmpSignedClass(v){
+  if(v === null || v === undefined || Math.abs(v) < 0.0001) return '';
+  return v > 0 ? 'text-good' : 'text-bad';
+}
+
+function komparasiRankText(meta, unitName){
+  if(!meta) return { rank: '—', ctx: '' };
+  const isKanwil = meta.tipeKantor === 'Kantor Wilayah';
+  return {
+    rank: meta.rank ? Math.round(meta.rank) : '—',
+    ctx: isKanwil ? 'antar kanwil' : ('antar cabang kelas ' + (meta.kelas || '-'))
+  };
+}
+
+function komparasiCard(el, unitName, meta, otherMeta, side, kode){
+  if(!unitName || !meta){ el.innerHTML = '<div class="cmp-card-cab">Pilih unit kerja</div>'; el.classList.remove('win'); return; }
+  const score = meta.scoreTotal || 0;
+  const win = otherMeta && score > (otherMeta.scoreTotal || 0) + 0.0001;
+  el.classList.toggle('win', !!win);
+  const gH = score - (meta.scoreTotalH1 || 0);
+  const gB = score - (meta.scoreTotalB1 || 0);
+  const rk = komparasiRankText(meta, unitName);
+  const dR = Math.round(meta.deltaRank || 0);
+  const dRTxt = dR > 0 ? '<span class="text-good">&#9650; ' + dR + '</span>' : (dR < 0 ? '<span class="text-bad">&#9660; ' + Math.abs(dR) + '</span>' : '<span style="color:var(--muted);">tetap</span>');
+  el.innerHTML = `
+    <div class="cmp-stat-lbl"><span class="cmp-dot ${side}"></span>Unit Kerja ${side.toUpperCase()}${win ? '<span class="cmp-win-tag">&#9650; Skor lebih tinggi</span>' : ''}</div>
+    <div class="cmp-card-name"></div>
+    <div class="cmp-card-cab"></div>
+    <div class="cmp-card-stats">
+      <div><div class="cmp-stat-lbl">Skor Total</div><div class="cmp-stat-val">${fmtScore(score)}</div></div>
+      <div><div class="cmp-stat-lbl">Peringkat</div><div class="cmp-stat-val">${rk.rank} <span style="font-size:12px;">${dRTxt}</span></div><div style="font-size:11px;color:var(--muted);">${rk.ctx}</div></div>
+      <div><div class="cmp-stat-lbl">Growth Harian</div><div class="cmp-stat-val ${kcmpSignedClass(gH)}">${kcmpSigned(gH, fmtScore)}</div><div style="font-size:11px;color:var(--muted);">vs H-1: ${fmtScore(meta.scoreTotalH1 || 0)}</div></div>
+      <div><div class="cmp-stat-lbl">Growth Bulanan</div><div class="cmp-stat-val ${kcmpSignedClass(gB)}">${kcmpSigned(gB, fmtScore)}</div><div style="font-size:11px;color:var(--muted);">vs bulan lalu: ${fmtScore(meta.scoreTotalB1 || 0)}</div></div>
+    </div>`;
+  el.querySelector('.cmp-card-name').textContent = unitName;
+  el.querySelector('.cmp-card-cab').textContent = (kode && kode !== unitName ? kode + ' · ' : '') + (meta.tipeKantor || '') + (meta.tipeKantor !== 'Kantor Wilayah' && meta.kelas ? ' · Kelas ' + meta.kelas : '');
+}
+
+function komparasiTally(dimKey){
+  const d = KCMP_DIMS[dimKey];
+  let a = 0, b = 0, t = 0;
+  komparasiAllRows.forEach(r => {
+    if(r.na) return;
+    const w = komparasiWinner(r[d.sc], r[d.scB], r[d.pct], r[d.pctB], r.bobot);
+    if(w === 'a') a++; else if(w === 'b') b++; else t++;
+  });
+  return { a, b, t };
+}
+
+function komparasiDimRow(label, diff, tally){
+  const tot = tally.a + tally.b;
+  const pa = tot ? tally.a / tot * 100 : 50;
+  const col = diff > 0.0001 ? KCMP_A : (diff < -0.0001 ? KCMP_B : 'var(--muted)');
+  return `<div class="kcmp-dim">
+      <span class="lbl">${label}</span>
+      <span class="val" style="color:${col};">${kcmpSigned(diff, fmtScore)}</span>
+      <div class="kcmp-bar" title="Indikator unggul — A: ${tally.a}, B: ${tally.b}, seri: ${tally.t}">
+        <span style="width:${tot ? pa : 0}%;background:${KCMP_A};"></span><span style="width:${tot ? 100 - pa : 0}%;background:${KCMP_B};"></span>
+      </div>
+      <span class="lbl" style="grid-column:1/-1;font-size:11px;">
+        <span style="color:${KCMP_A};font-weight:600;">A ${tally.a}</span> &middot; seri ${tally.t} &middot; <span style="color:${KCMP_B};font-weight:600;">B ${tally.b}</span> indikator
+      </span>
+    </div>`;
 }
 
 function renderKomparasiPage(){
   const unitA = document.getElementById('komparasiUnitA').value;
   const unitB = document.getElementById('komparasiUnitB').value;
   if(!unitA || !unitB) return;
-
-  document.getElementById('komparasiTitle').textContent = 'Komparasi \u2014 ' + unitA + ' vs ' + unitB;
 
   const rowsA = allRows.filter(r => r.namaKantor === unitA);
   const rowsB = allRows.filter(r => r.namaKantor === unitB);
@@ -1987,18 +2136,19 @@ function renderKomparasiPage(){
   const byNameA = {}; rowsA.forEach(r => byNameA[r.nama] = r);
   const byNameB = {}; rowsB.forEach(r => byNameB[r.nama] = r);
   const indikatorNames = Array.from(new Set([...rowsA.map(r=>r.nama), ...rowsB.map(r=>r.nama)]));
+  const metaA = unitMetaMap[unitA], metaB = unitMetaMap[unitB];
 
   komparasiAllRows = indikatorNames.map(nama => {
     const a = byNameA[nama], b = byNameB[nama];
     const notApplicable = (!a || (a.target===0 && a.realisasi===0)) && (!b || (b.target===0 && b.realisasi===0));
     return {
       nama,
+      na: notApplicable,
       bobot: (a && a.bobot) || (b && b.bobot) || 0,
       pctA: notApplicable ? null : (a ? a.pct : null),
       pctB: notApplicable ? null : (b ? b.pct : null),
       scoreA: notApplicable ? null : (a ? a.score : null),
       scoreB: notApplicable ? null : (b ? b.score : null),
-      selisih: notApplicable ? null : ((a?a.score:0) - (b?b.score:0)),
       hPctA: a ? a.pencapaianGrowthHarian : null,
       hPctB: b ? b.pencapaianGrowthHarian : null,
       hScoreA: a ? a.scoreGrowth : null,
@@ -2010,54 +2160,162 @@ function renderKomparasiPage(){
     };
   });
 
-  const thead = document.getElementById('komparasiHead');
-  thead.innerHTML =
-    '<tr>' +
-      '<th rowspan="2" class="sticky-col" style="vertical-align:bottom;">Nama</th>' +
-      '<th rowspan="2" class="num" style="vertical-align:bottom;">Bobot</th>' +
-      '<th colspan="5" class="grp-border-l grp-realisasi" style="text-align:center;">Realisasi</th>' +
-      '<th colspan="4" class="grp-border-l grp-harian" style="text-align:center;">Growth Harian</th>' +
-      '<th colspan="4" class="grp-border-l grp-bulanan" style="text-align:center;">Growth vs Bulan Kemarin</th>' +
-    '</tr>' +
-    '<tr>' +
-      '<th class="num grp-border-l">Pencapaian ' + escapeHtml(kodeA) + '</th>' +
-      '<th class="num">Pencapaian ' + escapeHtml(kodeB) + '</th>' +
-      '<th class="num">Score ' + escapeHtml(kodeA) + '</th>' +
-      '<th class="num">Score ' + escapeHtml(kodeB) + '</th>' +
-      '<th class="num">Selisih</th>' +
-      '<th class="num grp-border-l">Pencapaian ' + escapeHtml(kodeA) + '</th>' +
-      '<th class="num">Pencapaian ' + escapeHtml(kodeB) + '</th>' +
-      '<th class="num">Score ' + escapeHtml(kodeA) + '</th>' +
-      '<th class="num">Score ' + escapeHtml(kodeB) + '</th>' +
-      '<th class="num grp-border-l">Pencapaian ' + escapeHtml(kodeA) + '</th>' +
-      '<th class="num">Pencapaian ' + escapeHtml(kodeB) + '</th>' +
-      '<th class="num">Score ' + escapeHtml(kodeA) + '</th>' +
-      '<th class="num">Score ' + escapeHtml(kodeB) + '</th>' +
-    '</tr>';
+  // catatan
+  const note = document.getElementById('komparasiNote');
+  let noteTxt = '';
+  if(unitA === unitB) noteTxt = 'Unit A dan B sama — pilih dua unit kerja berbeda untuk dibandingkan.';
+  else if(metaA && metaB && (metaA.tipeKantor !== metaB.tipeKantor || (metaA.tipeKantor !== 'Kantor Wilayah' && metaA.kelas !== metaB.kelas))){
+    noteTxt = 'Kelompok peringkat berbeda (' + komparasiRankText(metaA).ctx + ' vs ' + komparasiRankText(metaB).ctx + ') — peringkat tidak sebanding langsung; bandingkan skor dan growth.';
+  }
+  note.textContent = noteTxt;
+  note.classList.toggle('hidden', !noteTxt);
 
-  renderKomparasiBody(komparasiAllRows);
+  komparasiCard(document.getElementById('komparasiCardA'), unitA, metaA, metaB, 'a', kodeA);
+  komparasiCard(document.getElementById('komparasiCardB'), unitB, metaB, metaA, 'b', kodeB);
+
+  // ringkasan VS
+  const vs = document.getElementById('komparasiVs');
+  if(metaA && metaB){
+    const sA = metaA.scoreTotal || 0, sB = metaB.scoreTotal || 0;
+    const d = sA - sB;
+    const dH = (sA - (metaA.scoreTotalH1||0)) - (sB - (metaB.scoreTotalH1||0));
+    const dB = (sA - (metaA.scoreTotalB1||0)) - (sB - (metaB.scoreTotalB1||0));
+    const col = d > 0.0001 ? KCMP_A : (d < -0.0001 ? KCMP_B : 'var(--muted)');
+    vs.innerHTML = `
+      <div class="cmp-vs-lbl">Selisih Skor (A &minus; B)</div>
+      <div class="cmp-vs-val" style="color:${col};">${kcmpSigned(d, fmtScore)}</div>
+      <div class="cmp-vs-sub" style="margin-bottom:4px;">${Math.abs(d) < 0.0001 ? 'Skor sama' : (d > 0 ? 'A unggul' : 'B unggul')}</div>
+      ${komparasiDimRow('Realisasi', d, komparasiTally('real'))}
+      ${komparasiDimRow('Growth Harian', dH, komparasiTally('harian'))}
+      ${komparasiDimRow('Growth Bulanan', dB, komparasiTally('bulanan'))}`;
+  }else vs.innerHTML = '<div class="cmp-vs-lbl">VS</div>';
+
+  renderKomparasiChart();
+
+  // tabel
+  document.getElementById('komparasiTitle').textContent = 'Rincian Komparasi — ' + unitA + ' vs ' + unitB;
+  const eA = escapeHtml(kodeA), eB = escapeHtml(kodeB);
+  const sub = (first) =>
+    '<th class="num' + (first ? ' grp-border-l' : '') + '"><span class="cmp-dot a"></span>Capaian ' + eA + '</th>' +
+    '<th class="num"><span class="cmp-dot b"></span>Capaian ' + eB + '</th>' +
+    '<th class="num"><span class="cmp-dot a"></span>Score ' + eA + '</th>' +
+    '<th class="num"><span class="cmp-dot b"></span>Score ' + eB + '</th>' +
+    '<th class="num">Selisih</th>';
+  document.getElementById('komparasiHead').innerHTML =
+    '<tr class="kgrp">' +
+      '<th rowspan="2" class="sticky-col" style="vertical-align:bottom;text-align:left;">Indikator</th>' +
+      '<th rowspan="2" class="num" style="vertical-align:bottom;">Bobot</th>' +
+      '<th colspan="5" class="grp-border-l grp-realisasi">Realisasi</th>' +
+      '<th colspan="5" class="grp-border-l grp-harian">Growth Harian</th>' +
+      '<th colspan="5" class="grp-border-l grp-bulanan">Growth vs Bulan Kemarin</th>' +
+    '</tr>' +
+    '<tr>' + sub(true) + sub(true) + sub(true) + '</tr>';
+
+  const q = document.getElementById('komparasiSearch').value.trim().toLowerCase();
+  renderKomparasiBody(q ? komparasiAllRows.filter(r => r.nama.toLowerCase().includes(q)) : komparasiAllRows);
   renderKomparasiFoot(unitA, unitB);
+}
+
+function renderKomparasiChart(){
+  if(typeof Chart === 'undefined') return;
+  const unitA = document.getElementById('komparasiUnitA').value;
+  const unitB = document.getElementById('komparasiUnitB').value;
+  const d = KCMP_DIMS[komparasiDim];
+  const isPct = komparasiMet === 'pct';
+  const kA = isPct ? d.pct : d.sc, kB = isPct ? d.pctB : d.scB;
+
+  let rows = komparasiAllRows.filter(r => !r.na && (r[kA] !== null || r[kB] !== null));
+  if(d.growth) rows = rows.filter(r => Math.abs(r[kA] || 0) > 0.0001 || Math.abs(r[kB] || 0) > 0.0001);
+  rows = rows.slice().sort((x,y) => Math.abs((y[kA]||0) - (y[kB]||0)) - Math.abs((x[kA]||0) - (x[kB]||0)));
+
+  const fmtV = v => v === null ? '' : (d.growth ? kcmpSigned(v, isPct ? fmtPct : fmtScore) : (isPct ? fmtPct(v) : fmtScore(v)));
+  document.getElementById('komparasiChartTitle').textContent = (isPct ? 'Pencapaian' : 'Score') + ' per indikator — ' + d.label;
+  document.getElementById('komparasiChartSub').innerHTML =
+    '<span class="cmp-dot a"></span>' + escapeHtml(unitA) + ' &nbsp; <span class="cmp-dot b"></span>' + escapeHtml(unitB) +
+    ' &middot; ' + rows.length + ' indikator' + (d.growth ? ' yang bergerak' : '') + ', urut dari selisih terbesar';
+
+  const wrap = document.getElementById('komparasiChartWrap');
+  wrap.style.height = Math.max(200, rows.length * 44 + 50) + 'px';
+  if(komparasiChartInstance) komparasiChartInstance.destroy();
+  komparasiChartInstance = null;
+  const canvas = document.getElementById('komparasiChart');
+  if(!rows.length){
+    wrap.style.height = '80px';
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    canvas.style.display = 'none';
+    let empty = wrap.querySelector('.kcmp-empty');
+    if(!empty){ empty = document.createElement('div'); empty.className = 'kcmp-empty'; empty.style.cssText = 'text-align:center;color:var(--muted);font-size:13px;padding-top:28px;'; wrap.appendChild(empty); }
+    empty.textContent = d.growth ? 'Tidak ada pergerakan indikator pada periode ini.' : 'Tidak ada indikator yang berlaku.';
+    return;
+  }
+  canvas.style.display = '';
+  const empty = wrap.querySelector('.kcmp-empty'); if(empty) empty.remove();
+
+  komparasiChartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: rows.map(r => r.nama),
+      datasets: [
+        { label: unitA, data: rows.map(r => r[kA]), backgroundColor: KCMP_A, borderRadius: 3, maxBarThickness: 14 },
+        { label: unitB, data: rows.map(r => r[kB]), backgroundColor: KCMP_B, borderRadius: 3, maxBarThickness: 14 }
+      ]
+    },
+    plugins: [ChartDataLabels],
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => c.dataset.label + ': ' + (c.raw === null ? 'tidak ada' : fmtV(c.raw)) } },
+        datalabels: {
+          anchor: 'end',
+          align: c => (c.dataset.data[c.dataIndex] || 0) < 0 ? 'start' : 'end',
+          clamp: true, color: '#11284A', font: { size: 10, weight: '700' },
+          formatter: v => fmtV(v)
+        }
+      },
+      scales: {
+        x: { beginAtZero: true, grace: '15%', ticks: { color: '#6B7280', font: { size: 11 } }, grid: { color: '#E5E9ED' } },
+        y: { ticks: { color: '#11284A', font: { size: 11 }, callback: function(v){ const l = this.getLabelForValue(v); const max = window.innerWidth < 640 ? 22 : 42; return l.length > max ? l.slice(0, max - 1) + '…' : l; } }, grid: { display: false } }
+      }
+    }
+  });
 }
 
 function renderKomparasiBody(rows){
   const tbody = document.getElementById('komparasiBody');
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="17" style="text-align:center;color:var(--muted);padding:24px;">Tidak ada indikator</td></tr>';
+    return;
+  }
+  const nullCell = '<td class="num null-cell">—</td>';
+  const group = (r, kp, kpB, ks, ksB, growth) => {
+    if(r.na && !growth) return '<td class="num null-cell grp-border-l" colspan="5" style="text-align:center;">tidak berlaku</td>';
+    const pA = r[kp], pB = r[kpB], sA = r[ks], sB = r[ksB];
+    const w = komparasiWinner(sA, sB, pA, pB, r.bobot);
+    // sorot sel score bila score berbeda; bila score sama (penentu = pencapaian), sorot sel pencapaian
+    const byScore = sA !== null && sB !== null && Math.abs(sA - sB) > 0.0001;
+    const wsA = (w === 'a' && byScore) ? 'win-a' : '', wsB = (w === 'b' && byScore) ? 'win-b' : '';
+    const wpA = (w === 'a' && !byScore) ? 'win-a' : '', wpB = (w === 'b' && !byScore) ? 'win-b' : '';
+    const pf = v => growth ? kcmpSigned(v, fmtPct) : fmtPct(v);
+    const sf = v => growth ? kcmpSigned(v, fmtScore) : fmtScore(v);
+    const pCell = (v, cls) => v === null ? nullCell.replace('class="num', 'class="num ' + cls) :
+      '<td class="num ' + cls + '">' + ((!growth && r.bobot > 0) ? '<span class="badge ' + statusClass(v) + '">' + pf(v) + '</span>' : pf(v)) + '</td>';
+    const sCell = (v, cls) => v === null ? nullCell.replace('class="num', 'class="num ' + cls) : '<td class="num ' + cls + '">' + sf(v) + '</td>';
+    const diff = (sA !== null && sB !== null) ? sA - sB : null;
+    const dCell = diff === null ? nullCell : '<td class="num ' + (diff > 0.0001 ? 'sel-a' : (diff < -0.0001 ? 'sel-b' : '')) + '">' + kcmpSigned(diff, fmtScore) + '</td>';
+    return pCell(pA, 'grp-border-l ' + wpA) + pCell(pB, wpB) +
+      sCell(sA, wsA) + sCell(sB, wsB) + dCell;
+  };
   tbody.innerHTML = rows.map(r => `
     <tr>
       <td class="sticky-col">${escapeHtml(r.nama)}</td>
       <td class="num">${fmtScore(r.bobot)}</td>
-      ${komparasiPctCell(r.pctA, r.pctB)}
-      ${komparasiPctCell(r.pctB, r.pctA)}
-      ${komparasiCellNum(r.scoreA)}
-      ${komparasiCellNum(r.scoreB)}
-      ${r.selisih===null ? '<td class="num null-cell">NULL</td>' : `<td class="num">${fmtScore(r.selisih)}</td>`}
-      ${komparasiPctCell(r.hPctA, r.hPctB)}
-      ${komparasiPctCell(r.hPctB, r.hPctA)}
-      ${komparasiCellNum(r.hScoreA)}
-      ${komparasiCellNum(r.hScoreB)}
-      ${komparasiPctCell(r.bPctA, r.bPctB)}
-      ${komparasiPctCell(r.bPctB, r.bPctA)}
-      ${komparasiCellNum(r.bScoreA)}
-      ${komparasiCellNum(r.bScoreB)}
+      ${group(r, 'pctA', 'pctB', 'scoreA', 'scoreB', false)}
+      ${group(r, 'hPctA', 'hPctB', 'hScoreA', 'hScoreB', true)}
+      ${group(r, 'bPctA', 'bPctB', 'bScoreA', 'bScoreB', true)}
     </tr>
   `).join('');
 }
@@ -2067,25 +2325,20 @@ function renderKomparasiFoot(unitA, unitB){
   const metaA = unitMetaMap[unitA] || {scoreTotal:0, scoreTotalH1:0, scoreTotalB1:0};
   const metaB = unitMetaMap[unitB] || {scoreTotal:0, scoreTotalH1:0, scoreTotalB1:0};
 
-  const scoreA = metaA.scoreTotal || 0;
-  const scoreB = metaB.scoreTotal || 0;
-  const hScoreA = scoreA - (metaA.scoreTotalH1||0);
-  const hScoreB = scoreB - (metaB.scoreTotalH1||0);
-  const bScoreA = scoreA - (metaA.scoreTotalB1||0);
-  const bScoreB = scoreB - (metaB.scoreTotalB1||0);
-
+  const sA = metaA.scoreTotal || 0, sB = metaB.scoreTotal || 0;
+  const hA = sA - (metaA.scoreTotalH1||0), hB = sB - (metaB.scoreTotalH1||0);
+  const bA = sA - (metaA.scoreTotalB1||0), bB = sB - (metaB.scoreTotalB1||0);
+  const grp = (a, b, growth) => {
+    const f = v => growth ? kcmpSigned(v, fmtScore) : fmtScore(v);
+    const d = a - b;
+    return '<td class="num grp-border-l"></td><td class="num"></td>' +
+      '<td class="num ' + (d > 0.0001 ? 'win-a' : '') + '">' + f(a) + '</td>' +
+      '<td class="num ' + (d < -0.0001 ? 'win-b' : '') + '">' + f(b) + '</td>' +
+      '<td class="num ' + (d > 0.0001 ? 'sel-a' : (d < -0.0001 ? 'sel-b' : '')) + '">' + kcmpSigned(d, fmtScore) + '</td>';
+  };
   tfoot.innerHTML = '<tr>' +
     '<td colspan="2" class="sticky-col">Skor Total</td>' +
-    '<td class="num"></td><td class="num"></td>' +
-    '<td class="num">' + fmtScore(scoreA) + '</td>' +
-    '<td class="num">' + fmtScore(scoreB) + '</td>' +
-    '<td class="num">' + fmtScore(scoreA-scoreB) + '</td>' +
-    '<td class="num"></td><td class="num"></td>' +
-    '<td class="num">' + fmtScore(hScoreA) + '</td>' +
-    '<td class="num">' + fmtScore(hScoreB) + '</td>' +
-    '<td class="num"></td><td class="num"></td>' +
-    '<td class="num">' + fmtScore(bScoreA) + '</td>' +
-    '<td class="num">' + fmtScore(bScoreB) + '</td>' +
+    grp(sA, sB, false) + grp(hA, hB, true) + grp(bA, bB, true) +
   '</tr>';
 }
 
@@ -4843,15 +5096,10 @@ function renderIProjectCabang(){
     document.getElementById('iprojCabangAvg').textContent = jab ? fmtScore(avgAll) : fmtScore(avgAll);
     document.getElementById('iprojCabangBest').textContent = cabRows[0].cabNama;
     document.getElementById('iprojCabangBestSub').textContent = fmtScore(cabRows[0].avg) + (jab ? '' : ' / 100');
-    const worst = cabRows[cabRows.length-1];
-    document.getElementById('iprojCabangWorst').textContent = worst.cabNama;
-    document.getElementById('iprojCabangWorstSub').textContent = fmtScore(worst.avg) + (jab ? '' : ' / 100');
   }else{
     document.getElementById('iprojCabangAvg').textContent = '—';
     document.getElementById('iprojCabangBest').textContent = '—';
     document.getElementById('iprojCabangBestSub').textContent = '';
-    document.getElementById('iprojCabangWorst').textContent = '—';
-    document.getElementById('iprojCabangWorstSub').textContent = '';
   }
 
   const n = cabRows.length;
